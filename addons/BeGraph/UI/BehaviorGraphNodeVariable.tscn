@@ -1,0 +1,93 @@
+[gd_scene format=3 uid="uid://bup4fdlymdgmo"]
+
+[ext_resource type="Script" uid="uid://cge6m18n225eb" path="res://addons/BeGraph/Classes/misc/BehaviorGraphNodeVariableEditor.gd" id="1_w1qui"]
+[ext_resource type="Texture2D" uid="uid://gabkvvih5tb" path="res://addons/BeGraph/Icons/link_icon.svg" id="1_yo868"]
+[ext_resource type="Texture2D" uid="uid://bm47qms27capg" path="res://addons/BeGraph/Icons/unlink_icon.svg" id="2_w1qui"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hdwr6"]
+bg_color = Color(0.078431375, 0.078431375, 0.078431375, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cy14o"]
+resource_local_to_scene = true
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 2
+border_color = Color(0, 0, 0, 0)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[node name="BehaviorGraphNodeVariable" type="PanelContainer" unique_id=1282235278]
+custom_minimum_size = Vector2(0, 35)
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -16.0
+offset_right = 223.0
+offset_bottom = 16.0
+grow_vertical = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_hdwr6")
+script = ExtResource("1_w1qui")
+
+[node name="FallbackLayer" type="PanelContainer" parent="." unique_id=222060223]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_behavior_recursive = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_cy14o")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1565367426]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="TypeIcon" type="TextureRect" parent="HBoxContainer" unique_id=1680265163]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(30, 30)
+custom_maximum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 4
+stretch_mode = 3
+
+[node name="BBReference" type="Label" parent="HBoxContainer" unique_id=893609572]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(125, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+
+[node name="BBLinkButton" type="MenuButton" parent="HBoxContainer" unique_id=1683114726]
+unique_name_in_owner = true
+custom_maximum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+mouse_filter = 1
+icon = ExtResource("1_yo868")
+icon_alignment = 1
+item_count = 2
+popup/item_0/text = "Local Blackboard"
+popup/item_0/id = 0
+popup/item_1/text = "Shared Blackboard"
+popup/item_1/id = 1
+
+[node name="BBUnlinkButton" type="Button" parent="HBoxContainer" unique_id=18998032]
+unique_name_in_owner = true
+visible = false
+custom_maximum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+mouse_filter = 1
+icon = ExtResource("2_w1qui")
+flat = true
+icon_alignment = 1

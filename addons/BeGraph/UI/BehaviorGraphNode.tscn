@@ -1,0 +1,119 @@
+[gd_scene format=3 uid="uid://dda5w7doqtpue"]
+
+[ext_resource type="Texture2D" uid="uid://cyeufk6walgcc" path="res://addons/BeGraph/Icons/graph_slot_icon.svg" id="1_bbj7d"]
+[ext_resource type="Script" uid="uid://dygdjgndlk554" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraphNode.gd" id="1_y0ctl"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kmv4x"]
+resource_local_to_scene = true
+content_margin_left = 10.0
+content_margin_top = 15.0
+content_margin_right = 10.0
+content_margin_bottom = 15.0
+bg_color = Color(0.161, 0.161, 0.161, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_y0ctl"]
+resource_local_to_scene = true
+content_margin_left = 10.0
+content_margin_top = 15.0
+content_margin_right = 10.0
+content_margin_bottom = 15.0
+bg_color = Color(0.161, 0.161, 0.161, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.824, 0.784, 0.745, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+anti_aliasing = false
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jn3wn"]
+resource_local_to_scene = true
+bg_color = Color(0.161, 0.161, 0.161, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+expand_margin_bottom = 1.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bbj7d"]
+resource_local_to_scene = true
+bg_color = Color(0.161, 0.161, 0.161, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_color = Color(0.824, 0.784, 0.745, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+expand_margin_bottom = 1.0
+
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_bbj7d"]
+color = Color(0.49803922, 0.49803922, 0.49803922, 1)
+thickness = 2
+
+[node name="BehaviorGraphNode" type="GraphNode" unique_id=229886852]
+offset_right = 460.0
+offset_bottom = 90.0
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 1
+theme_override_icons/port = ExtResource("1_bbj7d")
+theme_override_styles/panel = SubResource("StyleBoxFlat_kmv4x")
+theme_override_styles/panel_selected = SubResource("StyleBoxFlat_y0ctl")
+theme_override_styles/titlebar = SubResource("StyleBoxFlat_jn3wn")
+theme_override_styles/titlebar_selected = SubResource("StyleBoxFlat_bbj7d")
+slot/0/left_enabled = false
+slot/0/left_type = 0
+slot/0/left_color = Color(1, 1, 1, 1)
+slot/0/left_icon = null
+slot/0/right_enabled = false
+slot/0/right_type = 0
+slot/0/right_color = Color(1, 1, 1, 1)
+slot/0/right_icon = null
+slot/0/draw_stylebox = true
+slot/1/left_enabled = false
+slot/1/left_type = 0
+slot/1/left_color = Color(1, 1, 1, 1)
+slot/1/left_icon = null
+slot/1/right_enabled = false
+slot/1/right_type = 0
+slot/1/right_color = Color(1, 1, 1, 1)
+slot/1/right_icon = null
+slot/1/draw_stylebox = true
+script = ExtResource("1_y0ctl")
+
+[node name="HFlowContainer" type="HFlowContainer" parent="." unique_id=53652175]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(420, 0)
+layout_mode = 2
+theme_override_constants/v_separation = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=338220705]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="HSeparator" type="HSeparator" parent="HBoxContainer" unique_id=664201502]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+theme_override_styles/separator = SubResource("StyleBoxLine_bbj7d")
+
+[node name="Label" type="Label" parent="HBoxContainer" unique_id=1408622851]
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 1
+theme_override_colors/font_color = Color(0.49803922, 0.49803922, 0.49803922, 1)
+text = "CONDITIONS"
+
+[node name="HSeparator2" type="HSeparator" parent="HBoxContainer" unique_id=1007261211]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+theme_override_styles/separator = SubResource("StyleBoxLine_bbj7d")
