@@ -19,5 +19,5 @@ func set_resource_name()->String: return "Access Point"
 
 func set_allows_multiple_outputs() -> bool: return false
 
-func set_properties()-> Array[Dictionary]:
-	return [_add_behavior_property("label",TYPE_STRING)]
+func set_properties()-> void:
+	_add_behavior_property("label",TYPE_STRING)

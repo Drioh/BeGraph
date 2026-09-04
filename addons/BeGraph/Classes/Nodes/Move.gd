@@ -7,7 +7,7 @@ func tick()->Status:
 	return Status.SUCCESS
 
 func set_instruction() -> String:
-	return "MAMMA, stampo {variabile_bella} lo {str}, come faccio?{sandro}, {variabile_nulla}, senza contare che {sandro}"
+	return "MAMMA, stampo lo {str}, come faccio?{sandro}, {variabile_nulla}, senza contare che {sandro}"
 
 func set_node_category()->String: return "action_node"
 
@@ -23,9 +23,8 @@ func set_conditions() -> PackedStringArray:
 	])
 func set_allows_multiple_outputs() -> bool: return false
 
-func set_properties()-> Array[Dictionary]:
-	return[
-		_add_behavior_property("str",Vector2(1,1)),
-		_add_behavior_property("sandro",""),
-		_add_behavior_property("variabile_nulla",0,PROPERTY_HINT_ENUM,"primo_valore,secondo_valore,terzo_valore")
-	]
+func set_properties()-> void:
+	_add_behavior_property("str",Vector2(1,1))
+	_add_behavior_property("sandro","")
+	_add_behavior_property("variabile_nulla",0,PROPERTY_HINT_ENUM,"primo_valore,secondo_valore,terzo_valore")
+	

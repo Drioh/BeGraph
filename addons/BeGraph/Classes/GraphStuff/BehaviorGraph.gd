@@ -27,13 +27,14 @@ extends Resource
 			shared_blackboard = null
 
 ##BehaviorNodes contained in this graph
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY) var nodes : Dictionary = {
-	&"": {
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY) var nodes : Array[Dictionary] = [
+	{
 		"node": AccessPointNode.new(),
+		"graphnode_name": &"",
 		"position": Vector2(0,0),
 		"is_starting_point" : false,
 	}
-	}
+	]
 
 ##Used for saving purposes, this variable contains a copy of [param connections] from the graph edit. This value gets its value when a graph gets saved
 @export var connections : Array

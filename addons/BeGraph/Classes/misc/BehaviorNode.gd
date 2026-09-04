@@ -25,7 +25,7 @@ enum Status{SUCCESS,FAILURE,RUNNING, ERROR = -1}
 @abstract func set_allows_multiple_outputs() -> bool
 
 ##Defines the variables that can be used inside a BehaviorNode's code.
-@abstract func set_properties()-> Array[Dictionary]
+@abstract func set_properties()-> void
 
 ## Instruction displayed in node. To set this parameter, use the [method set_instruction] method
 var instruction : String = ""
@@ -37,7 +37,7 @@ var next : Array[BehaviorNode] = []
 var conditions : Array[BehaviorCondition]
 
 ##Contains all of the [BehaviorProperty] for this node.
-var behavior_properties:Array[BehaviorProperty]
+var behavior_properties:Array[Dictionary]
 
 ## For display purposes only, this parameter defines a node's category. Set using [method set_node_category]
 var node_category : String = ""
@@ -54,7 +54,6 @@ var output : bool = false
 ##If true, lets the node have more than one successor per output slot ([param next] is allowed to have a size greater than 0)
 var allows_multiple_outputs : bool = false
 
-
 ## Initializes the node by calling every overridable [code]set_*[/code] method,
 ## in order: [method set_node_category], [method build_conditions] (which in
 ## turn calls [method set_conditions]), [method set_instruction],
@@ -69,12 +68,12 @@ func _init() -> void:
 	input = set_input()
 	output=set_output()
 	allows_multiple_outputs = set_allows_multiple_outputs()
-	get_property_list() #first trigger of get_property_list so that behavior_properties can get populated
+	set_properties()
 
 ## Overrides [method Object._get_property_list] to expose this node's custom
 ## variables (defined via [method set_properties]) to the editor inspector.
 func _get_property_list() -> Array[Dictionary]:
-	return set_properties()
+	return behavior_properties
 
 ##Override this function to set the node category. If the string returned matches one of the categories found in the Project Settings, then it will allow the node wo have custom colors for background and border when selected
 func set_node_category()->String:
@@ -105,17 +104,20 @@ func _add_behavior_property(
 	hint:int=PROPERTY_HINT_NONE, 
 	hint_string:String="", 
 	classname:String="", 
-	usage:int=PROPERTY_USAGE_DEFAULT)->Dictionary:
-	behavior_properties.append(BehaviorProperty.new(name,default_value)) #populates [param behavior_properties]
-	return{
+	usage:int=PROPERTY_USAGE_DEFAULT)->void:
+	var entry : Dictionary={
 		"name":name,
 		"class_name":classname,
 		"type":typeof(default_value),
 		"hint":hint,
 		"hint_string":hint_string,
-		"usage":usage
+		"usage":usage,
+		"value":default_value,
+		"blackboard":null,
+		"blackboard_key":&""
 	}
-
+	behavior_properties.append(entry) #populates [param behavior_properties]
+	return
 ## Overrides [method Object._get]: looks up [param property] among
 ## [member behavior_properties] and returns its current value, or
 ## [code]null[/code] if no matching property is found. This is what allows
@@ -123,8 +125,8 @@ func _add_behavior_property(
 ## syntax.
 func _get(property: StringName) -> Variant:
 	for prop in behavior_properties:
-		if prop.name==property:
-			return prop.value #gets value from behavior_property
+		if prop["name"]==property:
+			return prop["value"] #gets value from behavior_property
 	return null
 
 ## Overrides [method Object._set]: looks up [param property] among
@@ -134,9 +136,9 @@ func _get(property: StringName) -> Variant:
 ## [code]false[/code] otherwise.
 func _set(property: StringName, value: Variant) -> bool:
 	for prop in behavior_properties:
-		if prop.name == property:
-			prop.value = value #handles setting a value for a behavior_property with the given key
-			changed.emit(prop.name,prop.blackboard_key)
+		if prop["name"] == property:
+			prop["value"] = value #handles setting a value for a behavior_property with the given key
+			changed.emit(prop["name"],prop["blackboard_key"])
 			return true
 	return false
 
@@ -144,10 +146,10 @@ func _set(property: StringName, value: Variant) -> bool:
 ##If this method gets called just with the [code]name[/code] parameter, without [code]blackboard[/code] or [code]blackboard_key[/code], the blackboard reference gets disabled
 func set_blackboard_reference(name:String,blackboard : BehaviorGraphBlackboard=null, blackboard_key: StringName=&""):
 	for property in behavior_properties:
-		if property.name == name:
-			property.blackboard=blackboard
-			property.blackboard_key=blackboard_key
-			changed.emit(property.name,property.blackboard_key)
+		if property["name"] == name:
+			property["blackboard"]=blackboard
+			property["blackboard_key"]=blackboard_key
+			changed.emit(property["name"],property["blackboard_key"])
 			return
 	push_error("unable to set property, %s name not found"%name)
 	return
@@ -155,14 +157,14 @@ func set_blackboard_reference(name:String,blackboard : BehaviorGraphBlackboard=n
 ## Returns [code]true[/code] if the variable associated to the given [code]key[/code] properties a blackboard
 func is_blackboard_property_enabled(key:StringName)->bool:
 	for property in behavior_properties:
-		if property.name == key:
-			return property.blackboard != null and property.blackboard_key != &""
+		if property["name"] == key:
+			return property["blackboard"] != null and property["blackboard_key"] != &""
 	return false
 
 ##Checks if there is a property with the given name in [param behavior_properties]
 func _has(property:StringName) -> bool:
 	for prop in behavior_properties:
-		if prop.name == property:
+		if prop["name"] == property:
 			return true
 	return false
 
@@ -178,23 +180,3 @@ class BehaviorCondition:
 	func _init(text:String= "", next:BehaviorNode = null) -> void:
 		self.text = text
 		self.next = next
-
-##A class to specify, for a variable, a default value, blackboard reference and a blackboard key, since [method get_property_list] does not allow for custom fields
-class BehaviorProperty:
-	##Property name, can be found in [method get_property_list] too
-	var name : String 
-	##Used as the default value for this property, type gets calculated through [method typeof]
-	var value : Variant
-	##Reference to the blackboard used, if used
-	var blackboard : BehaviorGraphBlackboard 
-	##Key from the blackboard to be used
-	var blackboard_key : StringName 
-
-	## Creates a new behavior property with the given [param name] and initial
-	## [param value], optionally pre-bound to [param blackboard] /
-	## [param blackboard_key].
-	func _init(name:String = "",value : Variant = null,blackboard : BehaviorGraphBlackboard=null, blackboard_key: StringName = &"") -> void:
-		self.name = name
-		self.value=value
-		self.blackboard=blackboard
-		self.blackboard_key=blackboard_key

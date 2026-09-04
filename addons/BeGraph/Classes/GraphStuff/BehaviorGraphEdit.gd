@@ -24,12 +24,12 @@ var shared_blackboard : BehaviorGraphBlackboard
 var _node_popup: PopupMenu
 
 ## Button used to print debug information about every node in the graph.
-@onready var button: Button = $Button
+@onready var info_button: Button = %InfoButton
+
 ## Label displaying the name/path of the currently loaded [BehaviorGraph].
 @onready var graph_label: Label = %GraphLabel
 
 func _ready() -> void:
-	button.pressed.connect(print_nodes_info)
 	delete_nodes_request.connect(_on_delete_nodes_request)
 	connection_request.connect(connect_nodes)
 	disconnection_request.connect(disconnect_nodes)
@@ -72,32 +72,9 @@ func disconnect_nodes(from_node: StringName, from_port: int, to_node: StringName
 ## shared blackboards for use by child node editors.
 func set_graph(graph: BehaviorGraph) -> void:
 	current_graph = graph
-	var graph_info: String = graph.resource_name if graph.resource_name != "" else graph.resource_path
-	graph_label.text = "Loaded Behavior Graph: %s" % graph_info
+	
 	local_blackboard=current_graph.local_blackboard
 	shared_blackboard=current_graph.shared_blackboard
-
-## Debug utility that prints, for every [BehaviorGraphNode] child, its
-## underlying [BehaviorNode]'s name, category, successors, instruction,
-## variables (with their blackboard bindings) and conditions.
-func print_nodes_info()->void:
-	for child in get_children():
-		if child is BehaviorGraphNode:
-			print("NODE: %s"%child.current_node)
-			print("   Name: %s"%_label_for_script(child.current_node.get_script().get_path()))
-			print("   Category: %s"%child.current_node.node_category)
-			print("   Successor(s): %s"%str(child.current_node.next))
-			print("\nINSTRUCTION AND VARIABLES")
-			print("   Node instruction: \"%s\""%child.current_node.instruction)
-			for v in child.current_node.variables:
-				print("   Variable %s"%v.name)
-				print("      Value: %s"%v.value)
-				print("      Blackboard connections: %s: %s"%[v.blackboard,v.blackboard_key])
-			if child.current_node.conditions.size()>0:
-				print("\nCONDITIONS")
-				for condition in child.current_node.conditions:
-					print("   Condition %s leads to %s"%[condition.text,condition.next])
-			print("========================================================================")
 
 ## Instantiates a new [BehaviorGraphNode] visual node, adds it as a child of
 ## this graph, and, if [param script_path] is provided, assigns it the
@@ -108,6 +85,8 @@ func add_node(script_path: String = "") -> void:
 	node.graph_edit = self
 	if script_path != "":
 		node.set_node_script(script_path)
+		node.position_offset = (get_local_mouse_position() + scroll_offset) / zoom
+		node.delete_request.connect(_on_delete_nodes_request)
 
 ## Callback for [signal GraphEdit.delete_nodes_request]. Removes each requested
 ## node (identified by [StringName]) from the graph, provided

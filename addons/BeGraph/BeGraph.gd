@@ -2,7 +2,8 @@
 extends EditorPlugin
 
 var dock : EditorDock
-var graph_edit : BehaviorGraphEdit
+var begraph_dock : Control
+var _dock_added : bool = false
 
 const BASE_CATEGORIES: Dictionary = {
 	"action_node": [Color(0.161, 0.161, 0.161, 1.0), Color(0.824, 0.784, 0.745, 1.0)],
@@ -23,41 +24,56 @@ const CUSTOM_CATEGORIES_KEY :String= "BeGraph/colors/node_colors/custom_categori
 const COLORS_PREFIX :String= "BeGraph/colors/node_colors/"
 
 func _enter_tree():
-	graph_edit = preload("res://addons/BeGraph/UI/BehaviorGraphEdit.tscn").instantiate()
+	begraph_dock = preload("res://addons/BeGraph/UI/BeGraphDock.tscn").instantiate()
 	dock = EditorDock.new()
-	dock.add_child(graph_edit)
+	dock.add_child(begraph_dock)
 	dock.title = "Behavior Graph"
 	dock.default_slot = EditorDock.DOCK_SLOT_BOTTOM
 	dock.available_layouts = EditorDock.DOCK_LAYOUT_HORIZONTAL | EditorDock.DOCK_LAYOUT_FLOATING
-	add_dock(dock)
 	_sync_settings()
-	dock.close()
 
 func _exit_tree():
 	_sync_settings(true)
-	if dock.is_visible_in_tree():
-		remove_dock(dock)
-		dock.queue_free()
+	_remove_dock()
+	dock.queue_free()
 
-func _enable_plugin() -> void: 
-	if dock.is_visible_in_tree():
-		dock.close()
+func _enable_plugin() -> void:
+	pass # nothing to do; dock stays hidden until something handled is selected
 
 func _disable_plugin() -> void:
-	if dock.is_visible_in_tree():
-		remove_dock(dock)
-		dock.queue_free()
+	_remove_dock()
 
 func _handles(object: Object) -> bool:
 	return object is BehaviorGraph or object is BehaviorNode
 
 func _edit(object: Object) -> void:
 	if object is BehaviorGraph:
-		graph_edit.set_graph(object)
+		_make_visible(true)
+		if not begraph_dock.loaded_graph == object:
+			begraph_dock.load_graph(object)
 
 func _make_visible(visible: bool) -> void:
 	if visible:
+		_add_dock()
 		dock.make_visible()
+		if not begraph_dock.close_button.pressed.is_connected(_on_close_pressed):
+			begraph_dock.close_button.pressed.connect(_on_close_pressed)
+		
+	else:
+		_remove_dock()
+
+func _add_dock() -> void:
+	if not _dock_added:
+		add_dock(dock)
+		_dock_added = true
+
+func _remove_dock() -> void:
+	if _dock_added:
+		remove_dock(dock)
+		_dock_added = false
+
+func _on_close_pressed() -> void:
+	_remove_dock()
 
 #region SETTINGS
 

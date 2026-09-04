@@ -31,14 +31,6 @@ var placeholder_regex := RegEx.new()
 ## [method BehaviorGraphEdit._on_delete_nodes_request]).
 @export var can_be_deleted : bool = true
 
-## Hides the default title bar (this node's title/label is rendered via its
-## instruction instead) and disables mouse input on it.
-func _ready() -> void:
-	var tb : HBoxContainer = get_titlebar_hbox()
-	tb.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	tb.remove_child(tb.get_children()[0])
-	tb.visible=false
-
 ## Loads the [BehaviorNode] script found at [param path] and configures this
 ## visual node accordingly: sets its color by category, enables/disables the
 ## input and output slots, renders the instruction (with inline placeholder
@@ -61,10 +53,33 @@ func set_node_script(path: String) -> void:
 	if node.conditions.size()>0:
 		set_slot_enabled_right(0,false)
 		set_conditions()
-	node_selected.connect(EditorInterface.edit_resource.bind(node))
-	node_deselected.connect(EditorInterface.edit_resource.bind(graph_edit.current_graph))
 
-
+	var tb : HBoxContainer = get_titlebar_hbox()
+	tb.add_theme_constant_override("separation",0)
+	
+	title = self.name
+	
+	var edit_button: Button = Button.new()
+	edit_button.flat = true
+	edit_button.icon = load("res://addons/BeGraph/Icons/edit_icon.svg")
+	edit_button.pressed.connect(EditorInterface.edit_resource.bind(node))
+	tb.add_child(edit_button)
+	
+	var separator = VSeparator.new()
+	tb.add_child(separator)
+	
+	var info_button: Button = Button.new()
+	info_button.flat = true
+	info_button.icon = load("res://addons/BeGraph/Icons/info_icon.svg")
+	info_button.pressed.connect(print_node_info)
+	tb.add_child(info_button)
+	
+	var delete_button: Button = Button.new()
+	delete_button.flat = true
+	delete_button.icon = load("res://addons/BeGraph/Icons/close_icon.svg")
+	delete_button.pressed.connect(delete_request.emit.bind([self.name]))
+	tb.add_child(delete_button)
+	
 ## Renders one row per entry in [member BehaviorNode.conditions]: makes
 ## [member h_box_container] visible and, for each condition, creates a new
 ## flow container populated via [method _render_placeholders] and enables a
@@ -94,18 +109,13 @@ func _render_placeholders(text: String, container: Control, is_main_instruction:
 
 		if start > last_end:
 			_add_text_label(text.substr(last_end, start - last_end), container)
-
 		_add_placeholder_value(key, m.get_string(0), container)
-
 		last_end = m.get_end()
-
 	if last_end < text.length():
 		_add_text_label(text.substr(last_end, text.length() - last_end), container)
 	
 	if not is_main_instruction:
 		set_slot_enabled_right(get_child_count()-1,true)
-		
-
 
 ## Resolves a single [code]{key}[/code] placeholder to an inline control, or a
 ## "null" label (with a warning) if the key is missing from [member node] or
@@ -191,3 +201,22 @@ func set_node_color(category:String):
 	for slot in get_child_count():
 		set("slot/%s/left_color",selection_color)
 		set("slot/%s/right_color",selection_color)
+
+
+func print_node_info()->void:
+	print("NODE: %s"%self)
+	print("   Name: %s"%graph_edit._label_for_script(node.get_script().get_path()))
+	print("   Category: %s"%node.node_category)
+	print("   Successor(s): %s"%str(node.next))
+	print("\nINSTRUCTION")
+	print("   Node instruction: \"%s\""%node.instruction)
+	print("\nVARIABLES [%s]"%node.behavior_properties.size())
+	for v in node.behavior_properties:
+		print("   Variable %s"%v.name)
+		print("      Value: %s"%v.value)
+		print("      Blackboard connections: %s: %s"%[v.blackboard,v.blackboard_key])
+	if node.conditions.size()>0:
+		print("\nCONDITIONS")
+		for condition in node.conditions:
+			print("   Condition %s leads to %s"%[condition.text,condition.next])
+	print("========================================================================")
