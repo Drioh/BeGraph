@@ -1,3 +1,4 @@
+@tool
 class_name MoveCharacter
 extends BehaviorNode
 
@@ -21,6 +22,7 @@ func set_conditions() -> PackedStringArray:
 		"Questa è la seconda condizione",
 		"Questa è la terza condizione con la variabile {sandro}"
 	])
+
 func set_allows_multiple_outputs() -> bool: return false
 
 func set_properties()-> void:

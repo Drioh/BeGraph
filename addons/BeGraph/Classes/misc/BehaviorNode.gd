@@ -2,6 +2,8 @@
 @abstract class_name BehaviorNode
 extends Resource
 
+
+
 ##The abstract class every node written for the BeGraph plugin must extend.[br]
 ##In order to show a custom name, a node must define the [code]DISPLAY_NAME[/code] String constant.
 
@@ -28,31 +30,42 @@ enum Status{SUCCESS,FAILURE,RUNNING, ERROR = -1}
 @abstract func set_properties()-> void
 
 ## Instruction displayed in node. To set this parameter, use the [method set_instruction] method
-var instruction : String = ""
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE)var instruction : String = ""
 
 ## A node's direct array of successors. If [param allows_multiple_outputs] is set to [code]true[/code], this node can have multiple successors, accessible using the classic array syntax
-var next : Array[BehaviorNode] = []
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE)var next : Array[BehaviorNode]
 
 ## Defines multiple successors for this node depending on the logic of the node itself. To set conditions, use the [method set_conditions] method, providing a [code]PackedStringArray[/code].[br]Conditions can have only one successor
-var conditions : Array[BehaviorCondition]
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE)var conditions : Array[BehaviorCondition]
 
 ##Contains all of the [BehaviorProperty] for this node.
-var behavior_properties:Array[Dictionary]
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE)var behavior_properties:Array[Dictionary]
 
 ## For display purposes only, this parameter defines a node's category. Set using [method set_node_category]
-var node_category : String = ""
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE)var node_category : String = ""
 
 ##Regular expression used to get variables from the text
 var regex :RegEx= RegEx.create_from_string(r"\{([^{}]+)\}")
 
 ##If true, lets the node have one or more predecessor(s)
-var input : bool = false
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE)var input : bool = false
 
 ##If true, lets the node have one or more, depending on [param allows_multiple_outputs] successor(s)
-var output : bool = false
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE)var output : bool = false
 
 ##If true, lets the node have more than one successor per output slot ([param next] is allowed to have a size greater than 0)
-var allows_multiple_outputs : bool = false
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE)var allows_multiple_outputs : bool = false
+
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var position_in_graph : Vector2
+
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var is_starting_node : bool :
+	get():
+		if node_category == "access_point_node": 
+			return true
+		return false
+
+signal behavior_property_changed(name:StringName,blackboard_key:StringName)
+
 
 ## Initializes the node by calling every overridable [code]set_*[/code] method,
 ## in order: [method set_node_category], [method build_conditions] (which in
@@ -63,10 +76,10 @@ var allows_multiple_outputs : bool = false
 ## populated via [method set_properties].
 func _init() -> void:
 	node_category = set_node_category()
-	conditions = build_conditions()
-	instruction = set_instruction()
 	input = set_input()
 	output=set_output()
+	conditions = build_conditions()
+	instruction = set_instruction()
 	allows_multiple_outputs = set_allows_multiple_outputs()
 	set_properties()
 
@@ -82,19 +95,20 @@ func set_node_category()->String:
 ## Override this function with a PackedStringArray. Each entry in the array will be a condition.[br]
 ##Variables with the [code]{}[/code] annotation can be used.
 func set_conditions() -> PackedStringArray :
-	return []
+	return PackedStringArray([])
 
 ## Used to build conditions starting from the array given by the [method set_conditions] method.[br]
 ##If one or more conditions are set, [param output] gets set to [code]false[/code]
 func build_conditions() -> Array[BehaviorCondition] :
-	var conditions_texts = set_conditions()
+	var conditions_texts : PackedStringArray = set_conditions()
 	if conditions_texts.size() == 0: 
 		return[] #return if there is no condition set
 	
 	output = false #output automatically set to false
 	var ret : Array[BehaviorCondition] = []
 	for condition_text in conditions_texts:
-		ret.append(BehaviorCondition.new(condition_text))
+		var behavior_condition : BehaviorCondition = BehaviorCondition.new(condition_text)
+		ret.append(behavior_condition)
 	return ret
 
 ##Utility function to build a property to inject into [method set_properties].
@@ -104,7 +118,7 @@ func _add_behavior_property(
 	hint:int=PROPERTY_HINT_NONE, 
 	hint_string:String="", 
 	classname:String="", 
-	usage:int=PROPERTY_USAGE_DEFAULT)->void:
+	usage:int=PROPERTY_USAGE_DEFAULT|PROPERTY_USAGE_STORAGE)->void:
 	var entry : Dictionary={
 		"name":name,
 		"class_name":classname,
@@ -160,6 +174,27 @@ func is_blackboard_property_enabled(key:StringName)->bool:
 		if property["name"] == key:
 			return property["blackboard"] != null and property["blackboard_key"] != &""
 	return false
+
+func print_node_info()->void:
+	print("NODE: %s"%self)
+	print("   Name: %s"%get_script().get_path())
+	print("   Category: %s"%node_category)
+	print("   Successor(s): %s"%str(next))
+	print("\nINSTRUCTION")
+	print("   Node instruction: \"%s\""%instruction)
+	print("\nVARIABLES [%s]"%behavior_properties.size())
+	for v in behavior_properties:
+		print("   Variable %s"%v.name)
+		print("      Value: %s"%v.value)
+		print("      Blackboard connection: %s from %s"%[v.blackboard_key,v.blackboard])
+	if conditions.size()>0:
+		print("\nCONDITIONS")
+		for condition in conditions:
+			print("   Condition %s leads to %s"%[condition.text,condition.next])
+
+func add_next(n : BehaviorNode)->void:
+	next.append(n)
+	return
 
 ##Checks if there is a property with the given name in [param behavior_properties]
 func _has(property:StringName) -> bool:

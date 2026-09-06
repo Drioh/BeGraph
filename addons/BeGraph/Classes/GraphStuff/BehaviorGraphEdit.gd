@@ -48,12 +48,19 @@ func connect_nodes(from_node: StringName, from_port: int, to_node: StringName, t
 	var t_node : BehaviorGraphNode = get_node(NodePath(to_node))
 	
 	var cond_1 : bool = from_node in get_connection_starting_nodes()
-	var cond_2 : bool = not f_node.current_node.allows_multiple_outputs
+	var cond_2 : bool = not f_node.node.allows_multiple_outputs
 	var cond_3 : bool = get_connection_count(from_node,from_port)>0
 	if  cond_1 and cond_2 and cond_3:
 		push_error("Node %s does not allow multiple outputs"%from_node)
 		return
-	f_node.current_node.next.append(t_node.current_node)
+	f_node.node.add_next(t_node.node)
+	var c:Dictionary = {
+		"from_node":from_node,
+		"from_port":from_port,
+		"to_node":to_node,
+		"to_port":to_port
+	}
+	current_graph.add_connection(c)
 	connect_node(from_node,from_port,to_node,to_port)
 
 ## Callback for [signal GraphEdit.disconnection_request]. Removes the successor
@@ -63,19 +70,38 @@ func disconnect_nodes(from_node: StringName, from_port: int, to_node: StringName
 	var f_node : BehaviorGraphNode = get_node(NodePath(from_node))
 	var t_node : BehaviorGraphNode = get_node(NodePath(to_node))
 	
-	if f_node.current_node.next.has(t_node.current_node):
-		f_node.current_node.next.erase(t_node.current_node)
+	if f_node.node.next.has(t_node.node):
+		f_node.node.next.erase(t_node.node)
+	var c:Dictionary = {
+		"from_node":from_node,
+		"from_port":from_port,
+		"to_node":to_node,
+		"to_port":to_port
+	}
+	current_graph.remove_connection(c)
 	disconnect_node(from_node,from_port,to_node,to_port)
 
 ## Loads the given [BehaviorGraph] into the editor: stores the reference,
 ## updates [member graph_label] with its name/path, and caches its local and
 ## shared blackboards for use by child node editors.
 func set_graph(graph: BehaviorGraph) -> void:
+	current_graph=null
+	
+	if connections.size()>0:
+		clear_connections()
+	
+	for child in get_children().duplicate():
+		if child is BehaviorGraphNode:
+			child.queue_free()
 	current_graph = graph
 	
 	local_blackboard=current_graph.local_blackboard
 	shared_blackboard=current_graph.shared_blackboard
-
+	
+	for node in current_graph.nodes:
+		load_node(node)
+	for connection in current_graph.connections:
+		connect_node(connection["from_node"],connection["from_port"],connection["to_node"],connection["to_port"])
 ## Instantiates a new [BehaviorGraphNode] visual node, adds it as a child of
 ## this graph, and, if [param script_path] is provided, assigns it the
 ## [BehaviorNode] script found at that path.
@@ -85,9 +111,23 @@ func add_node(script_path: String = "") -> void:
 	node.graph_edit = self
 	if script_path != "":
 		node.set_node_script(script_path)
+		
 		node.position_offset = (get_local_mouse_position() + scroll_offset) / zoom
+		node.node.position_in_graph = node.position_offset
+		node.node.resource_name = node.name
+		current_graph.add_node(node.node)
+		
 		node.delete_request.connect(_on_delete_nodes_request)
-
+	
+func load_node(n:BehaviorNode):
+	var node : BehaviorGraphNode = NODE.instantiate()
+	add_child(node)
+	node.graph_edit = self
+	node.set_node(n)
+	node.position_offset = n.position_in_graph
+	node.name=n.resource_name
+	node.delete_request.connect(_on_delete_nodes_request)
+	
 ## Callback for [signal GraphEdit.delete_nodes_request]. Removes each requested
 ## node (identified by [StringName]) from the graph, provided
 ## [member BehaviorGraphNode.can_be_deleted] is [code]true[/code] for all of
@@ -97,16 +137,23 @@ func add_node(script_path: String = "") -> void:
 func _on_delete_nodes_request(nodes: Array[StringName]):
 	for n in nodes:
 		var nod = get_node(NodePath(n)) as BehaviorGraphNode
-		if nod.can_be_deleted:
-			for c in get_connection_list_from_node(n):
-				disconnect_node(c["from_node"],c["from_port"],c["to_node"],c["to_port"])
-			if EditorInterface.get_inspector().get_edited_object() == nod.node:
-				EditorInterface.inspect_object(current_graph)
-			remove_child(nod)
-		else:
-			push_error("node %s can not ben deleted." % nod)
+		
+		if nod.node.is_starting_node && current_graph.get_starting_nodes().size()==1:
+			push_error("node %s cannot ben deleted. There must be at least one access point" % nod)
 			return
-
+		for c in get_connection_list_from_node(n):
+			disconnect_node(c["from_node"],c["from_port"],c["to_node"],c["to_port"])
+			current_graph.remove_connection(
+				{"from_node":c["from_node"],
+				"from_port":c["from_port"],
+				"to_node":c["to_node"],
+				"to_port":c["to_port"]}
+			)
+		if EditorInterface.get_inspector().get_edited_object() == nod.node:
+			EditorInterface.inspect_object(current_graph)
+		current_graph.remove_node(nod.node)
+		remove_child(nod)
+		
 ## Callback for [signal GraphEdit.popup_request]. Builds the node-creation
 ## popup menu (from [constant NODE_PATH]) and displays it at the current mouse
 ## position.

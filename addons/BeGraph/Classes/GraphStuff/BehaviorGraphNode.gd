@@ -41,7 +41,12 @@ func set_node_script(path: String) -> void:
 	if not FileAccess.file_exists(path):
 		return
 		
-	node = load(path).new()
+	set_node(load(path).new())
+
+func set_node(n:BehaviorNode) -> void:
+	node = n
+	name = node.resource_name
+	
 	set_node_color("BeGraph/colors/node_colors/%s" % node.node_category)
 	set_slot_enabled_right(0, node.output)
 	set_slot_enabled_left(0, node.input)
@@ -51,13 +56,13 @@ func set_node_script(path: String) -> void:
 	
 	_render_placeholders(node.instruction, h_flow_container, true)
 	if node.conditions.size()>0:
-		set_slot_enabled_right(0,false)
 		set_conditions()
-
+		
 	var tb : HBoxContainer = get_titlebar_hbox()
 	tb.add_theme_constant_override("separation",0)
 	
 	title = self.name
+	position_offset_changed.connect(update_node_offset)
 	
 	var edit_button: Button = Button.new()
 	edit_button.flat = true
@@ -71,7 +76,7 @@ func set_node_script(path: String) -> void:
 	var info_button: Button = Button.new()
 	info_button.flat = true
 	info_button.icon = load("res://addons/BeGraph/Icons/info_icon.svg")
-	info_button.pressed.connect(print_node_info)
+	info_button.pressed.connect(node.print_node_info)
 	tb.add_child(info_button)
 	
 	var delete_button: Button = Button.new()
@@ -79,6 +84,7 @@ func set_node_script(path: String) -> void:
 	delete_button.icon = load("res://addons/BeGraph/Icons/close_icon.svg")
 	delete_button.pressed.connect(delete_request.emit.bind([self.name]))
 	tb.add_child(delete_button)
+	
 	
 ## Renders one row per entry in [member BehaviorNode.conditions]: makes
 ## [member h_box_container] visible and, for each condition, creates a new
@@ -92,6 +98,8 @@ func set_conditions() -> void:
 		add_child(container)
 		_render_placeholders(condition.text, container, false)
 
+func update_node_offset():
+	node.position_in_graph = position_offset
 
 ## Clears (if needed) and fills [param container] with labels/controls generated
 ## from [param text], replacing any [code]{placeholder}[/code] tokens found via
@@ -201,22 +209,3 @@ func set_node_color(category:String):
 	for slot in get_child_count():
 		set("slot/%s/left_color",selection_color)
 		set("slot/%s/right_color",selection_color)
-
-
-func print_node_info()->void:
-	print("NODE: %s"%self)
-	print("   Name: %s"%graph_edit._label_for_script(node.get_script().get_path()))
-	print("   Category: %s"%node.node_category)
-	print("   Successor(s): %s"%str(node.next))
-	print("\nINSTRUCTION")
-	print("   Node instruction: \"%s\""%node.instruction)
-	print("\nVARIABLES [%s]"%node.behavior_properties.size())
-	for v in node.behavior_properties:
-		print("   Variable %s"%v.name)
-		print("      Value: %s"%v.value)
-		print("      Blackboard connections: %s: %s"%[v.blackboard,v.blackboard_key])
-	if node.conditions.size()>0:
-		print("\nCONDITIONS")
-		for condition in node.conditions:
-			print("   Condition %s leads to %s"%[condition.text,condition.next])
-	print("========================================================================")

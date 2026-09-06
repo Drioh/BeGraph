@@ -50,6 +50,8 @@ func _edit(object: Object) -> void:
 	if object is BehaviorGraph:
 		_make_visible(true)
 		if not begraph_dock.loaded_graph == object:
+			if begraph_dock.loaded_graph != null:
+				_on_save_pressed()
 			begraph_dock.load_graph(object)
 
 func _make_visible(visible: bool) -> void:
@@ -58,7 +60,8 @@ func _make_visible(visible: bool) -> void:
 		dock.make_visible()
 		if not begraph_dock.close_button.pressed.is_connected(_on_close_pressed):
 			begraph_dock.close_button.pressed.connect(_on_close_pressed)
-		
+		if not begraph_dock.save_button.pressed.is_connected(_on_save_pressed):
+			begraph_dock.save_button.pressed.connect(_on_save_pressed)
 	else:
 		_remove_dock()
 
@@ -74,6 +77,13 @@ func _remove_dock() -> void:
 
 func _on_close_pressed() -> void:
 	_remove_dock()
+
+func _on_save_pressed() -> void:
+	var result : int = ResourceSaver.save(begraph_dock.loaded_graph)
+	if result == 0: 
+		print("saving \"%s\" to path:%s"%[begraph_dock.loaded_graph,begraph_dock.loaded_graph.resource_path])
+	else:
+		print("Couldn't save resource %s"%begraph_dock.loaded_graph)
 
 #region SETTINGS
 

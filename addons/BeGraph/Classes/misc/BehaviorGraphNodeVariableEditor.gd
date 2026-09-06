@@ -337,7 +337,7 @@ func change_property(property: StringName, new_value: Variant, field: StringName
 ## property matches [member key], refreshes this control's display: shows the
 ## value editor if no blackboard key is bound ([param bb_key] is empty), or
 ## shows the blackboard reference label otherwise.
-func update_variable(k : StringName,bb_key : StringName):
+func update_variable(k : StringName = &"",bb_key : StringName = &""):
 	if key == k:
 		if bb_key == &"":
 			var_property_editor.update_property()
