@@ -1,0 +1,95 @@
+[gd_resource type="Resource" script_class="BehaviorGraph" format=3 uid="uid://bh6eyqwwwhyvx"]
+
+[ext_resource type="Script" uid="uid://ca0cevcqjpnsq" path="res://addons/BeGraph/Classes/misc/BehaviorNode.gd" id="1_b3xf4"]
+[ext_resource type="Script" uid="uid://k00ohks5fdyy" path="res://addons/BeGraph/Classes/Nodes/Move.gd" id="2_cwobf"]
+[ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="2_kusnh"]
+[ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="3_cwobf"]
+
+[sub_resource type="Resource" id="Resource_2e1d4"]
+resource_name = "BehaviorGraphNode"
+script = ExtResource("2_cwobf")
+instruction = "MAMMA, stampo lo {str}, come faccio?{sandro}, {variabile_nulla}, senza contare che {sandro}"
+conditions = Array[Dictionary]([{
+"next": null,
+"text": "Prima Condizione"
+}, {
+"next": null,
+"text": "Questa è la seconda condizione"
+}, {
+"next": null,
+"text": "Questa è la terza condizione con la variabile {sandro}"
+}])
+behavior_properties = Array[Dictionary]([{
+"blackboard": null,
+"blackboard_key": &"",
+"class_name": "",
+"hint": 0,
+"hint_string": "",
+"name": "str",
+"type": 5,
+"usage": 6,
+"value": Vector2(1, 1)
+}, {
+"blackboard": null,
+"blackboard_key": &"",
+"class_name": "",
+"hint": 0,
+"hint_string": "",
+"name": "sandro",
+"type": 4,
+"usage": 6,
+"value": ""
+}, {
+"blackboard": null,
+"blackboard_key": &"",
+"class_name": "",
+"hint": 2,
+"hint_string": "primo_valore,secondo_valore,terzo_valore",
+"name": "variabile_nulla",
+"type": 2,
+"usage": 6,
+"value": 0
+}])
+node_category = "action_node"
+input = true
+position_in_graph = Vector2(805, -69)
+str = Vector2(1, 1)
+sandro = ""
+variabile_nulla = 0
+
+[sub_resource type="Resource" id="Resource_4igop"]
+resource_name = "start_node"
+script = ExtResource("2_kusnh")
+instruction = "Access Point: {label}"
+next = Array[ExtResource("1_b3xf4")]([SubResource("Resource_2e1d4"), SubResource("Resource_2e1d4")])
+behavior_properties = Array[Dictionary]([{
+"blackboard": null,
+"blackboard_key": &"",
+"class_name": "",
+"hint": 0,
+"hint_string": "",
+"name": "label",
+"type": 2,
+"usage": 6,
+"value": 4
+}])
+node_category = "access_point_node"
+output = true
+is_starting_node = true
+label = 4
+
+[resource]
+script = ExtResource("3_cwobf")
+nodes = Array[ExtResource("1_b3xf4")]([SubResource("Resource_4igop"), SubResource("Resource_2e1d4")])
+connections = Array[Dictionary]([{
+"from_node": &"start_node2",
+"from_port": 0,
+"to_node": &"BehaviorGraphNode",
+"to_port": 0
+}, {
+"from_node": &"start_node",
+"from_port": 0,
+"to_node": &"BehaviorGraphNode",
+"to_port": 0
+}])
+metadata/_custom_type_script = "uid://d25yjg1utgxu"

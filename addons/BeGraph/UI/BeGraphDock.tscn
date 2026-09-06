@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://dxcvo6c77p5bd"]
 
 [ext_resource type="Script" uid="uid://bse806knnrtb1" path="res://addons/BeGraph/Classes/misc/BeGraphDock.gd" id="1_cgses"]
-[ext_resource type="Texture2D" uid="uid://clw4llfqosy5e" path="res://addons/BeGraph/Icons/info_icon.svg" id="2_4n6tn"]
 [ext_resource type="Texture2D" uid="uid://csnxon045mpad" path="res://addons/BeGraph/Icons/edit_icon.svg" id="2_vf8wo"]
 [ext_resource type="Texture2D" uid="uid://bqgwx8fm6ojbg" path="res://addons/BeGraph/Icons/save_icon.svg" id="3_5bs10"]
 [ext_resource type="Texture2D" uid="uid://dudipaux5f7v" path="res://addons/BeGraph/Icons/close_icon.svg" id="3_vf8wo"]
@@ -47,6 +46,9 @@ icon = ExtResource("2_vf8wo")
 flat = true
 icon_alignment = 1
 
+[node name="VSeparator" type="VSeparator" parent="VBoxContainer/HBoxContainer" unique_id=471265851]
+layout_mode = 2
+
 [node name="SaveButton" type="Button" parent="VBoxContainer/HBoxContainer" unique_id=1276617218]
 unique_name_in_owner = true
 custom_maximum_size = Vector2(24, 24)
@@ -57,22 +59,6 @@ offset_transform_enabled = true
 offset_transform_scale = Vector2(0.8, 0.8)
 tooltip_text = "Print info for all nodes in this graph"
 icon = ExtResource("3_5bs10")
-flat = true
-icon_alignment = 1
-
-[node name="VSeparator" type="VSeparator" parent="VBoxContainer/HBoxContainer" unique_id=471265851]
-layout_mode = 2
-
-[node name="InfoButton" type="Button" parent="VBoxContainer/HBoxContainer" unique_id=1279037449]
-unique_name_in_owner = true
-custom_maximum_size = Vector2(24, 24)
-layout_mode = 2
-size_flags_horizontal = 4
-size_flags_vertical = 4
-offset_transform_enabled = true
-offset_transform_scale = Vector2(0.8, 0.8)
-tooltip_text = "Print info for all nodes in this graph"
-icon = ExtResource("2_4n6tn")
 flat = true
 icon_alignment = 1
 

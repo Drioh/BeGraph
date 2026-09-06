@@ -23,9 +23,6 @@ var shared_blackboard : BehaviorGraphBlackboard
 ## (built dynamically from [constant NODE_PATH]).
 var _node_popup: PopupMenu
 
-## Button used to print debug information about every node in the graph.
-@onready var info_button: Button = %InfoButton
-
 ## Label displaying the name/path of the currently loaded [BehaviorGraph].
 @onready var graph_label: Label = %GraphLabel
 
@@ -53,13 +50,13 @@ func connect_nodes(from_node: StringName, from_port: int, to_node: StringName, t
 	if  cond_1 and cond_2 and cond_3:
 		push_error("Node %s does not allow multiple outputs"%from_node)
 		return
-	f_node.node.add_next(t_node.node)
 	var c:Dictionary = {
 		"from_node":from_node,
 		"from_port":from_port,
 		"to_node":to_node,
 		"to_port":to_port
 	}
+	f_node.node.add_next(t_node.node,from_port)
 	current_graph.add_connection(c)
 	connect_node(from_node,from_port,to_node,to_port)
 
@@ -116,6 +113,7 @@ func add_node(script_path: String = "") -> void:
 		node.node.position_in_graph = node.position_offset
 		node.node.resource_name = node.name
 		current_graph.add_node(node.node)
+		
 		
 		node.delete_request.connect(_on_delete_nodes_request)
 	

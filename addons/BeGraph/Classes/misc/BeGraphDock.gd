@@ -2,7 +2,6 @@
 extends Control
 
 @onready var graph_label: Label = %GraphLabel
-@onready var info_button: Button = %InfoButton
 @onready var save_button: Button = %SaveButton
 @onready var edit_button: Button = %EditButton
 @onready var close_button: Button = %CloseButton
@@ -11,16 +10,7 @@ extends Control
 var loaded_graph : BehaviorGraph = null
 
 func _ready() -> void:
-	info_button.pressed.connect(print_nodes_info)
 	edit_button.pressed.connect(edit_graph)
-
-## Debug utility that prints, for every [BehaviorGraphNode] child, its
-## underlying [BehaviorNode]'s name, category, successors, instruction,
-## variables (with their blackboard bindings) and conditions.
-func print_nodes_info()->void:
-	for node in loaded_graph.nodes:
-		node.print_node_info()
-		print("========================================================================")
 
 func edit_graph()->void:
 	EditorInterface.edit_resource(loaded_graph)

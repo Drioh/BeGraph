@@ -55,7 +55,7 @@ func _edit(object: Object) -> void:
 			begraph_dock.load_graph(object)
 
 func _make_visible(visible: bool) -> void:
-	if visible:
+	if visible or EditorInterface.get_inspector().get_edited_object() is BehaviorGraph:
 		_add_dock()
 		dock.make_visible()
 		if not begraph_dock.close_button.pressed.is_connected(_on_close_pressed):

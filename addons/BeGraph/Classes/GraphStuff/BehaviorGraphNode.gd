@@ -45,7 +45,6 @@ func set_node_script(path: String) -> void:
 
 func set_node(n:BehaviorNode) -> void:
 	node = n
-	name = node.resource_name
 	
 	set_node_color("BeGraph/colors/node_colors/%s" % node.node_category)
 	set_slot_enabled_right(0, node.output)
@@ -72,12 +71,7 @@ func set_node(n:BehaviorNode) -> void:
 	
 	var separator = VSeparator.new()
 	tb.add_child(separator)
-	
-	var info_button: Button = Button.new()
-	info_button.flat = true
-	info_button.icon = load("res://addons/BeGraph/Icons/info_icon.svg")
-	info_button.pressed.connect(node.print_node_info)
-	tb.add_child(info_button)
+
 	
 	var delete_button: Button = Button.new()
 	delete_button.flat = true
