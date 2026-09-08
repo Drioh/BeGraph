@@ -45,7 +45,7 @@ func set_node_script(path: String) -> void:
 
 func set_node(n:BehaviorNode) -> void:
 	node = n
-	
+
 	set_slot_enabled_right(0, node.output)
 	set_slot_enabled_left(0, node.input)
 	
@@ -58,8 +58,10 @@ func set_node(n:BehaviorNode) -> void:
 		
 	var tb : HBoxContainer = get_titlebar_hbox()
 	tb.add_theme_constant_override("separation",0)
+	tb.get_child(0).add_theme_font_size_override("font_size",18)
 	
-	title = self.name
+	title = self.name.validate_node_name()
+	node.resource_name = title
 	position_offset_changed.connect(update_node_offset)
 	
 	var edit_button: Button = Button.new()
@@ -151,6 +153,8 @@ func _add_text_label(segment: String, container : HFlowContainer) -> void:
 	l.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	l.size_flags_vertical=Control.SIZE_SHRINK_CENTER
 	l.vertical_alignment=VERTICAL_ALIGNMENT_CENTER
+	l.add_theme_font_size_override("font_size",16)
+	
 	container.add_child(l)
 
 ## Appends a [Label] reading "null" to [param container], with a tooltip
@@ -167,6 +171,7 @@ func _add_null_label(segment: String,container : HFlowContainer) -> void:
 	l.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	l.size_flags_vertical=Control.SIZE_SHRINK_CENTER
 	l.vertical_alignment=VERTICAL_ALIGNMENT_CENTER
+	l.add_theme_font_size_override("font_size",16)
 	
 	container.add_child(l)
 

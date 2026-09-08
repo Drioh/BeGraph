@@ -6,7 +6,7 @@
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kmv4x"]
 resource_local_to_scene = true
 content_margin_left = 10.0
-content_margin_top = 0.0
+content_margin_top = 7.0
 content_margin_right = 10.0
 content_margin_bottom = 15.0
 bg_color = Color(0.161, 0.161, 0.161, 1)
@@ -16,7 +16,7 @@ corner_radius_bottom_left = 10
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_y0ctl"]
 resource_local_to_scene = true
 content_margin_left = 10.0
-content_margin_top = 0.0
+content_margin_top = 7.0
 content_margin_right = 10.0
 content_margin_bottom = 15.0
 bg_color = Color(0.161, 0.161, 0.161, 1)
@@ -32,6 +32,7 @@ anti_aliasing = false
 resource_local_to_scene = true
 content_margin_left = 15.0
 content_margin_top = 7.0
+content_margin_bottom = 7.0
 bg_color = Color(0.161, 0.161, 0.161, 1)
 corner_radius_top_left = 10
 corner_radius_top_right = 10
@@ -41,6 +42,7 @@ expand_margin_bottom = 1.0
 resource_local_to_scene = true
 content_margin_left = 15.0
 content_margin_top = 7.0
+content_margin_bottom = 7.0
 bg_color = Color(0.161, 0.161, 0.161, 1)
 border_width_left = 2
 border_width_top = 2

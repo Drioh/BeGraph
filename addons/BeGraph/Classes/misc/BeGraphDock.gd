@@ -12,7 +12,6 @@ var loaded_graph : BehaviorGraph = null
 
 func _ready() -> void:
 	edit_button.pressed.connect(edit_graph)
-
 func edit_graph()->void:
 	EditorInterface.edit_resource(loaded_graph)
 

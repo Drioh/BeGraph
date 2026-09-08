@@ -272,7 +272,7 @@ func _ready() -> void:
 	bb_link_button.show()
 	bb_link_button.about_to_popup.connect(_populate_popup,CONNECT_DEFERRED)
 	bb_unlink_button.hide()
-	custom_minimum_size.y=35
+	custom_minimum_size.y=20
 
 
 ## Initializes this control for editing property [param k] (of type [param t])
@@ -314,7 +314,6 @@ func setup_variable_editor(n : BehaviorNode,t:int,k:StringName,l_bb:BehaviorGrap
 	editor.set_object_and_property(node, k)
 	editor.draw_label=false
 	editor.selectable=false
-	editor.custom_minimum_size.x=50
 	h_box_container.add_child(editor)
 	h_box_container.move_child(editor,1)
 	var_property_editor=editor

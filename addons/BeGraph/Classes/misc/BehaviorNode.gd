@@ -198,7 +198,7 @@ func add_next(n : BehaviorNode, from_port : int)->void:
 func remove_next(n:BehaviorNode, from_port : int)->void:
 	if output:
 		if n in next:
-			next.erase(next)
+			next.erase(n)
 		return
 	else:
 		if conditions[from_port]["next"] == n:

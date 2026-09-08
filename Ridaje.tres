@@ -1,0 +1,157 @@
+[gd_resource type="Resource" script_class="BehaviorGraph" format=3 uid="uid://dba8o2d0ubse5"]
+
+[ext_resource type="Script" uid="uid://ca0cevcqjpnsq" path="res://addons/BeGraph/Classes/misc/BehaviorNode.gd" id="1_e88sb"]
+[ext_resource type="Script" uid="uid://be01k3jh4ckwt" path="res://addons/BeGraph/Classes/Nodes/Actions/Print.gd" id="2_l2icv"]
+[ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="2_x1k1m"]
+[ext_resource type="Script" uid="uid://pjibqyy3ifwn" path="res://addons/BeGraph/Classes/Nodes/Flow/ValueComparator.gd" id="3_k2wi2"]
+[ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="3_l2icv"]
+
+[sub_resource type="Resource" id="Resource_l2icv"]
+resource_name = "_GraphNode_26246"
+script = ExtResource("2_l2icv")
+instruction = "Prints {value}"
+behavior_properties = Array[Dictionary]([{
+"blackboard": null,
+"blackboard_key": &"",
+"class_name": "",
+"hint": 0,
+"hint_string": "",
+"name": "value",
+"type": 0,
+"usage": 131072,
+"value": null
+}])
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(2047, -115)
+
+[sub_resource type="Resource" id="Resource_bcd1r"]
+resource_name = "_GraphNode_27573"
+script = ExtResource("2_l2icv")
+instruction = "Prints {value}"
+behavior_properties = Array[Dictionary]([{
+"blackboard": null,
+"blackboard_key": &"",
+"class_name": "",
+"hint": 0,
+"hint_string": "",
+"name": "value",
+"type": 0,
+"usage": 131072,
+"value": null
+}])
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(2070, 161)
+
+[sub_resource type="Resource" id="Resource_b6ids"]
+resource_name = "_GraphNode_25835"
+script = ExtResource("3_k2wi2")
+instruction = "Compare {value_1} and {value_2}"
+conditions = Array[Dictionary]([{
+"next": SubResource("Resource_l2icv"),
+"text": "{value_1} > {value_2}"
+}, {
+"next": SubResource("Resource_bcd1r"),
+"text": "{value_1} = {value_2}"
+}, {
+"next": null,
+"text": "{value_1} < {value_2}"
+}])
+behavior_properties = Array[Dictionary]([{
+"blackboard": null,
+"blackboard_key": &"",
+"class_name": "",
+"hint": 0,
+"hint_string": "",
+"name": "value_1",
+"type": 2,
+"usage": 6,
+"value": 0
+}, {
+"blackboard": null,
+"blackboard_key": &"",
+"class_name": "",
+"hint": 0,
+"hint_string": "",
+"name": "value_2",
+"type": 2,
+"usage": 6,
+"value": 0
+}])
+node_category = "control_flow_node"
+input = true
+position_in_graph = Vector2(1311, -92)
+value_1 = 0
+value_2 = 0
+
+[sub_resource type="Resource" id="Resource_turyu"]
+resource_name = "BehaviorGraphNode"
+script = ExtResource("2_l2icv")
+instruction = "Prints {value}"
+next = Array[ExtResource("1_e88sb")]([SubResource("Resource_b6ids")])
+behavior_properties = Array[Dictionary]([{
+"blackboard": null,
+"blackboard_key": &"",
+"class_name": "",
+"hint": 0,
+"hint_string": "",
+"name": "value",
+"type": 0,
+"usage": 131072,
+"value": null
+}])
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(690, -69)
+
+[sub_resource type="Resource" id="Resource_k2wi2"]
+resource_name = "start_node"
+script = ExtResource("2_x1k1m")
+instruction = "Access Point: {label}"
+next = Array[ExtResource("1_e88sb")]([SubResource("Resource_turyu")])
+behavior_properties = Array[Dictionary]([{
+"blackboard": null,
+"blackboard_key": &"",
+"class_name": "",
+"hint": 0,
+"hint_string": "",
+"name": "label",
+"type": 2,
+"usage": 6,
+"value": 4
+}])
+node_category = "access_point_node"
+output = true
+position_in_graph = Vector2(184, -69)
+is_starting_node = true
+label = 4
+
+[resource]
+script = ExtResource("3_l2icv")
+nodes = Array[ExtResource("1_e88sb")]([SubResource("Resource_k2wi2"), SubResource("Resource_turyu"), SubResource("Resource_b6ids"), SubResource("Resource_l2icv"), SubResource("Resource_bcd1r")])
+connections = Array[Dictionary]([{
+"from_node": "start_node",
+"from_port": 0,
+"to_node": "BehaviorGraphNode",
+"to_port": 0
+}, {
+"from_node": "BehaviorGraphNode",
+"from_port": 0,
+"to_node": "_GraphNode_25835",
+"to_port": 0
+}, {
+"from_node": "_GraphNode_25835",
+"from_port": 0,
+"to_node": "_GraphNode_26246",
+"to_port": 0
+}, {
+"from_node": "_GraphNode_25835",
+"from_port": 1,
+"to_node": "_GraphNode_27573",
+"to_port": 0
+}])
+metadata/_custom_type_script = "uid://d25yjg1utgxu"
