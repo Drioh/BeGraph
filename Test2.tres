@@ -1,14 +1,14 @@
-[gd_resource type="Resource" script_class="BehaviorGraph" format=3 uid="uid://b8634stfwr8aj"]
+[gd_resource type="Resource" script_class="BehaviorGraph" format=3 uid="uid://dyn5epr1ovjun"]
 
-[ext_resource type="Script" uid="uid://ca0cevcqjpnsq" path="res://addons/BeGraph/Classes/misc/BehaviorNode.gd" id="1_uauhc"]
-[ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="2_3gp3i"]
-[ext_resource type="Script" uid="uid://be01k3jh4ckwt" path="res://addons/BeGraph/Classes/Nodes/Actions/Print.gd" id="2_xonew"]
-[ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="3_xonew"]
-[ext_resource type="Script" uid="uid://pjibqyy3ifwn" path="res://addons/BeGraph/Classes/Nodes/Flow/NumberComparator.gd" id="6_g03ti"]
+[ext_resource type="Script" uid="uid://ca0cevcqjpnsq" path="res://addons/BeGraph/Classes/misc/BehaviorNode.gd" id="1_0jyxs"]
+[ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="2_7krfb"]
+[ext_resource type="Script" uid="uid://be01k3jh4ckwt" path="res://addons/BeGraph/Classes/Nodes/Actions/Print.gd" id="2_10b3j"]
+[ext_resource type="Script" uid="uid://pjibqyy3ifwn" path="res://addons/BeGraph/Classes/Nodes/Flow/NumberComparator.gd" id="3_3wxud"]
+[ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="3_10b3j"]
 
-[sub_resource type="Resource" id="Resource_xonew"]
-resource_name = "@GraphNode@33473"
-script = ExtResource("2_xonew")
+[sub_resource type="Resource" id="Resource_3y5r8"]
+resource_name = "@GraphNode@40468"
+script = ExtResource("2_10b3j")
 instruction = "Prints {value}"
 behavior_properties = Array[Dictionary]([{
 "blackboard": null,
@@ -19,16 +19,16 @@ behavior_properties = Array[Dictionary]([{
 "name": "value",
 "type": 0,
 "usage": 131072,
-"value": null
+"value": "Maggiore"
 }])
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1334, -138)
+position_in_graph = Vector2(1587, -92)
 
-[sub_resource type="Resource" id="Resource_y3mkl"]
-resource_name = "@GraphNode@33556"
-script = ExtResource("2_xonew")
+[sub_resource type="Resource" id="Resource_10rfl"]
+resource_name = "@GraphNode@40551"
+script = ExtResource("2_10b3j")
 instruction = "Prints {value}"
 behavior_properties = Array[Dictionary]([{
 "blackboard": null,
@@ -39,16 +39,16 @@ behavior_properties = Array[Dictionary]([{
 "name": "value",
 "type": 0,
 "usage": 131072,
-"value": null
+"value": "Uguale"
 }])
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1380, -23)
+position_in_graph = Vector2(1564, 23)
 
-[sub_resource type="Resource" id="Resource_ihbpk"]
-resource_name = "@GraphNode@33639"
-script = ExtResource("2_xonew")
+[sub_resource type="Resource" id="Resource_po7bv"]
+resource_name = "@GraphNode@40634"
+script = ExtResource("2_10b3j")
 instruction = "Prints {value}"
 behavior_properties = Array[Dictionary]([{
 "blackboard": null,
@@ -59,25 +59,25 @@ behavior_properties = Array[Dictionary]([{
 "name": "value",
 "type": 0,
 "usage": 131072,
-"value": null
+"value": "Minore"
 }])
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1426, 115)
+position_in_graph = Vector2(1564, 138)
 
-[sub_resource type="Resource" id="Resource_g03ti"]
+[sub_resource type="Resource" id="Resource_v6yd7"]
 resource_name = "BehaviorGraphNode"
-script = ExtResource("6_g03ti")
+script = ExtResource("3_3wxud")
 instruction = "Compare {value_1} and {value_2}"
 conditions = Array[Dictionary]([{
-"next": SubResource("Resource_xonew"),
+"next": SubResource("Resource_3y5r8"),
 "text": "{value_1} > {value_2}"
 }, {
-"next": SubResource("Resource_y3mkl"),
+"next": SubResource("Resource_10rfl"),
 "text": "{value_1} = {value_2}"
 }, {
-"next": SubResource("Resource_ihbpk"),
+"next": SubResource("Resource_po7bv"),
 "text": "{value_1} < {value_2}"
 }])
 behavior_properties = Array[Dictionary]([{
@@ -89,7 +89,7 @@ behavior_properties = Array[Dictionary]([{
 "name": "value_1",
 "type": 2,
 "usage": 6,
-"value": 4
+"value": 2
 }, {
 "blackboard": null,
 "blackboard_key": &"",
@@ -103,15 +103,15 @@ behavior_properties = Array[Dictionary]([{
 }])
 node_category = "control_flow_node"
 input = true
-position_in_graph = Vector2(713, -46)
-value_1 = 4
+position_in_graph = Vector2(805, -92)
+value_1 = 2
 value_2 = 5
 
-[sub_resource type="Resource" id="Resource_uauhc"]
+[sub_resource type="Resource" id="Resource_3wxud"]
 resource_name = "start_node"
-script = ExtResource("2_3gp3i")
+script = ExtResource("2_7krfb")
 instruction = "Access Point: {label}"
-next = Array[ExtResource("1_uauhc")]([SubResource("Resource_g03ti")])
+next = Array[ExtResource("1_0jyxs")]([SubResource("Resource_v6yd7")])
 behavior_properties = Array[Dictionary]([{
 "blackboard": null,
 "blackboard_key": &"",
@@ -129,8 +129,8 @@ is_starting_node = true
 label = 4
 
 [resource]
-script = ExtResource("3_xonew")
-nodes = Array[ExtResource("1_uauhc")]([SubResource("Resource_uauhc"), SubResource("Resource_g03ti"), SubResource("Resource_xonew"), SubResource("Resource_y3mkl"), SubResource("Resource_ihbpk")])
+script = ExtResource("3_10b3j")
+nodes = Array[ExtResource("1_0jyxs")]([SubResource("Resource_3wxud"), SubResource("Resource_v6yd7"), SubResource("Resource_3y5r8"), SubResource("Resource_10rfl"), SubResource("Resource_po7bv")])
 connections = Array[Dictionary]([{
 "from_node": &"start_node",
 "from_port": 0,
@@ -139,17 +139,17 @@ connections = Array[Dictionary]([{
 }, {
 "from_node": &"BehaviorGraphNode",
 "from_port": 0,
-"to_node": &"@GraphNode@33473",
+"to_node": &"@GraphNode@40468",
 "to_port": 0
 }, {
 "from_node": &"BehaviorGraphNode",
 "from_port": 1,
-"to_node": &"@GraphNode@33556",
+"to_node": &"@GraphNode@40551",
 "to_port": 0
 }, {
 "from_node": &"BehaviorGraphNode",
 "from_port": 2,
-"to_node": &"@GraphNode@33639",
+"to_node": &"@GraphNode@40634",
 "to_port": 0
 }])
 metadata/_custom_type_script = "uid://d25yjg1utgxu"

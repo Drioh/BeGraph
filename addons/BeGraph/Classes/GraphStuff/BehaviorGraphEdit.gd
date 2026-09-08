@@ -44,12 +44,18 @@ func connect_nodes(from_node: StringName, from_port: int, to_node: StringName, t
 	var f_node : BehaviorGraphNode = get_node(NodePath(from_node))
 	var t_node : BehaviorGraphNode = get_node(NodePath(to_node))
 	
-	var cond_1 : bool = from_node in get_connection_starting_nodes()
-	var cond_2 : bool = not f_node.node.allows_multiple_outputs
-	var cond_3 : bool = get_connection_count(from_node,from_port)>0
-	if  cond_1 and cond_2 and cond_3:
-		push_error("Node %s does not allow multiple outputs"%from_node)
-		return
+	if f_node.node.conditions.size() > 0:
+		# Each condition can have only one connection: if this condition already
+		# has an exiting connection, deny a new one.
+		if is_connection_from_node_from_port_enabled(from_node, from_port):
+			push_error("Output %d of node %s is a condition and already has a connection" % [from_port, from_node])
+			return
+	elif not f_node.node.allows_multiple_outputs:
+		# A nod that does not have conditions and that allows only one exit
+		# if there's already an exit, deny it.
+		if get_connection_list_from_node(from_node).size() > 0:
+			push_error("Node %s does not allow multiple outputs" % from_node)
+			return
 	var c:Dictionary = {
 		"from_node":from_node,
 		"from_port":from_port,
@@ -57,7 +63,8 @@ func connect_nodes(from_node: StringName, from_port: int, to_node: StringName, t
 		"to_port":to_port
 	}
 	f_node.node.add_next(t_node.node,from_port)
-	current_graph.add_connection(c)
+	if c not in current_graph.connections:
+		current_graph.add_connection(c)
 	connect_node(from_node,from_port,to_node,to_port)
 
 ## Callback for [signal GraphEdit.disconnection_request]. Removes the successor
@@ -99,11 +106,10 @@ func set_graph(graph: BehaviorGraph) -> void:
 	
 	local_blackboard=current_graph.local_blackboard
 	shared_blackboard=current_graph.shared_blackboard
-	
 	for node in current_graph.nodes:
 		load_node(node)
 	for connection in current_graph.connections:
-		connect_node(connection["from_node"],connection["from_port"],connection["to_node"],connection["to_port"])
+		connect_node(connection["from_node"],connection["from_port"],connection["to_node"],connection["to_port"],true)
 ## Instantiates a new [BehaviorGraphNode] visual node, adds it as a child of
 ## this graph, and, if [param script_path] is provided, assigns it the
 ## [BehaviorNode] script found at that path.
@@ -125,10 +131,10 @@ func add_node(script_path: String = "") -> void:
 func load_node(n:BehaviorNode):
 	var node : BehaviorGraphNode = NODE.instantiate()
 	add_child(node)
+	node.name=n.resource_name
 	node.graph_edit = self
 	node.set_node(n)
 	node.position_offset = n.position_in_graph
-	node.name=n.resource_name
 	node.delete_request.connect(_on_delete_nodes_request)
 	
 ## Callback for [signal GraphEdit.delete_nodes_request]. Removes each requested
@@ -247,3 +253,8 @@ func get_connection_ending_nodes()->Array[StringName]:
 	for c in connections:
 		if c["to_node"] not in ret: ret.append(c["to_node"])
 	return ret
+
+func is_connection_from_node_from_port_enabled(from_node:StringName,from_port:int)-> bool:
+	for c in get_connection_list_from_node(from_node):
+		if c["from_node"] == from_node and c["from_port"]==from_port: return true
+	return false

@@ -1,0 +1,26 @@
+@tool
+extends BehaviorNode
+
+const DISPLAY_NAME : String = "Sequence"
+const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon.svg"
+
+func set_instruction() -> String:
+	return "Sequence"
+
+func tick() -> Status:
+	for child in next:
+		var status : Status = child.tick()
+		if status == Status.FAILURE or status == Status.RUNNING:
+			return status
+	return Status.SUCCESS
+
+func set_node_category()->String: return "control_flow_node"
+
+func set_input()->bool: return true
+
+func set_output()->bool : return true
+
+func set_allows_multiple_outputs() -> bool: return true
+
+func set_properties()-> void:
+	pass

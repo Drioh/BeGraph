@@ -8,7 +8,7 @@ var _dock_added : bool = false
 
 const BASE_CATEGORIES: Dictionary = {
 	"action_node": [Color(0.161, 0.161, 0.161, 1.0), Color(0.824, 0.784, 0.745, 1.0)],
-	"access_point_node": [Color(0.18, 0.396, 0.29, 1.0), Color(0.467, 1.0, 0.6, 1.0)],
+	"access_point_node": [Color(0.075, 0.161, 0.157, 1.0), Color(0.467, 1.0, 0.6, 1.0)],
 	"control_flow_node": [Color(0.224, 0.196, 0.31, 1.0), Color(0.706, 0.58, 0.953, 1.0)],
 	"comment_node": [Color(0.447, 0.318, 0.263, 1.0), Color(1.0, 0.722, 0.537, 1.0)],
 }
