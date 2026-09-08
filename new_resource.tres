@@ -1,0 +1,155 @@
+[gd_resource type="Resource" script_class="BehaviorGraph" format=3 uid="uid://b8634stfwr8aj"]
+
+[ext_resource type="Script" uid="uid://ca0cevcqjpnsq" path="res://addons/BeGraph/Classes/misc/BehaviorNode.gd" id="1_uauhc"]
+[ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="2_3gp3i"]
+[ext_resource type="Script" uid="uid://be01k3jh4ckwt" path="res://addons/BeGraph/Classes/Nodes/Actions/Print.gd" id="2_xonew"]
+[ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="3_xonew"]
+[ext_resource type="Script" uid="uid://pjibqyy3ifwn" path="res://addons/BeGraph/Classes/Nodes/Flow/NumberComparator.gd" id="6_g03ti"]
+
+[sub_resource type="Resource" id="Resource_xonew"]
+resource_name = "@GraphNode@33473"
+script = ExtResource("2_xonew")
+instruction = "Prints {value}"
+behavior_properties = Array[Dictionary]([{
+"blackboard": null,
+"blackboard_key": &"",
+"class_name": "",
+"hint": 0,
+"hint_string": "",
+"name": "value",
+"type": 0,
+"usage": 131072,
+"value": null
+}])
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(1334, -138)
+
+[sub_resource type="Resource" id="Resource_y3mkl"]
+resource_name = "@GraphNode@33556"
+script = ExtResource("2_xonew")
+instruction = "Prints {value}"
+behavior_properties = Array[Dictionary]([{
+"blackboard": null,
+"blackboard_key": &"",
+"class_name": "",
+"hint": 0,
+"hint_string": "",
+"name": "value",
+"type": 0,
+"usage": 131072,
+"value": null
+}])
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(1380, -23)
+
+[sub_resource type="Resource" id="Resource_ihbpk"]
+resource_name = "@GraphNode@33639"
+script = ExtResource("2_xonew")
+instruction = "Prints {value}"
+behavior_properties = Array[Dictionary]([{
+"blackboard": null,
+"blackboard_key": &"",
+"class_name": "",
+"hint": 0,
+"hint_string": "",
+"name": "value",
+"type": 0,
+"usage": 131072,
+"value": null
+}])
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(1426, 115)
+
+[sub_resource type="Resource" id="Resource_g03ti"]
+resource_name = "BehaviorGraphNode"
+script = ExtResource("6_g03ti")
+instruction = "Compare {value_1} and {value_2}"
+conditions = Array[Dictionary]([{
+"next": SubResource("Resource_xonew"),
+"text": "{value_1} > {value_2}"
+}, {
+"next": SubResource("Resource_y3mkl"),
+"text": "{value_1} = {value_2}"
+}, {
+"next": SubResource("Resource_ihbpk"),
+"text": "{value_1} < {value_2}"
+}])
+behavior_properties = Array[Dictionary]([{
+"blackboard": null,
+"blackboard_key": &"",
+"class_name": "",
+"hint": 0,
+"hint_string": "",
+"name": "value_1",
+"type": 2,
+"usage": 6,
+"value": 4
+}, {
+"blackboard": null,
+"blackboard_key": &"",
+"class_name": "",
+"hint": 0,
+"hint_string": "",
+"name": "value_2",
+"type": 2,
+"usage": 6,
+"value": 5
+}])
+node_category = "control_flow_node"
+input = true
+position_in_graph = Vector2(713, -46)
+value_1 = 4
+value_2 = 5
+
+[sub_resource type="Resource" id="Resource_uauhc"]
+resource_name = "start_node"
+script = ExtResource("2_3gp3i")
+instruction = "Access Point: {label}"
+next = Array[ExtResource("1_uauhc")]([SubResource("Resource_g03ti")])
+behavior_properties = Array[Dictionary]([{
+"blackboard": null,
+"blackboard_key": &"",
+"class_name": "",
+"hint": 0,
+"hint_string": "",
+"name": "label",
+"type": 2,
+"usage": 6,
+"value": 4
+}])
+node_category = "access_point_node"
+output = true
+is_starting_node = true
+label = 4
+
+[resource]
+script = ExtResource("3_xonew")
+nodes = Array[ExtResource("1_uauhc")]([SubResource("Resource_uauhc"), SubResource("Resource_g03ti"), SubResource("Resource_xonew"), SubResource("Resource_y3mkl"), SubResource("Resource_ihbpk")])
+connections = Array[Dictionary]([{
+"from_node": &"start_node",
+"from_port": 0,
+"to_node": &"BehaviorGraphNode",
+"to_port": 0
+}, {
+"from_node": &"BehaviorGraphNode",
+"from_port": 0,
+"to_node": &"@GraphNode@33473",
+"to_port": 0
+}, {
+"from_node": &"BehaviorGraphNode",
+"from_port": 1,
+"to_node": &"@GraphNode@33556",
+"to_port": 0
+}, {
+"from_node": &"BehaviorGraphNode",
+"from_port": 2,
+"to_node": &"@GraphNode@33639",
+"to_port": 0
+}])
+metadata/_custom_type_script = "uid://d25yjg1utgxu"

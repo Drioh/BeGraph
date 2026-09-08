@@ -270,7 +270,7 @@ func _ready() -> void:
 	
 	bb_reference.hide()
 	bb_link_button.show()
-	bb_link_button.about_to_popup.connect(_populate_popup)
+	bb_link_button.about_to_popup.connect(_populate_popup,CONNECT_DEFERRED)
 	bb_unlink_button.hide()
 	custom_minimum_size.y=35
 
@@ -284,9 +284,9 @@ func _ready() -> void:
 func setup_variable_editor(n : BehaviorNode,t:int,k:StringName,l_bb:BehaviorGraphBlackboard,s_bb:BehaviorGraphBlackboard) -> bool:
 	type = t
 	local_blackboard=l_bb
-	local_variable_submenu.index_pressed.connect(_on_popup_index_pressed.bind(local_variable_submenu))
+	local_variable_submenu.index_pressed.connect(_on_popup_index_pressed.bind(local_variable_submenu),CONNECT_DEFERRED)
 	shared_blackboard=s_bb
-	shared_variable_submenu.index_pressed.connect(_on_popup_index_pressed.bind(shared_variable_submenu))
+	shared_variable_submenu.index_pressed.connect(_on_popup_index_pressed.bind(shared_variable_submenu),CONNECT_DEFERRED)
 	
 	node = n
 	key = k
@@ -314,12 +314,13 @@ func setup_variable_editor(n : BehaviorNode,t:int,k:StringName,l_bb:BehaviorGrap
 	editor.set_object_and_property(node, k)
 	editor.draw_label=false
 	editor.selectable=false
-	editor.custom_minimum_size.x=125
-	editor.size_flags_horizontal=Control.SIZE_EXPAND_FILL
-	editor.size_flags_vertical=Control.SIZE_SHRINK_CENTER
+	editor.custom_minimum_size.x=50
 	h_box_container.add_child(editor)
 	h_box_container.move_child(editor,1)
 	var_property_editor=editor
+	var_property_editor.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+	var_property_editor.size_flags_vertical=Control.SIZE_SHRINK_CENTER
+	size_flags_horizontal=Control.SIZE_SHRINK_BEGIN
 	node.changed.connect(update_variable)
 	editor.property_changed.connect(change_property)
 	_populate_popup()
@@ -437,7 +438,10 @@ func _populate_popup() -> void:
 ## [member fallback_layer] accordingly; clears the tint once the drag ends.
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_DRAG_BEGIN:
-		if get_viewport().gui_get_drag_data().has("resource") and typeof(get_viewport().gui_get_drag_data()["resource"].value) in CONVERSION_DICT[type]:
+		var drag_data = get_viewport().gui_get_drag_data()
+		var cond_1 : bool = drag_data.has("resource") and typeof(drag_data["resource"].value) in CONVERSION_DICT[type]
+		var cond_2 : bool = typeof(drag_data["resource"].value) == TYPE_NIL
+		if cond_1 or cond_2:
 			fallback_layer.set_indexed("theme_override_styles/panel:bg_color",ProjectSettings.get_setting("BeGraph/colors/allowed_variable_color_background"))
 			fallback_layer.set_indexed("theme_override_styles/panel:border_color",ProjectSettings.get_setting("BeGraph/colors/allowed_variable_color_border"))
 		else:
@@ -452,7 +456,11 @@ func _notification(what: int) -> void:
 ## position lands on a valid slot within this control.
 func _can_drop_data(at_position, data):
 	var global_pos = get_global_transform() * at_position
-	return _get_slot_at(self,global_pos)!=null and typeof(data["resource"].value) in CONVERSION_DICT[type]
+	
+	var cond_1:bool=_get_slot_at(self,global_pos)!=null and typeof(data["resource"].value) in CONVERSION_DICT[type]
+	var cond_2 : bool = typeof(data["resource"].value) == TYPE_NIL
+	print(cond_2)
+	return cond_1 or cond_2
 
 ## Handles a successful drop of a blackboard variable resource: determines
 ## whether it came from the local or shared blackboard (based on its resource

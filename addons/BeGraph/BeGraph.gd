@@ -3,13 +3,14 @@ extends EditorPlugin
 
 var dock : EditorDock
 var begraph_dock : Control
+var file_dialog: EditorFileDialog
 var _dock_added : bool = false
 
 const BASE_CATEGORIES: Dictionary = {
 	"action_node": [Color(0.161, 0.161, 0.161, 1.0), Color(0.824, 0.784, 0.745, 1.0)],
 	"access_point_node": [Color(0.18, 0.396, 0.29, 1.0), Color(0.467, 1.0, 0.6, 1.0)],
 	"control_flow_node": [Color(0.224, 0.196, 0.31, 1.0), Color(0.706, 0.58, 0.953, 1.0)],
-	"conditional_node": [Color(0.447, 0.318, 0.263, 1.0), Color(1.0, 0.722, 0.537, 1.0)],
+	"comment_node": [Color(0.447, 0.318, 0.263, 1.0), Color(1.0, 0.722, 0.537, 1.0)],
 }
 
 const NODES_PATH_KEY :String= "BeGraph/nodes_path"
@@ -30,17 +31,27 @@ func _enter_tree():
 	dock.title = "Behavior Graph"
 	dock.default_slot = EditorDock.DOCK_SLOT_BOTTOM
 	dock.available_layouts = EditorDock.DOCK_LAYOUT_HORIZONTAL | EditorDock.DOCK_LAYOUT_FLOATING
+	var fs_dock = get_editor_interface().get_file_system_dock()
+	fs_dock.resource_removed.connect(_on_resource_removed)
 	_sync_settings()
+	
 
 func _exit_tree():
 	_sync_settings(true)
 	_remove_dock()
+	var fs_dock = get_editor_interface().get_file_system_dock()
+	fs_dock.resource_removed.disconnect(_on_resource_removed)
 	dock.queue_free()
 
 func _enable_plugin() -> void:
-	pass # nothing to do; dock stays hidden until something handled is selected
+	pass
+
+func _on_resource_removed (resource:Resource)->void:
+	if resource == begraph_dock.loaded_graph:
+		begraph_dock.load_graph(null)
 
 func _disable_plugin() -> void:
+	
 	_remove_dock()
 
 func _handles(object: Object) -> bool:
@@ -62,6 +73,8 @@ func _make_visible(visible: bool) -> void:
 			begraph_dock.close_button.pressed.connect(_on_close_pressed)
 		if not begraph_dock.save_button.pressed.is_connected(_on_save_pressed):
 			begraph_dock.save_button.pressed.connect(_on_save_pressed)
+		if not begraph_dock.save_as_button.pressed.is_connected(_on_save_as_pressed):
+			begraph_dock.save_as_button.pressed.connect(_on_save_as_pressed)
 	else:
 		_remove_dock()
 
@@ -85,6 +98,21 @@ func _on_save_pressed() -> void:
 	else:
 		print("Couldn't save resource %s"%begraph_dock.loaded_graph)
 
+func _on_save_as_pressed()->void:
+	file_dialog = EditorFileDialog.new()
+	file_dialog.file_mode = EditorFileDialog.FILE_MODE_SAVE_FILE
+	file_dialog.access = EditorFileDialog.ACCESS_RESOURCES
+	file_dialog.add_filter("*.tres", "Behavior Graph")
+	file_dialog.current_file = "NewBehaviorGraph.tres"
+	file_dialog.file_selected.connect(_on_file_selected)
+
+	EditorInterface.get_base_control().add_child(file_dialog)
+	file_dialog.popup_centered_ratio()
+
+func _on_file_selected(path: String) -> void:
+	ResourceSaver.save(begraph_dock.loaded_graph, path)
+	EditorInterface.get_resource_filesystem().scan()
+	begraph_dock.load_graph(load(path))
 #region SETTINGS
 
 func _sync_settings(remove_all: bool = false) -> void:

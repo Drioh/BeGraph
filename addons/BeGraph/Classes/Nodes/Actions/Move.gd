@@ -3,6 +3,7 @@ class_name MoveCharacter
 extends BehaviorNode
 
 const DISPLAY_NAME : String = "Move"
+const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
 
 func tick()->Status:
 	return Status.SUCCESS

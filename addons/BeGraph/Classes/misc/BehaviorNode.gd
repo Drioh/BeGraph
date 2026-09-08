@@ -6,7 +6,7 @@ extends Resource
 ##In order to show a custom name, a node must define the [code]DISPLAY_NAME[/code] String constant.
 
 ##Return value for the [method tick] method.
-enum Status{SUCCESS,FAILURE,RUNNING, ERROR = -1}
+enum Status{SUCCESS,FAILURE,RUNNING}
 
 ## Describes what the node does. Logic to determine which node is next in execution is written here.
 @abstract func tick() -> Status
@@ -39,7 +39,7 @@ enum Status{SUCCESS,FAILURE,RUNNING, ERROR = -1}
 @export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE|PROPERTY_USAGE_READ_ONLY|PROPERTY_USAGE_EDITOR)var next : Array[BehaviorNode]
 
 ##Contains all of the [BehaviorProperty] for this node.
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE)var behavior_properties:Array[Dictionary]
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE|PROPERTY_USAGE_READ_ONLY|PROPERTY_USAGE_EDITOR)var behavior_properties:Array[Dictionary]
 
 ## For display purposes only, this parameter defines a node's category. Set using [method set_node_category]
 @export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE|PROPERTY_USAGE_READ_ONLY|PROPERTY_USAGE_EDITOR)var node_category : String = ""
@@ -142,8 +142,16 @@ func _add_behavior_property(
 func _get(property: StringName) -> Variant:
 	for prop in behavior_properties:
 		if prop["name"]==property:
+			if prop["blackboard"]!=null:
+				return prop["blackboard"].get_value(prop["blackboard_key"])
 			return prop["value"] #gets value from behavior_property
 	return null
+
+func _get_property_usage(property: StringName) -> int:
+	for prop in behavior_properties:
+		if prop["name"]==property:
+			return prop["usage"] #gets value from behavior_property
+	return PROPERTY_USAGE_DEFAULT
 
 ## Overrides [method Object._set]: looks up [param property] among
 ## [member behavior_properties] and, if found, updates its value and emits
@@ -178,12 +186,25 @@ func is_blackboard_property_enabled(key:StringName)->bool:
 	return false
 
 func add_next(n : BehaviorNode, from_port : int)->void:
-	if from_port == 0:
-		next.append(n)
+	if output:
+		if n not in next:
+			next.append(n)
 		return
 	else:
-		conditions[from_port-1]["next"]=n
+		if conditions[from_port]["next"] != n:
+			conditions[from_port]["next"]=n
 		return
+
+func remove_next(n:BehaviorNode, from_port : int)->void:
+	if output:
+		if n in next:
+			next.erase(next)
+		return
+	else:
+		if conditions[from_port]["next"] == n:
+			conditions[from_port]["next"] = null
+		return
+
 ##Checks if there is a property with the given name in [param behavior_properties]
 func _has(property:StringName) -> bool:
 	for prop in behavior_properties:

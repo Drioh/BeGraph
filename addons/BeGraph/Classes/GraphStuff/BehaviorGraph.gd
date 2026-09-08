@@ -2,8 +2,6 @@
 class_name BehaviorGraph
 extends Resource
 
-##If set to [code]true[/code], this graph gets triggered as soon as the scene starts
-@export var activate_on_start : bool = false
 @export_group("Blackboards")
 
 ##Blackboard with values that don't get shared between different instances of this graph
@@ -70,3 +68,22 @@ func get_starting_nodes() ->Array[BehaviorNode]:
 	for node in nodes:
 		if node.node_category == "access_point_node": ret.append(node)
 	return ret
+
+func get_starting_node(name:StringName)->BehaviorNode:
+	for node in nodes:
+		if node.resource_name == name: return node
+	push_error("Couldn't find node \"%s\""%name)
+	return null
+
+func get_starting_nodes_names() ->PackedStringArray:
+	var ret : PackedStringArray = []
+	for node in nodes:
+		if node.node_category == "access_point_node": ret.append(node.resource_name)
+	return ret
+
+func get_node(name:StringName)->BehaviorNode:
+	for node in nodes:
+		if node.resource_name==name:
+			return node
+	push_error("node %s not found"%name)
+	return

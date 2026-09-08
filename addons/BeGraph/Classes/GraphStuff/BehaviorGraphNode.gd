@@ -46,7 +46,6 @@ func set_node_script(path: String) -> void:
 func set_node(n:BehaviorNode) -> void:
 	node = n
 	
-	set_node_color("BeGraph/colors/node_colors/%s" % node.node_category)
 	set_slot_enabled_right(0, node.output)
 	set_slot_enabled_left(0, node.input)
 	
@@ -66,7 +65,7 @@ func set_node(n:BehaviorNode) -> void:
 	var edit_button: Button = Button.new()
 	edit_button.flat = true
 	edit_button.icon = load("res://addons/BeGraph/Icons/edit_icon.svg")
-	edit_button.pressed.connect(EditorInterface.edit_resource.bind(node))
+	edit_button.pressed.connect(EditorInterface.edit_resource.bind(node),CONNECT_DEFERRED)
 	tb.add_child(edit_button)
 	
 	var separator = VSeparator.new()
@@ -76,8 +75,11 @@ func set_node(n:BehaviorNode) -> void:
 	var delete_button: Button = Button.new()
 	delete_button.flat = true
 	delete_button.icon = load("res://addons/BeGraph/Icons/close_icon.svg")
-	delete_button.pressed.connect(delete_request.emit.bind([self.name]))
+	delete_button.pressed.connect(delete_request.emit.bind([self.name]),CONNECT_DEFERRED)
 	tb.add_child(delete_button)
+	
+	set_node_color("BeGraph/colors/node_colors/%s" % node.node_category)
+	
 	
 	
 ## Renders one row per entry in [member BehaviorNode.conditions]: makes
@@ -91,7 +93,7 @@ func set_conditions() -> void:
 		container.alignment=FlowContainer.ALIGNMENT_END
 		add_child(container)
 		_render_placeholders(condition.text, container, false)
-
+	
 func update_node_offset():
 	node.position_in_graph = position_offset
 
@@ -118,7 +120,7 @@ func _render_placeholders(text: String, container: Control, is_main_instruction:
 	
 	if not is_main_instruction:
 		set_slot_enabled_right(get_child_count()-1,true)
-
+	
 ## Resolves a single [code]{key}[/code] placeholder to an inline control, or a
 ## "null" label (with a warning) if the key is missing from [member node] or
 ## its current value is [code]null[/code].
@@ -130,9 +132,10 @@ func _add_placeholder_value(key: String, raw_match: String, container: Control) 
 
 	var variable: Variant = node.get(key)
 	if variable == null:
-		push_warning("Value for key \"%s\" is null" % key)
-		_add_null_label(raw_match, container)
-		return
+		if ! node._get_property_usage(key) == PROPERTY_USAGE_NIL_IS_VARIANT:
+			push_warning("Value for key \"%s\" is null" % key)
+			_add_null_label(raw_match, container)
+			return
 
 	_add_inline_control(key, variable, container)
 
@@ -201,5 +204,5 @@ func set_node_color(category:String):
 	set_indexed("theme_override_styles/panel_selected:border_color",selection_color)
 	set_indexed("theme_override_styles/titlebar_selected:border_color",selection_color)
 	for slot in get_child_count():
-		set("slot/%s/left_color",selection_color)
-		set("slot/%s/right_color",selection_color)
+		set("slot/%s/left_color"%slot,selection_color)
+		set("slot/%s/right_color"%slot,selection_color)

@@ -3,6 +3,7 @@ extends Control
 
 @onready var graph_label: Label = %GraphLabel
 @onready var save_button: Button = %SaveButton
+@onready var save_as_button: Button = %SaveAsButton
 @onready var edit_button: Button = %EditButton
 @onready var close_button: Button = %CloseButton
 @onready var graph_edit: BehaviorGraphEdit = %GraphEdit
@@ -17,7 +18,11 @@ func edit_graph()->void:
 
 func load_graph(object: BehaviorGraph):
 	loaded_graph= object
-	
+	if loaded_graph == null:
+		graph_label.text = "Loaded Behavior Graph:"
+		graph_edit.set_graph(object)
+		EditorInterface.edit_resource(null)
+		return
 	var graph_info: String = object.resource_name if object.resource_name != "" else object.resource_path
 	graph_label.text = "Loaded Behavior Graph: %s" % graph_info
 	graph_edit.set_graph(object)

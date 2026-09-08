@@ -67,14 +67,13 @@ func disconnect_nodes(from_node: StringName, from_port: int, to_node: StringName
 	var f_node : BehaviorGraphNode = get_node(NodePath(from_node))
 	var t_node : BehaviorGraphNode = get_node(NodePath(to_node))
 	
-	if f_node.node.next.has(t_node.node):
-		f_node.node.next.erase(t_node.node)
 	var c:Dictionary = {
 		"from_node":from_node,
 		"from_port":from_port,
 		"to_node":to_node,
 		"to_port":to_port
 	}
+	f_node.node.remove_next(t_node.node,from_port)
 	current_graph.remove_connection(c)
 	disconnect_node(from_node,from_port,to_node,to_port)
 
@@ -91,6 +90,12 @@ func set_graph(graph: BehaviorGraph) -> void:
 		if child is BehaviorGraphNode:
 			child.queue_free()
 	current_graph = graph
+	
+	if current_graph == null:
+		local_blackboard=null
+		shared_blackboard=null
+		return
+	
 	
 	local_blackboard=current_graph.local_blackboard
 	shared_blackboard=current_graph.shared_blackboard
@@ -171,9 +176,7 @@ func _build_node_popup(path: String) -> PopupMenu:
 	if not DirAccess.dir_exists_absolute(path):
 		push_error("Path not valid: %s" % path)
 		return null
-
 	var popup := PopupMenu.new()
-
 	var dirs := DirAccess.get_directories_at(path)
 	dirs.sort()
 	for dir_name in dirs:
@@ -182,11 +185,10 @@ func _build_node_popup(path: String) -> PopupMenu:
 			if sub: sub.queue_free()
 			continue
 		sub.name = dir_name
-		sub.set_item_icon(-1,EditorInterface.get_editor_theme().get_icon("Folder", "EditorIcons"))
-		
-		popup.add_child(sub)
+
 		popup.add_submenu_node_item(dir_name, sub)
-		
+		popup.set_item_icon(-1, EditorInterface.get_editor_theme().get_icon("Folder", "EditorIcons"))
+
 	var files := DirAccess.get_files_at(path)
 	files.sort()
 	for file_name in files:
@@ -195,8 +197,11 @@ func _build_node_popup(path: String) -> PopupMenu:
 		var full_path := path.path_join(file_name)
 		var id := popup.item_count
 		popup.add_item(_label_for_script(full_path), id)
+		var icon : Texture2D = _icon_for_script(full_path)
+		if not icon == null:
+			popup.set_item_icon(id, icon)
 		popup.set_item_metadata(id, full_path)
-		
+
 	popup.id_pressed.connect(_on_node_popup_id_pressed.bind(popup))
 	return popup
 
@@ -219,6 +224,14 @@ func _label_for_script(script_path: String) -> String:
 		return consts["DISPLAY_NAME"]
 	return script_path.get_file().get_basename()
 
+func _icon_for_script(script_path: String) -> Texture2D:
+	var scr := load(script_path) as GDScript
+	if scr == null:
+		return null
+	var consts := scr.get_script_constant_map()
+	if consts.has("DISPLAY_ICON") and consts["DISPLAY_ICON"] != "":
+		return load(consts["DISPLAY_ICON"])
+	return null
 ## Returns the [StringName] of every node in the graph that is the source
 ## ("from") end of at least one connection.
 func get_connection_starting_nodes()->Array[StringName]:
