@@ -116,6 +116,18 @@ func add_node(script_path: String = "") -> void:
 
 		node.delete_request.connect(_on_delete_nodes_request)
 
+## Disconnette (visivamente e sul BehaviorNode sottostante) ogni connessione
+## uscente da [param graph_node] la cui porta non esiste più dopo un cambio
+## nel numero di condizioni.
+func prune_invalid_connections_from(graph_node: BehaviorGraphNode) -> void:
+	var n := graph_node.node.conditions.size()
+	# offset di 2 = h_flow_container + h_box_container, i due figli fissi
+	# prima delle righe di condizione (verifica questo numero nel tuo setup!)
+	var max_valid_port : int = 1 + n if n > 0 else 0
+	for c in get_connection_list_from_node(graph_node.name):
+		if c["from_port"] > max_valid_port:
+			disconnect_nodes(c["from_node"], c["from_port"], c["to_node"], c["to_port"])
+
 ## Callback for [signal GraphEdit.delete_nodes_request]. Removes each requested
 ## node (identified by [StringName]) from the graph, provided
 ## [member BehaviorGraphNode.can_be_deleted] is [code]true[/code] for all of
@@ -173,9 +185,9 @@ func connect_nodes(from_node: StringName, from_port: int, to_node: StringName, t
 			return
 
 	var c: Dictionary = {
-		"from_node": from_node.validate_node_name(),
+		"from_node": StringName(from_node.validate_node_name()),
 		"from_port": from_port,
-		"to_node": to_node.validate_node_name(),
+		"to_node": StringName(to_node.validate_node_name()),
 		"to_port": to_port
 	}
 	f_node.node.add_next(t_node.node, from_port)
@@ -197,8 +209,11 @@ func disconnect_nodes(from_node: StringName, from_port: int, to_node: StringName
 		"to_node": to_node,
 		"to_port": to_port
 	}
+
 	f_node.node.remove_next(t_node.node, from_port)
+	print("connessione prima della chiamata %s"%c)
 	current_graph.remove_connection(c)
+
 	disconnect_node(from_node, from_port, to_node, to_port)
 
 ## Returns the [StringName] of every node in the graph that is the source

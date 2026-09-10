@@ -81,6 +81,7 @@ func set_node(n:BehaviorNode) -> void:
 	tb.add_child(delete_button)
 	
 	set_node_color("BeGraph/colors/node_colors/%s" % node.node_category)
+	node.conditions_changed.connect(_on_conditions_changed)
 	
 	
 	
@@ -98,6 +99,28 @@ func set_conditions() -> void:
 	
 func update_node_offset():
 	node.position_in_graph = position_offset
+
+## Ricostruisce le righe/porte relative a [member BehaviorNode.conditions]
+## quando queste cambiano dinamicamente (es. enum modificato dall'utente).
+func _on_conditions_changed() -> void:
+	_clear_condition_rows()
+	if node.conditions.size() > 0:
+		set_conditions()
+	else:
+		h_box_container.visible = false
+	set_node_color("BeGraph/colors/node_colors/%s" % node.node_category)
+	if graph_edit:
+		graph_edit.prune_invalid_connections_from(self)
+	reset_size()
+
+## Rimuove ogni riga di condizione aggiunta da [method set_conditions],
+## mantenendo solo [member h_flow_container] e [member h_box_container].
+func _clear_condition_rows() -> void:
+	var kept : Array = [h_flow_container, h_box_container]
+	for child in get_children().duplicate():
+		if child is Control and not kept.has(child):
+			remove_child(child)
+			child.queue_free()
 
 ## Clears (if needed) and fills [param container] with labels/controls generated
 ## from [param text], replacing any [code]{placeholder}[/code] tokens found via

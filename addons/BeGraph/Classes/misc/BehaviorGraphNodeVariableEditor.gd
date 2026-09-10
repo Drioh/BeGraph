@@ -370,17 +370,19 @@ func _on_popup_index_pressed(index : int,sub_menu:PopupMenu) -> void:
 	var k : String = sub_menu.get_item_text(index)
 	if (popup.get_item_submenu_node(0) == sub_menu):
 		node.set_blackboard_reference(key, local_blackboard, k)
-		if shared_blackboard.changed.is_connected(check_key):
-			shared_blackboard.changed.disconnect(check_key)
-			shared_blackboard.get_variable(k).changed.disconnect(check_key)
+		if shared_blackboard:
+			if shared_blackboard.changed.is_connected(check_key):
+				shared_blackboard.changed.disconnect(check_key)
+				shared_blackboard.get_variable(k).changed.disconnect(check_key)
 		if not local_blackboard.changed.is_connected(check_key):
 			local_blackboard.changed.connect(check_key.bind(local_blackboard))
 			local_blackboard.get_variable(k).changed.connect(check_key.bind(local_blackboard))
 	if (popup.get_item_submenu_node(1) == sub_menu):
 		node.set_blackboard_reference(key, shared_blackboard, k)
-		if local_blackboard.changed.is_connected(check_key):
-			local_blackboard.changed.disconnect(check_key)
-			local_blackboard.get_variable(k).changed.disconnect(check_key)
+		if local_blackboard:
+			if local_blackboard.changed.is_connected(check_key):
+				local_blackboard.changed.disconnect(check_key)
+				local_blackboard.get_variable(k).changed.disconnect(check_key)
 		if not shared_blackboard.changed.is_connected(check_key):
 			shared_blackboard.changed.connect(check_key.bind(shared_blackboard))
 			shared_blackboard.get_variable(k).changed.connect(check_key.bind(shared_blackboard))
@@ -403,13 +405,16 @@ func _on_bb_unlink_button_pressed() -> void:
 	bb_link_button.show()
 	bb_unlink_button.hide()
 	
-	if local_blackboard.changed.is_connected(check_key):
+	if local_blackboard:
+		if local_blackboard.changed.is_connected(check_key):
 			local_blackboard.changed.disconnect(check_key)
-			local_blackboard.get_variable(bb_reference.text).changed.disconnect(check_key)
-
-	if shared_blackboard.changed.is_connected(check_key):
+			if local_blackboard.get_variable(bb_reference.text):
+				local_blackboard.get_variable(bb_reference.text).changed.disconnect(check_key)
+	if shared_blackboard:
+		if shared_blackboard.changed.is_connected(check_key):
 			shared_blackboard.changed.disconnect(check_key)
-			shared_blackboard.get_variable(bb_reference.text).changed.disconnect(check_key)
+			if shared_blackboard.get_variable(bb_reference.text):
+				shared_blackboard.get_variable(bb_reference.text).changed.disconnect(check_key)
 
 ## Callback for [signal MenuButton.about_to_popup] on [member bb_link_button].
 ## Repopulates [member local_variable_submenu] and [member shared_variable_submenu]
@@ -432,7 +437,7 @@ func _populate_popup() -> void:
 				shared_variable_submenu.add_item(blackboard_variable.name)
 				shared_variable_submenu.set_item_icon(-1, theme.get_icon(type_string(t), "EditorIcons"))
 
-## Provides drag-and-drop visual feedback: while a compatible/incompatible
+## ovides drag-and-drop visual feedback: while a compatible/incompatible
 ## blackboard variable resource is being dragged over this control, tints
 ## [member fallback_layer] accordingly; clears the tint once the drag ends.
 func _notification(what: int) -> void:
@@ -458,7 +463,6 @@ func _can_drop_data(at_position, data):
 	
 	var cond_1:bool=_get_slot_at(self,global_pos)!=null and typeof(data["resource"].value) in CONVERSION_DICT[type]
 	var cond_2 : bool = typeof(data["resource"].value) == TYPE_NIL
-	print(cond_2)
 	return cond_1 or cond_2
 
 ## Handles a successful drop of a blackboard variable resource: determines
@@ -467,11 +471,27 @@ func _can_drop_data(at_position, data):
 ## [method BehaviorNode.set_blackboard_reference].
 func _drop_data(at_position, data):
 	var bb : BehaviorGraphBlackboard
+	var k : StringName = data["resource"].name
 	if data["resource"].resource_path.get_slice("::", 0) == "":
 		bb = local_blackboard
+		if shared_blackboard:
+			if shared_blackboard.changed.is_connected(check_key):
+				shared_blackboard.changed.disconnect(check_key)
+				shared_blackboard.get_variable(k).changed.disconnect(check_key)
+		if not local_blackboard.changed.is_connected(check_key):
+			local_blackboard.changed.connect(check_key.bind(local_blackboard))
+			local_blackboard.get_variable(k).changed.connect(check_key.bind(local_blackboard))
 	else:
 		bb = shared_blackboard
-	node.set_blackboard_reference(key, bb, data["resource"].name)
+		if local_blackboard:
+			if local_blackboard.changed.is_connected(check_key):
+				local_blackboard.changed.disconnect(check_key)
+				local_blackboard.get_variable(k).changed.disconnect(check_key)
+		if not shared_blackboard.changed.is_connected(check_key):
+			shared_blackboard.changed.connect(check_key.bind(shared_blackboard))
+			shared_blackboard.get_variable(k).changed.connect(check_key.bind(shared_blackboard))
+	node.set_blackboard_reference(key, bb, k)
+		
 
 ## Recursively searches [param node]'s [Control] descendants for the one whose
 ## global rect contains [param global_pos], returning the first (deepest)

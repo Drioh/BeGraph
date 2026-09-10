@@ -65,6 +65,7 @@ var regex :RegEx= RegEx.create_from_string(r"\{([^{}]+)\}")
 		return false
 
 signal behavior_property_changed(name:StringName,blackboard_key:StringName)
+signal conditions_changed
 
 @export_group("Properties")
 

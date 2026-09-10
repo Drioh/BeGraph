@@ -55,7 +55,9 @@ func add_connection(connection:Dictionary):
 
 func remove_connection(connection:Dictionary):
 	var index : int = -1
+	print("connessione dopo la chiamata %s"%connection)
 	for i in connections.size():
+		print("connessione in chiamata %s"%connections[i])
 		if connections[i]==connection: 
 			index = i
 	if index == -1:
