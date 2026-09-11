@@ -8,11 +8,11 @@ func set_instruction() -> String:
 	return "Random Selector"
 
 func tick() -> Status:
-	var shuffled : Array[BehaviorNode] = next.duplicate()
+	var shuffled : Array[BehaviorNode] = _next_ref.duplicate()
 	shuffled.shuffle()
 
-	for child in shuffled:
-		var status : Status = child.tick()
+	for i in shuffled.size():
+		var status : Status = tick_next(i)
 		if status == Status.SUCCESS or status == Status.RUNNING:
 			return status
 	return Status.FAILURE

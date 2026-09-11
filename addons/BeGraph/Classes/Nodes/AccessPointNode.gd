@@ -9,8 +9,8 @@ func set_instruction() -> String:
 	return "Access Point: {label}"
 
 func tick() -> Status:
-	if next.size()>0:
-		next[0].tick()
+	if _next_ref.size()>0:
+		tick_next()
 	return Status.RUNNING
 
 func set_node_category()->String:return "access_point_node"

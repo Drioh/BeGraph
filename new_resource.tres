@@ -1,0 +1,116 @@
+[gd_resource type="Resource" script_class="BehaviorGraph" format=3 uid="uid://b8634stfwr8aj"]
+
+[ext_resource type="Script" uid="uid://da0t4052e3fsp" path="res://addons/BeGraph/Classes/misc/BlackboardVariable.gd" id="1_3gp3i"]
+[ext_resource type="Script" uid="uid://ca0cevcqjpnsq" path="res://addons/BeGraph/Classes/misc/BehaviorNode.gd" id="2_xonew"]
+[ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="3_y3mkl"]
+[ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="4_ihbpk"]
+[ext_resource type="Script" uid="uid://b3vtxotira4wb" path="res://addons/BeGraph/Classes/Nodes/Actions/Move.gd" id="4_xonew"]
+[ext_resource type="Script" uid="uid://be01k3jh4ckwt" path="res://addons/BeGraph/Classes/Nodes/Actions/Print.gd" id="5_y3mkl"]
+
+[sub_resource type="Resource" id="Resource_p8ve5"]
+script = ExtResource("1_3gp3i")
+name = &"dawsdae"
+value = "Ciao"
+metadata/_custom_type_script = "uid://da0t4052e3fsp"
+
+[sub_resource type="Resource" id="Resource_3gp3i"]
+resource_name = "start_node"
+script = ExtResource("3_y3mkl")
+instruction = "Access Point: {label}"
+behavior_properties = Array[Dictionary]([{
+"blackboard_key": &"",
+"class_name": "",
+"hint": 0,
+"hint_string": "",
+"name": "label",
+"type": 2,
+"usage": 6,
+"value": 4
+}])
+node_category = "access_point_node"
+output = true
+is_starting_node = true
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[WeakRef]([Object(WeakRef,"script":null)
+, Object(WeakRef,"script":null)
+])
+label = 4
+
+[sub_resource type="Resource" id="Resource_xonew"]
+resource_name = "BehaviorGraphNode"
+script = ExtResource("4_xonew")
+instruction = "MAMMA, stampo lo {str}, come faccio?{sandro}, {variabile_nulla}, senza contare che {sandro}"
+conditions = Array[Dictionary]([{
+"next": null,
+"text": "Prima Condizione"
+}, {
+"next": null,
+"text": "Questa è la seconda condizione"
+}, {
+"next": null,
+"text": "Questa è la terza condizione con la variabile {sandro}"
+}])
+behavior_properties = Array[Dictionary]([{
+"blackboard_key": &"",
+"class_name": "",
+"hint": 0,
+"hint_string": "",
+"name": "str",
+"type": 5,
+"usage": 6,
+"value": Vector2(1, 1)
+}, {
+"blackboard_key": &"dawsdae",
+"class_name": "",
+"hint": 0,
+"hint_string": "",
+"name": "sandro",
+"type": 4,
+"usage": 6,
+"value": ""
+}, {
+"blackboard_key": &"",
+"class_name": "",
+"hint": 2,
+"hint_string": "primo_valore,secondo_valore,terzo_valore",
+"name": "variabile_nulla",
+"type": 2,
+"usage": 6,
+"value": 0
+}])
+node_category = "action_node"
+input = true
+position_in_graph = Vector2(759, -69)
+_graph_ref = Object(WeakRef,"script":null)
+
+str = Vector2(1, 1)
+sandro = "Ciao"
+variabile_nulla = 0
+
+[sub_resource type="Resource" id="Resource_ihbpk"]
+resource_name = "_GraphNode_34220"
+script = ExtResource("5_y3mkl")
+instruction = "Prints {value}"
+behavior_properties = Array[Dictionary]([{
+"blackboard_key": &"",
+"class_name": "",
+"hint": 0,
+"hint_string": "",
+"name": "value",
+"type": 0,
+"usage": 131072,
+"value": Color(0, 0, 0, 1)
+}])
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(1380, 0)
+_graph_ref = Object(WeakRef,"script":null)
+
+
+[resource]
+script = ExtResource("4_ihbpk")
+blackboard = Array[ExtResource("1_3gp3i")]([SubResource("Resource_p8ve5")])
+nodes = Array[ExtResource("2_xonew")]([SubResource("Resource_3gp3i"), SubResource("Resource_xonew"), SubResource("Resource_ihbpk")])
+metadata/_custom_type_script = "uid://d25yjg1utgxu"

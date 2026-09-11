@@ -8,8 +8,8 @@ func set_instruction() -> String:
 	return "Selector"
 
 func tick() -> Status:
-	for child in next:
-		var status : Status = child.tick()
+	for i in _next_ref.size():
+		var status : Status = tick_next(i)
 		if status == Status.SUCCESS or status == Status.RUNNING:
 			return status
 	return Status.FAILURE

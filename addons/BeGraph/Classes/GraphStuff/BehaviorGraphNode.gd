@@ -27,10 +27,6 @@ var node: BehaviorNode
 ## condition text.
 var placeholder_regex := RegEx.new()
 
-## If [code]false[/code], this node cannot be removed from the graph (see
-## [method BehaviorGraphEdit._on_delete_nodes_request]).
-@export var can_be_deleted : bool = true
-
 ## Loads the [BehaviorNode] script found at [param path] and configures this
 ## visual node accordingly: sets its color by category, enables/disables the
 ## input and output slots, renders the instruction (with inline placeholder
@@ -40,7 +36,6 @@ var placeholder_regex := RegEx.new()
 func set_node_script(path: String) -> void:
 	if not FileAccess.file_exists(path):
 		return
-		
 	set_node(load(path).new())
 
 func set_node(n:BehaviorNode) -> void:
@@ -62,7 +57,7 @@ func set_node(n:BehaviorNode) -> void:
 	
 	title = self.name.validate_node_name()
 	node.resource_name = title
-	position_offset_changed.connect(update_node_offset)
+	position_offset_changed.connect(func():node.position_in_graph = position_offset)
 	
 	var edit_button: Button = Button.new()
 	edit_button.flat = true
@@ -70,9 +65,7 @@ func set_node(n:BehaviorNode) -> void:
 	edit_button.pressed.connect(EditorInterface.edit_resource.bind(node),CONNECT_DEFERRED)
 	tb.add_child(edit_button)
 	
-	var separator = VSeparator.new()
-	tb.add_child(separator)
-
+	tb.add_child(VSeparator.new())
 	
 	var delete_button: Button = Button.new()
 	delete_button.flat = true
@@ -81,9 +74,6 @@ func set_node(n:BehaviorNode) -> void:
 	tb.add_child(delete_button)
 	
 	set_node_color("BeGraph/colors/node_colors/%s" % node.node_category)
-	node.conditions_changed.connect(_on_conditions_changed)
-	
-	
 	
 ## Renders one row per entry in [member BehaviorNode.conditions]: makes
 ## [member h_box_container] visible and, for each condition, creates a new
@@ -92,13 +82,10 @@ func set_node(n:BehaviorNode) -> void:
 func set_conditions() -> void:
 	for condition in node.conditions:
 		h_box_container.visible = true
-		var container := HFlowContainer.new()
+		var container :HFlowContainer= HFlowContainer.new()
 		container.alignment=FlowContainer.ALIGNMENT_END
 		add_child(container)
 		_render_placeholders(condition.text, container, false)
-	
-func update_node_offset():
-	node.position_in_graph = position_offset
 
 ## Ricostruisce le righe/porte relative a [member BehaviorNode.conditions]
 ## quando queste cambiano dinamicamente (es. enum modificato dall'utente).
@@ -131,11 +118,11 @@ func _render_placeholders(text: String, container: Control, is_main_instruction:
 		for child in container.get_children():
 			container.remove_child(child)
 			child.queue_free()
+	
 	var last_end := 0
 	for m in placeholder_regex.search_all(text):
 		var start := m.get_start()
 		var key := m.get_string(1)
-
 		if start > last_end:
 			_add_text_label(text.substr(last_end, start - last_end), container)
 		_add_placeholder_value(key, m.get_string(0), container)
@@ -157,7 +144,7 @@ func _add_placeholder_value(key: String, raw_match: String, container: Control) 
 
 	var variable: Variant = node.get(key)
 	if variable == null:
-		if ! node._get_property_usage(key) == PROPERTY_USAGE_NIL_IS_VARIANT:
+		if ! node.get_node_property_info(key,"usage") == PROPERTY_USAGE_NIL_IS_VARIANT:
 			push_warning("Value for key \"%s\" is null" % key)
 			_add_null_label(raw_match, container)
 			return
@@ -208,13 +195,15 @@ func _add_inline_control(key: String, value: Variant,container : HFlowContainer)
 	var control: BehaviorGraphNodeVariableEditor = BEHAVIOR_GRAPH_NODE_VARIABLE.instantiate()
 	container.add_child(control)
 	
-	if not control.setup_variable_editor(node,type,key,graph_edit.local_blackboard,graph_edit.shared_blackboard):
+	var associated_property : Dictionary = node.get_node_property_info(key)
+	
+	if not control.setup_variable_editor(node,associated_property,graph_edit.current_graph.blackboard):
 		push_warning("No available editor for \"%s\" (type %s)" % [key, type])
 		_add_text_label("{%s}" % key,container)
 	
 	control.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	control.size_flags_vertical=Control.SIZE_EXPAND_FILL
-	control.bb_unlink_button.pressed.connect(node.set_blackboard_reference.bind(key))
+	#control.bb_unlink_button.pressed.connect(node.set_node_property_blackboard_key.bind(key))
 	control.resized.connect(reset_size, CONNECT_DEFERRED)
 	return
 

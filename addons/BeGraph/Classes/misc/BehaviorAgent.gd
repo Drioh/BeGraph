@@ -38,7 +38,7 @@ func _update_process_flags() -> void:
 func _get_property_list() -> Array[Dictionary]:
 	var ret: Array[Dictionary] = []
 	if behavior_graph != null:
-		var names := behavior_graph.get_starting_nodes_names()
+		var names := behavior_graph.get_nodes_by_category("access_point_node")
 		var hint_string := ""
 		hint_string = ",".join(names)
 
@@ -100,7 +100,7 @@ func _select_starting_node(index: int) -> void:
 		starting_node = null
 		return
 		
-	var names := behavior_graph.get_starting_nodes_names()
+	var names := behavior_graph.get_nodes_by_category("access_point_node")
 	if names == null:
 		starting_node = null
 		return

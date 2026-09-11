@@ -8,9 +8,9 @@ func set_instruction() -> String:
 	return "Inverter"
 
 func tick() -> Status:
-	if next.size() == 0:
+	if _next_ref.size() == 0:
 		return Status.FAILURE
-	var status : Status = next[0].tick()
+	var status : Status = tick_next()
 	match status:
 		Status.SUCCESS:
 			return Status.FAILURE

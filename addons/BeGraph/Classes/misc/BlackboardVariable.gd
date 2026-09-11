@@ -2,8 +2,14 @@
 class_name BlackboardVariable
 extends Resource
 
-@export var name: StringName = &""
+signal name_changed(new_name:String)
+signal value_changed(new_value:Variant)
+
+@export var name: StringName = &"":
+	set(v):
+		name = v
+		name_changed.emit(name)
 @export var value : Variant:
 	set(v):
 		value = v
-		emit_changed()
+		value_changed.emit(value)

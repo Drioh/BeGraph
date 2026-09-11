@@ -35,9 +35,6 @@ enum Status{SUCCESS,FAILURE,RUNNING}
 ## Defines multiple successors for this node depending on the logic of the node itself. To set conditions, use the [method set_conditions] method, providing a [code]PackedStringArray[/code].[br]Conditions can have only one successor
 @export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE|PROPERTY_USAGE_READ_ONLY|PROPERTY_USAGE_EDITOR)var conditions : Array[Dictionary]
 
-## A node's direct array of successors. If [param allows_multiple_outputs] is set to [code]true[/code], this node can have multiple successors, accessible using the classic array syntax
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE|PROPERTY_USAGE_READ_ONLY|PROPERTY_USAGE_EDITOR)var next : Array[BehaviorNode]
-
 ##Contains all of the [BehaviorProperty] for this node.
 @export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE|PROPERTY_USAGE_READ_ONLY|PROPERTY_USAGE_EDITOR)var behavior_properties:Array[Dictionary]
 
@@ -64,8 +61,10 @@ var regex :RegEx= RegEx.create_from_string(r"\{([^{}]+)\}")
 			return true
 		return false
 
-signal behavior_property_changed(name:StringName,blackboard_key:StringName)
-signal conditions_changed
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE|PROPERTY_USAGE_READ_ONLY|PROPERTY_USAGE_EDITOR)var _graph_ref : WeakRef
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE|PROPERTY_USAGE_READ_ONLY|PROPERTY_USAGE_EDITOR)var _next_ref : Array[WeakRef] = []
+
+signal blackboard_key_set(property:StringName,blackboard_key:StringName)
 
 @export_group("Properties")
 
@@ -130,29 +129,10 @@ func _add_behavior_property(
 		"hint_string":hint_string,
 		"usage":usage,
 		"value":default_value,
-		"blackboard":null,
 		"blackboard_key":&""
 	}
 	behavior_properties.append(entry) #populates [param behavior_properties]
 	return
-## Overrides [method Object._get]: looks up [param property] among
-## [member behavior_properties] and returns its current value, or
-## [code]null[/code] if no matching property is found. This is what allows
-## behavior properties to be read via plain [code]node.property_name[/code]
-## syntax.
-func _get(property: StringName) -> Variant:
-	for prop in behavior_properties:
-		if prop["name"]==property:
-			if prop["blackboard"]!=null:
-				return prop["blackboard"].get_value(prop["blackboard_key"])
-			return prop["value"] #gets value from behavior_property
-	return null
-
-func _get_property_usage(property: StringName) -> int:
-	for prop in behavior_properties:
-		if prop["name"]==property:
-			return prop["usage"] #gets value from behavior_property
-	return PROPERTY_USAGE_DEFAULT
 
 ## Overrides [method Object._set]: looks up [param property] among
 ## [member behavior_properties] and, if found, updates its value and emits
@@ -163,48 +143,47 @@ func _set(property: StringName, value: Variant) -> bool:
 	for prop in behavior_properties:
 		if prop["name"] == property:
 			prop["value"] = value #handles setting a value for a behavior_property with the given key
-			changed.emit(prop["name"],prop["blackboard_key"])
+			changed.emit()
 			return true
 	return false
 
 ##Enables a blackboard reference in [param behavior_property][br]
 ##If this method gets called just with the [code]name[/code] parameter, without [code]blackboard[/code] or [code]blackboard_key[/code], the blackboard reference gets disabled
-func set_blackboard_reference(name:String,blackboard : BehaviorGraphBlackboard=null, blackboard_key: StringName=&""):
-	for property in behavior_properties:
-		if property["name"] == name:
-			property["blackboard"]=blackboard
-			property["blackboard_key"]=blackboard_key
-			changed.emit(property["name"],property["blackboard_key"])
+func set_node_property_blackboard_key(property:String, blackboard_key: StringName=&""):
+	for prop in behavior_properties:
+		if prop["name"] == property:
+			prop["blackboard_key"]=blackboard_key
+			blackboard_key_set.emit(property,blackboard_key)
 			return
-	push_error("unable to set property, %s name not found"%name)
+	push_error("unable to set property, %s name not found"%property)
 	return
+	
+## Overrides [method Object._get]: looks up [param property] among
+## [member behavior_properties] and returns its current value, or
+## [code]null[/code] if no matching property is found. This is what allows
+## behavior properties to be read via plain [code]node.property_name[/code]
+## syntax.
+func _get(property: StringName) -> Variant:
+	for prop in behavior_properties:
+		if prop["name"]==property:
+			var key : StringName = prop["blackboard_key"]
+			if key != &"":
+				var graph : BehaviorGraph = _graph_ref.get_ref()
+				return graph.get_blackboard_property(key).value
+			return prop["value"] #gets value from behavior_property
+	return null
 
-## Returns [code]true[/code] if the variable associated to the given [code]key[/code] properties a blackboard
-func is_blackboard_property_enabled(key:StringName)->bool:
-	for property in behavior_properties:
-		if property["name"] == key:
-			return property["blackboard"] != null and property["blackboard_key"] != &""
-	return false
-
-func add_next(n : BehaviorNode, from_port : int)->void:
-	if output:
-		if n not in next:
-			next.append(n)
-		return
-	else:
-		if conditions[from_port]["next"] != n:
-			conditions[from_port]["next"]=n
-		return
-
-func remove_next(n:BehaviorNode, from_port : int)->void:
-	if output:
-		if n in next:
-			next.erase(n)
-		return
-	else:
-		if conditions[from_port]["next"] == n:
-			conditions[from_port]["next"] = null
-		return
+func get_node_property_info(property:StringName,info:String="") -> Variant:
+	for prop in behavior_properties:
+		if prop["name"]==property:
+			if info == "":
+				return prop
+			if prop[info]:
+				return prop[info]
+			push_error("no key '%s' for a node property"%info)
+			return
+	push_error("property '%s' not found"%property)
+	return 
 
 ##Checks if there is a property with the given name in [param behavior_properties]
 func _has(property:StringName) -> bool:
@@ -212,3 +191,44 @@ func _has(property:StringName) -> bool:
 		if prop["name"] == property:
 			return true
 	return false
+
+## Returns [code]true[/code] if the variable associated to the given [code]key[/code] properties a blackboard
+func is_blackboard_reference_enabled(key:StringName)->bool:
+	for property in behavior_properties:
+		if property["name"] == key:
+			return property["blackboard_key"] != &""
+	return false
+
+func add_next(n : BehaviorNode, from_port : int)->void:
+	var n_ref : WeakRef = weakref(n)
+	if output:
+		if n_ref not in _next_ref:
+			_next_ref.append(n_ref)
+		return
+	else:
+		if conditions[from_port]["next"] != n_ref:
+			conditions[from_port]["next"]=n_ref
+		return
+
+func remove_next(n:BehaviorNode, from_port : int)->void:
+	var n_ref : WeakRef = weakref(n)
+	if output:
+		if n_ref in _next_ref:
+			_next_ref.erase(n_ref)
+		return
+	else:
+		if conditions[from_port]["next"] == n_ref:
+			conditions[from_port]["next"] = null
+		return
+
+func tick_next(index:int = 0) -> Status:
+	if _next_ref.size()<=index+1:
+		return _next_ref[index].get_ref().tick()
+	push_error("BehaviorNode %s has less than %s successors"%[self,index+1])
+	return Status.FAILURE
+
+func tick_condition(index:int=0)->Status:
+	if conditions.size()<=index+1:
+		return conditions[index]["next"].get_ref().tick()
+	push_error("BehaviorNode %s has less than %s conditions"%[self,index+1])
+	return Status.FAILURE

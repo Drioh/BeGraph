@@ -23,12 +23,6 @@ const NODE = preload("res://addons/BeGraph/UI/BehaviorGraphNode.tscn")
 ## The [BehaviorGraph] resource currently being edited by this graph.
 var current_graph: BehaviorGraph
 
-## [BehaviorGraphBlackboard] containing variables local to [member current_graph].
-var local_blackboard: BehaviorGraphBlackboard
-
-## [BehaviorGraphBlackboard] containing variables shared across multiple graphs.
-var shared_blackboard: BehaviorGraphBlackboard
-
 ## Root [PopupMenu] shown when the user requests to create a new node
 ## (built dynamically from [constant NODE_PATH]).
 var _node_popup: PopupMenu
@@ -67,14 +61,6 @@ func set_graph(graph: BehaviorGraph) -> void:
 			child.free()
 	current_graph = graph
 
-	if current_graph == null:
-		local_blackboard = null
-		shared_blackboard = null
-		return
-
-	local_blackboard = current_graph.local_blackboard
-	shared_blackboard = current_graph.shared_blackboard
-
 	load_nodes()
 	load_connections()
 
@@ -87,8 +73,10 @@ func load_nodes() -> void:
 		node.name = node_to_load.resource_name
 		node.graph_edit = self
 		node.set_node(node_to_load)
+		node.node._graph_ref=weakref(current_graph)
 		node.position_offset = node_to_load.position_in_graph
 		node.delete_request.connect(_on_delete_nodes_request)
+		
 
 ## Recreates every visual connection stored in [member current_graph.connections].
 func load_connections() -> void:
@@ -109,9 +97,9 @@ func add_node(script_path: String = "") -> void:
 	node.graph_edit = self
 	if script_path != "":
 		node.set_node_script(script_path)
-
 		node.position_offset = (get_local_mouse_position() + scroll_offset) / zoom
 		node.node.position_in_graph = node.position_offset
+		node.node._graph_ref=weakref(current_graph)
 		current_graph.add_node(node.node)
 
 		node.delete_request.connect(_on_delete_nodes_request)
@@ -211,7 +199,6 @@ func disconnect_nodes(from_node: StringName, from_port: int, to_node: StringName
 	}
 
 	f_node.node.remove_next(t_node.node, from_port)
-	print("connessione prima della chiamata %s"%c)
 	current_graph.remove_connection(c)
 
 	disconnect_node(from_node, from_port, to_node, to_port)

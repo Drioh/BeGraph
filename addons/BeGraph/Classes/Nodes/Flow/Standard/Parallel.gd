@@ -11,13 +11,13 @@ func set_instruction() -> String:
 
 func tick() -> Status:
 	var mode : int = get("mode")
-	var required_successes : int = next.size() if mode == Mode.ALL else get("required_successes")
+	var required_successes : int = _next_ref.size() if mode == Mode.ALL else get("required_successes")
 
 	var successes := 0
 	var failures := 0
 
-	for child in next:
-		var status : Status = child.tick()
+	for i in _next_ref.size():
+		var status : Status = tick_next(i)
 		match status:
 			Status.SUCCESS:
 				successes += 1
@@ -28,7 +28,7 @@ func tick() -> Status:
 
 	if successes >= required_successes:
 		return Status.SUCCESS
-	if failures > next.size() - required_successes:
+	if failures > _next_ref.size() - required_successes:
 		return Status.FAILURE
 	return Status.RUNNING
 

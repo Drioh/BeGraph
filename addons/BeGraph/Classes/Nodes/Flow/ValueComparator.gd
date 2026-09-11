@@ -12,13 +12,13 @@ func tick() -> Status:
 	var value_2 = get("value_2")
 	
 	if value_1>value_2:
-		conditions[0]["next"].tick()
+		tick_condition(0)
 		return Status.RUNNING
 	if value_1==value_2:
-		conditions[1]["next"].tick()
+		tick_condition(1)
 		return Status.RUNNING
 	if value_1<value_2:
-		conditions[2]["next"].tick()
+		tick_condition(2)
 		return Status.RUNNING
 	return Status.FAILURE
 

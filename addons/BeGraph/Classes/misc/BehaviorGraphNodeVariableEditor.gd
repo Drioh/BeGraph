@@ -233,10 +233,6 @@ var var_property_editor: EditorProperty
 ## Root popup shown by [member bb_link_button], containing the local and
 ## shared blackboard submenus.
 @onready var popup :PopupMenu= bb_link_button.get_popup()
-## Submenu listing compatible variables from [member local_blackboard].
-@onready var local_variable_submenu : PopupMenu = PopupMenu.new()
-## Submenu listing compatible variables from [member shared_blackboard].
-@onready var shared_variable_submenu : PopupMenu = PopupMenu.new()
 
 ## The [enum Variant.Type] of the variable being edited. Setting it also
 ## refreshes [member type_icon].
@@ -246,84 +242,90 @@ var var_property_editor: EditorProperty
 		type_icon.texture=EditorInterface.get_editor_theme().get_icon(type_string(value),"EditorIcons")
 ## The name of the [BehaviorNode] property this control edits.
 @onready var key : StringName = &""
-
-## Reference to the graph's local blackboard, used to populate
-## [member local_variable_submenu] and to validate/react to drag-and-drop and
-## bound-variable changes.
-@onready var local_blackboard : BehaviorGraphBlackboard = BehaviorGraphBlackboard.new()
-## Reference to the graph's shared blackboard, used to populate
-## [member shared_variable_submenu] and to validate/react to drag-and-drop and
-## bound-variable changes.
-@onready var shared_blackboard : BehaviorGraphBlackboard = BehaviorGraphBlackboard.new()
-
 ## The [BehaviorNode] resource that owns the variable being edited.
 @onready var node : BehaviorNode
 
-## Sets up the blackboard-link popup (local/shared submenus), wires up the
-## unlink button, and shows the link button by default (no blackboard binding).
-func _ready() -> void:
-	popup.clear()
-	popup.add_submenu_node_item("Local Blackboard",local_variable_submenu)
-	popup.add_submenu_node_item("Shared Blackboard", shared_variable_submenu)
-	
-	bb_unlink_button.pressed.connect(_on_bb_unlink_button_pressed)
-	
-	bb_reference.hide()
-	bb_link_button.show()
-	bb_link_button.about_to_popup.connect(_populate_popup,CONNECT_DEFERRED)
-	bb_unlink_button.hide()
-	custom_minimum_size.y=20
-
-
+var linked_property : BlackboardVariable = null:
+	set(v):
+		if v:
+			linked_property=v
+			if linked_property.name_changed.is_connected(update_bb_name):
+				linked_property.name_changed.disconnect(update_bb_name)
+			linked_property.name_changed.connect(update_bb_name)
+			
+			if linked_property.value_changed.is_connected(update_bb_value):
+				linked_property.value_changed.disconnect(update_bb_value)
+			linked_property.value_changed.connect(update_bb_value)
+			
+			if node._graph_ref.get_ref().changed.is_connected(check_property):
+				node._graph_ref.get_ref().changed.disconnect(check_property)
+			node._graph_ref.get_ref().changed.connect(check_property)
+			
+@onready var linked : bool = false:
+	set(value):
+		if value:
+			if var_property_editor: 
+				var_property_editor.hide()
+			bb_link_button.hide()
+			bb_reference.show()
+			bb_unlink_button.show()
+		else:
+			if var_property_editor: 
+				var_property_editor.show()
+			
+			linked_property=null
+			bb_link_button.show()
+			bb_reference.hide()
+			bb_unlink_button.hide()
+		linked = value
 ## Initializes this control for editing property [param k] (of type [param t])
 ## on [param n], using [param l_bb] and [param s_bb] as the local/shared
 ## blackboards. Instantiates the matching [EditorProperty] via
 ## [method EditorInspector.instantiate_property_editor] and wires up value
 ## change propagation in both directions. Returns [code]false[/code] if no
 ## editor could be created for this property's type.
-func setup_variable_editor(n : BehaviorNode,t:int,k:StringName,l_bb:BehaviorGraphBlackboard,s_bb:BehaviorGraphBlackboard) -> bool:
-	type = t
-	local_blackboard=l_bb
-	local_variable_submenu.index_pressed.connect(_on_popup_index_pressed.bind(local_variable_submenu),CONNECT_DEFERRED)
-	shared_blackboard=s_bb
-	shared_variable_submenu.index_pressed.connect(_on_popup_index_pressed.bind(shared_variable_submenu),CONNECT_DEFERRED)
-	
+func setup_variable_editor(n : BehaviorNode,property:Dictionary,bb:Array[BlackboardVariable]) -> bool:
 	node = n
-	key = k
 	
-	var hint : int = PROPERTY_HINT_NONE
-	var hint_string: String =  ""
-	
-	for property in node.get_property_list():
-		if property["name"] == k:
-			hint = property["hint"]
-			hint_string = property["hint_string"]
+	type = property["type"]
+	key = property["name"]
+	var hint : int = property["hint"]
+	var hint_string: String =  property["hint_string"]
+	var usage : int = property["usage"]
 	
 	var editor: EditorProperty = EditorInspector.instantiate_property_editor(
-		node, #CAMBIARE DALLA VARIABILE AL NODO STESSO, LASCIARE IN BEHAVIORGRAPHNODEVARIABLE SOLO INFO SU BLACKBOARD
+		node,
 		type, 
-		k, 
+		key, 
 		hint, 
 		hint_string, 
-		EDITOR_USAGES, 
+		EDITOR_USAGES|usage, 
 		true
 	)
 	if editor == null:
 		return false
 	
-	editor.set_object_and_property(node, k)
+	editor.set_object_and_property(node, key)
 	editor.draw_label=false
 	editor.selectable=false
+	
 	h_box_container.add_child(editor)
 	h_box_container.move_child(editor,1)
+	
 	var_property_editor=editor
 	var_property_editor.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	var_property_editor.size_flags_vertical=Control.SIZE_SHRINK_CENTER
+	
 	size_flags_horizontal=Control.SIZE_SHRINK_BEGIN
-	node.changed.connect(update_variable)
 	editor.property_changed.connect(change_property)
-	_populate_popup()
 	editor.update_property()
+	node.changed.connect(editor.update_property)
+	node.blackboard_key_set.connect(sync_blackboard_keys)
+	
+	bb_link_button.about_to_popup.connect(_populate_popup,CONNECT_DEFERRED)
+	bb_unlink_button.pressed.connect(node.set_node_property_blackboard_key.bind(key))
+	popup.index_pressed.connect(_on_popup_index_pressed)
+	
 	for child in get_all_children(editor):
 		child.mouse_filter=Control.MOUSE_FILTER_PASS
 	return true
@@ -333,26 +335,31 @@ func setup_variable_editor(n : BehaviorNode,t:int,k:StringName,l_bb:BehaviorGrap
 func change_property(property: StringName, new_value: Variant, field: StringName, changing: bool) -> void:
 	node.set(property, new_value)
 
-## Callback for [signal Resource.changed] on [member node]. When the changed
-## property matches [member key], refreshes this control's display: shows the
-## value editor if no blackboard key is bound ([param bb_key] is empty), or
-## shows the blackboard reference label otherwise.
-func update_variable(k : StringName = &"",bb_key : StringName = &""):
+func sync_blackboard_keys(k : StringName = &"",bb_key : StringName = &""):
 	if key == k:
 		if bb_key == &"":
-			var_property_editor.update_property()
-			if not var_property_editor.visible: 
-				var_property_editor.show()
-				bb_reference.hide()
-				bb_link_button.show()
-				bb_unlink_button.hide()
+			linked =false
 		else:
 			if var_property_editor.visible: 
-				var_property_editor.hide()
-				bb_reference.show()
+				linked = true
 				bb_reference.text = String(bb_key)
-				bb_link_button.hide()
-				bb_unlink_button.show()
+
+## Callback for [signal MenuButton.about_to_popup] on [member bb_link_button].
+## Repopulates [member local_variable_submenu] and [member shared_variable_submenu]
+## with the variables from each blackboard whose type is compatible with
+## [member type] (per [constant CONVERSION_DICT]), each with its type icon.
+func _populate_popup() -> void:
+	popup.clear()
+	var theme := EditorInterface.get_editor_theme()
+	for blackboard_property in node._graph_ref.get_ref().blackboard:
+		var t: int = typeof(blackboard_property.value)
+		if t in CONVERSION_DICT[type]:
+			popup.add_item(blackboard_property.name)
+			popup.set_item_icon(-1, theme.get_icon(type_string(t), "EditorIcons"))
+	
+	if popup.item_count == 0:
+		popup.add_item("no properties to pick from blackboard")
+		popup.set_item_disabled(-1,true)
 
 ## Callback fired when an item is selected from [param sub_menu] (either
 ## [member local_variable_submenu] or [member shared_variable_submenu]).
@@ -361,137 +368,43 @@ func update_variable(k : StringName = &"",bb_key : StringName = &""):
 ## and (re)connects the appropriate blackboard's [signal Resource.changed]
 ## signal (and that of the bound variable) to [method check_key], making sure
 ## only one blackboard is listened to at a time.
-func _on_popup_index_pressed(index : int,sub_menu:PopupMenu) -> void:
-	if var_property_editor: var_property_editor.hide()
-	bb_reference.show()
-	bb_reference.text = sub_menu.get_item_text(index)
-	bb_link_button.hide()
-	bb_unlink_button.show()
-	var k : String = sub_menu.get_item_text(index)
-	if (popup.get_item_submenu_node(0) == sub_menu):
-		node.set_blackboard_reference(key, local_blackboard, k)
-		if shared_blackboard:
-			if shared_blackboard.changed.is_connected(check_key):
-				shared_blackboard.changed.disconnect(check_key)
-				shared_blackboard.get_variable(k).changed.disconnect(check_key)
-		if not local_blackboard.changed.is_connected(check_key):
-			local_blackboard.changed.connect(check_key.bind(local_blackboard))
-			local_blackboard.get_variable(k).changed.connect(check_key.bind(local_blackboard))
-	if (popup.get_item_submenu_node(1) == sub_menu):
-		node.set_blackboard_reference(key, shared_blackboard, k)
-		if local_blackboard:
-			if local_blackboard.changed.is_connected(check_key):
-				local_blackboard.changed.disconnect(check_key)
-				local_blackboard.get_variable(k).changed.disconnect(check_key)
-		if not shared_blackboard.changed.is_connected(check_key):
-			shared_blackboard.changed.connect(check_key.bind(shared_blackboard))
-			shared_blackboard.get_variable(k).changed.connect(check_key.bind(shared_blackboard))
-
-## Validates the current blackboard binding against [param bb]: if the bound
-## key no longer exists in [param bb], or its value's type is no longer
-## compatible with [member type] (per [constant CONVERSION_DICT]), the binding
-## is cleared and this control reverts to the plain value editor.
-func check_key(bb:BehaviorGraphBlackboard):
-	if not bb_reference.text in bb.get_keys() or typeof(bb.get_value(bb_reference.text)) not in CONVERSION_DICT[type]:
-		node.set_blackboard_reference(key) #unsetting the reference, optional parameters are null by default
-		_on_bb_unlink_button_pressed()
-
-## Callback for [member bb_unlink_button]'s pressed signal. Reverts this
-## control to displaying the plain value editor and disconnects any
-## [method check_key] listeners on either blackboard.
-func _on_bb_unlink_button_pressed() -> void:
-	if var_property_editor: var_property_editor.show()
-	bb_reference.hide()
-	bb_link_button.show()
-	bb_unlink_button.hide()
-	
-	if local_blackboard:
-		if local_blackboard.changed.is_connected(check_key):
-			local_blackboard.changed.disconnect(check_key)
-			if local_blackboard.get_variable(bb_reference.text):
-				local_blackboard.get_variable(bb_reference.text).changed.disconnect(check_key)
-	if shared_blackboard:
-		if shared_blackboard.changed.is_connected(check_key):
-			shared_blackboard.changed.disconnect(check_key)
-			if shared_blackboard.get_variable(bb_reference.text):
-				shared_blackboard.get_variable(bb_reference.text).changed.disconnect(check_key)
-
-## Callback for [signal MenuButton.about_to_popup] on [member bb_link_button].
-## Repopulates [member local_variable_submenu] and [member shared_variable_submenu]
-## with the variables from each blackboard whose type is compatible with
-## [member type] (per [constant CONVERSION_DICT]), each with its type icon.
-func _populate_popup() -> void:
-	local_variable_submenu.clear()
-	shared_variable_submenu.clear()
-	var theme := EditorInterface.get_editor_theme()
-	if local_blackboard != null:
-		for blackboard_variable in local_blackboard.content:
-			var t: int = typeof(blackboard_variable.value)
-			if t in CONVERSION_DICT[type]:
-				local_variable_submenu.add_item(blackboard_variable.name)
-				local_variable_submenu.set_item_icon(-1, theme.get_icon(type_string(t), "EditorIcons"))
-	if shared_blackboard != null:
-		for blackboard_variable in shared_blackboard.content:
-			var t: int = typeof(blackboard_variable.value)
-			if t in CONVERSION_DICT[type]:
-				shared_variable_submenu.add_item(blackboard_variable.name)
-				shared_variable_submenu.set_item_icon(-1, theme.get_icon(type_string(t), "EditorIcons"))
-
-## ovides drag-and-drop visual feedback: while a compatible/incompatible
-## blackboard variable resource is being dragged over this control, tints
-## [member fallback_layer] accordingly; clears the tint once the drag ends.
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_DRAG_BEGIN:
-		var drag_data = get_viewport().gui_get_drag_data()
-		var cond_1 : bool = drag_data.has("resource") and typeof(drag_data["resource"].value) in CONVERSION_DICT[type]
-		var cond_2 : bool = typeof(drag_data["resource"].value) == TYPE_NIL
-		if cond_1 or cond_2:
-			fallback_layer.set_indexed("theme_override_styles/panel:bg_color",ProjectSettings.get_setting("BeGraph/colors/allowed_variable_color_background"))
-			fallback_layer.set_indexed("theme_override_styles/panel:border_color",ProjectSettings.get_setting("BeGraph/colors/allowed_variable_color_border"))
-		else:
-			fallback_layer.set_indexed("theme_override_styles/panel:bg_color",ProjectSettings.get_setting("BeGraph/colors/not_allowed_variable_color_background"))
-			fallback_layer.set_indexed("theme_override_styles/panel:border_color",ProjectSettings.get_setting("BeGraph/colors/not_allowed_variable_color_border"))
-	if what == NOTIFICATION_DRAG_END:
-		fallback_layer.set_indexed("theme_override_styles/panel:bg_color",Color(0.0, 0.0, 0.0, 0.0))
-		fallback_layer.set_indexed("theme_override_styles/panel:border_color",Color(0.0, 0.0, 0.0, 0.0))
+func _on_popup_index_pressed(index : int) -> void:
+	linked = true
+	var property_name :String = popup.get_item_text(index)
+	for property in node._graph_ref.get_ref().blackboard:
+		if property.name == property_name:
+			linked_property=property
+	bb_reference.text = property_name
+	node.set_node_property_blackboard_key(key, property_name)
 
 ## Returns [code]true[/code] if [param data] represents a blackboard variable
 ## resource whose value type is compatible with [member type] and the drop
 ## position lands on a valid slot within this control.
 func _can_drop_data(at_position, data):
 	var global_pos = get_global_transform() * at_position
-	
-	var cond_1:bool=_get_slot_at(self,global_pos)!=null and typeof(data["resource"].value) in CONVERSION_DICT[type]
-	var cond_2 : bool = typeof(data["resource"].value) == TYPE_NIL
-	return cond_1 or cond_2
-
+	if (data.has("resource")):
+		var cond_1:bool=_get_slot_at(self,global_pos)!=null and typeof(data["resource"].value) in CONVERSION_DICT[type]
+		var cond_2 : bool = typeof(data["resource"].value) == TYPE_NIL
+		return cond_1 or cond_2
+	return false
 ## Handles a successful drop of a blackboard variable resource: determines
 ## whether it came from the local or shared blackboard (based on its resource
 ## path) and binds [member node]'s property to that blackboard/key via
 ## [method BehaviorNode.set_blackboard_reference].
 func _drop_data(at_position, data):
-	var bb : BehaviorGraphBlackboard
 	var k : StringName = data["resource"].name
-	if data["resource"].resource_path.get_slice("::", 0) == "":
-		bb = local_blackboard
-		if shared_blackboard:
-			if shared_blackboard.changed.is_connected(check_key):
-				shared_blackboard.changed.disconnect(check_key)
-				shared_blackboard.get_variable(k).changed.disconnect(check_key)
-		if not local_blackboard.changed.is_connected(check_key):
-			local_blackboard.changed.connect(check_key.bind(local_blackboard))
-			local_blackboard.get_variable(k).changed.connect(check_key.bind(local_blackboard))
-	else:
-		bb = shared_blackboard
-		if local_blackboard:
-			if local_blackboard.changed.is_connected(check_key):
-				local_blackboard.changed.disconnect(check_key)
-				local_blackboard.get_variable(k).changed.disconnect(check_key)
-		if not shared_blackboard.changed.is_connected(check_key):
-			shared_blackboard.changed.connect(check_key.bind(shared_blackboard))
-			shared_blackboard.get_variable(k).changed.connect(check_key.bind(shared_blackboard))
-	node.set_blackboard_reference(key, bb, k)
-		
+	bb_reference.text = String(k)
+	linked_property=data["resource"]
+	node.set_node_property_blackboard_key(key, k)
+
+func update_bb_name(n:StringName):
+	bb_reference.text=n
+	node.set_node_property_blackboard_key(key,n)
+
+func update_bb_value(v:Variant):
+	if not typeof(v) in CONVERSION_DICT[type]:
+		node.set_node_property_blackboard_key(key)
+		linked=false
 
 ## Recursively searches [param node]'s [Control] descendants for the one whose
 ## global rect contains [param global_pos], returning the first (deepest)
@@ -515,3 +428,27 @@ func get_all_children(in_node,arr:=[]):
 	for child in in_node.get_children():
 		arr = get_all_children(child,arr)
 	return arr
+
+func check_property(blackboard:Array[BlackboardVariable])->void:
+	if linked_property != null:
+		if linked_property not in blackboard:
+			node.set_node_property_blackboard_key(key)
+			linked=false
+
+## ovides drag-and-drop visual feedback: while a compatible/incompatible
+## blackboard variable resource is being dragged over this control, tints
+## [member fallback_layer] accordingly; clears the tint once the drag ends.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_DRAG_BEGIN:
+		var drag_data = get_viewport().gui_get_drag_data()
+		var cond_1 : bool = drag_data.has("resource") and typeof(drag_data["resource"].value) in CONVERSION_DICT[type]
+		var cond_2 : bool = typeof(drag_data["resource"].value) == TYPE_NIL
+		if cond_1 or cond_2:
+			fallback_layer.set_indexed("theme_override_styles/panel:bg_color",ProjectSettings.get_setting("BeGraph/colors/allowed_variable_color_background"))
+			fallback_layer.set_indexed("theme_override_styles/panel:border_color",ProjectSettings.get_setting("BeGraph/colors/allowed_variable_color_border"))
+		else:
+			fallback_layer.set_indexed("theme_override_styles/panel:bg_color",ProjectSettings.get_setting("BeGraph/colors/not_allowed_variable_color_background"))
+			fallback_layer.set_indexed("theme_override_styles/panel:border_color",ProjectSettings.get_setting("BeGraph/colors/not_allowed_variable_color_border"))
+	if what == NOTIFICATION_DRAG_END:
+		fallback_layer.set_indexed("theme_override_styles/panel:bg_color",Color(0.0, 0.0, 0.0, 0.0))
+		fallback_layer.set_indexed("theme_override_styles/panel:border_color",Color(0.0, 0.0, 0.0, 0.0))

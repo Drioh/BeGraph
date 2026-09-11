@@ -59,7 +59,7 @@ func _sync_from_enum_values(previous_size: int = -1) -> void:
 		conditions.append({"text": values[i], "next": kept_next})
 
 	output = false
-	conditions_changed.emit()   # aggiorna solo le righe/porte del GraphNode: non tocca l'Inspector
+	#conditions_changed.emit()   # aggiorna solo le righe/porte del GraphNode: non tocca l'Inspector
 
 	# Il dropdown di "value" legge hint_string solo quando l'Inspector viene
 	# ricostruito: lo facciamo SOLO quando la dimensione dell'array cambia,

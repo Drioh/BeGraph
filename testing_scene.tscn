@@ -1,12 +1,3 @@
 [gd_scene format=3 uid="uid://darchkoe02k7p"]
 
-[ext_resource type="Script" uid="uid://cj0fv54i6ere" path="res://addons/BeGraph/Classes/misc/BehaviorAgent.gd" id="1_7tmfp"]
-[ext_resource type="Resource" uid="uid://blcvm7yvaseef" path="res://Dai.tres" id="2_7tmfp"]
-
 [node name="Node2D" type="Node2D" unique_id=1496466534]
-
-[node name="BehaviorAgent" type="Node" parent="." unique_id=251482828]
-script = ExtResource("1_7tmfp")
-behavior_graph = ExtResource("2_7tmfp")
-starting_point = 0
-metadata/_custom_type_script = "uid://cj0fv54i6ere"
