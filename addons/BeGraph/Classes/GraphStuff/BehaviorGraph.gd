@@ -11,7 +11,11 @@ extends Resource
 @export_group("Graph Properties")
 
 ##BehaviorNodes contained in this graph
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY) var nodes : Array[BehaviorNode]
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY) var nodes : Array[BehaviorNode]:
+	set(v):
+		nodes=v
+		for n in nodes:
+			if n: n._graph_ref=weakref(self)
 ##Used for saving purposes, this variable contains a copy of [param connections] from the graph edit. This value gets its value when a graph gets saved
 @export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY) var connections : Array[Dictionary]
 
@@ -24,6 +28,7 @@ func _init() -> void:
 
 #region Node methods
 func add_node(node:BehaviorNode):
+	node._graph_ref=weakref(self)
 	nodes.append(node)
 
 func remove_node(node:BehaviorNode):

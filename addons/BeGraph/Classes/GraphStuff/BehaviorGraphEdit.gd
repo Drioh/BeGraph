@@ -77,14 +77,12 @@ func load_nodes() -> void:
 		node.position_offset = node_to_load.position_in_graph
 		node.delete_request.connect(_on_delete_nodes_request)
 		
-
 ## Recreates every visual connection stored in [member current_graph.connections].
 func load_connections() -> void:
 	for connection in current_graph.connections:
 		connect_node(connection["from_node"], connection["from_port"], connection["to_node"], connection["to_port"])
 
 #endregion
-
 
 #region Node management
 
@@ -99,7 +97,6 @@ func add_node(script_path: String = "") -> void:
 		node.set_node_script(script_path)
 		node.position_offset = (get_local_mouse_position() + scroll_offset) / zoom
 		node.node.position_in_graph = node.position_offset
-		node.node._graph_ref=weakref(current_graph)
 		current_graph.add_node(node.node)
 
 		node.delete_request.connect(_on_delete_nodes_request)

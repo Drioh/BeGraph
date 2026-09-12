@@ -144,7 +144,7 @@ func _add_placeholder_value(key: String, raw_match: String, container: Control) 
 
 	var variable: Variant = node.get(key)
 	if variable == null:
-		if ! node.get_node_property_info(key,"usage") == PROPERTY_USAGE_NIL_IS_VARIANT:
+		if ! node.get_node_property_info(key,"usage") and PROPERTY_USAGE_NIL_IS_VARIANT:
 			push_warning("Value for key \"%s\" is null" % key)
 			_add_null_label(raw_match, container)
 			return
@@ -203,7 +203,6 @@ func _add_inline_control(key: String, value: Variant,container : HFlowContainer)
 	
 	control.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	control.size_flags_vertical=Control.SIZE_EXPAND_FILL
-	#control.bb_unlink_button.pressed.connect(node.set_node_property_blackboard_key.bind(key))
 	control.resized.connect(reset_size, CONNECT_DEFERRED)
 	return
 

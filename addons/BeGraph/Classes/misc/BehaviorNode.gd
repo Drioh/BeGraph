@@ -61,8 +61,8 @@ var regex :RegEx= RegEx.create_from_string(r"\{([^{}]+)\}")
 			return true
 		return false
 
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE|PROPERTY_USAGE_READ_ONLY|PROPERTY_USAGE_EDITOR)var _graph_ref : WeakRef
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE|PROPERTY_USAGE_READ_ONLY|PROPERTY_USAGE_EDITOR)var _next_ref : Array[WeakRef] = []
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE|PROPERTY_USAGE_READ_ONLY|PROPERTY_USAGE_EDITOR) var _graph_ref : WeakRef
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE|PROPERTY_USAGE_READ_ONLY|PROPERTY_USAGE_EDITOR) var _next_ref : Array[WeakRef] = []
 
 signal blackboard_key_set(property:StringName,blackboard_key:StringName)
 
@@ -120,14 +120,15 @@ func _add_behavior_property(
 	hint:int=PROPERTY_HINT_NONE, 
 	hint_string:String="", 
 	classname:String="", 
-	usage:int=PROPERTY_USAGE_DEFAULT|PROPERTY_USAGE_STORAGE)->void:
+	usage:int=PROPERTY_USAGE_SCRIPT_VARIABLE|PROPERTY_USAGE_EDITOR|PROPERTY_USAGE_STORAGE)->void:
+	
 	var entry : Dictionary={
 		"name":name,
 		"class_name":classname,
 		"type":typeof(default_value),
 		"hint":hint,
 		"hint_string":hint_string,
-		"usage":usage,
+		"usage":usage|PROPERTY_USAGE_SCRIPT_VARIABLE|PROPERTY_USAGE_EDITOR|PROPERTY_USAGE_STORAGE,
 		"value":default_value,
 		"blackboard_key":&""
 	}
@@ -140,9 +141,12 @@ func _add_behavior_property(
 ## key. Returns [code]true[/code] if the property was found and set, or
 ## [code]false[/code] otherwise.
 func _set(property: StringName, value: Variant) -> bool:
+	print_stack()
 	for prop in behavior_properties:
 		if prop["name"] == property:
-			prop["value"] = value #handles setting a value for a behavior_property with the given key
+			prop["value"] = value
+			if prop["usage"] & PROPERTY_USAGE_NIL_IS_VARIANT:
+				prop["type"] = typeof(null)
 			changed.emit()
 			return true
 	return false
@@ -199,36 +203,47 @@ func is_blackboard_reference_enabled(key:StringName)->bool:
 			return property["blackboard_key"] != &""
 	return false
 
-func add_next(n : BehaviorNode, from_port : int)->void:
-	var n_ref : WeakRef = weakref(n)
+func add_next(n : BehaviorNode, from_port : int) -> void:
 	if output:
-		if n_ref not in _next_ref:
-			_next_ref.append(n_ref)
+		if not _next_ref.any(func(r): return r.get_ref() == n):
+			_next_ref.append(weakref(n))
 		return
 	else:
-		if conditions[from_port]["next"] != n_ref:
-			conditions[from_port]["next"]=n_ref
+		var current : WeakRef = conditions[from_port]["next"]
+		if current == null or current.get_ref() != n:
+			conditions[from_port]["next"] = weakref(n)
 		return
 
-func remove_next(n:BehaviorNode, from_port : int)->void:
-	var n_ref : WeakRef = weakref(n)
+func remove_next(n : BehaviorNode, from_port : int) -> void:
 	if output:
-		if n_ref in _next_ref:
-			_next_ref.erase(n_ref)
+		for i in range(_next_ref.size() - 1, -1, -1):
+			var target = _next_ref[i].get_ref()
+			if target == n or target == null:  # rimuovi anche i weakref "morti"
+				_next_ref.remove_at(i)
 		return
 	else:
-		if conditions[from_port]["next"] == n_ref:
+		var current : WeakRef = conditions[from_port]["next"]
+		if current != null and (current.get_ref() == n or current.get_ref() == null):
 			conditions[from_port]["next"] = null
 		return
 
 func tick_next(index:int = 0) -> Status:
-	if _next_ref.size()<=index+1:
-		return _next_ref[index].get_ref().tick()
-	push_error("BehaviorNode %s has less than %s successors"%[self,index+1])
+	if index < _next_ref.size():
+		var target = _next_ref[index].get_ref()
+		if target:
+			return target.tick()
+		push_error("BehaviorNode %s: successore all'indice %s è stato liberato" % [self, index])
+		return Status.FAILURE
+	push_error("BehaviorNode %s has less than %s successors" % [self, index+1])
 	return Status.FAILURE
 
-func tick_condition(index:int=0)->Status:
-	if conditions.size()<=index+1:
-		return conditions[index]["next"].get_ref().tick()
-	push_error("BehaviorNode %s has less than %s conditions"%[self,index+1])
+func tick_condition(index:int = 0) -> Status:
+	if index < conditions.size():
+		var next_ref : WeakRef = conditions[index]["next"]
+		var target = next_ref.get_ref() if next_ref else null
+		if target:
+			return target.tick()
+		push_error("BehaviorNode %s: condizione %s non ha un successore valido" % [self, index])
+		return Status.FAILURE
+	push_error("BehaviorNode %s has less than %s conditions" % [self, index+1])
 	return Status.FAILURE

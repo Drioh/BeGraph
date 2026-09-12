@@ -8,7 +8,7 @@ class_name BehaviorGraphNodeVariableEditor
 extends PanelContainer
 
 ## Property usage flags passed when instantiating the inline [EditorProperty].
-const EDITOR_USAGES = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_NIL_IS_VARIANT |PROPERTY_USAGE_SCRIPT_VARIABLE
+const EDITOR_USAGES = PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_STORAGE
 ## Maps each [enum Variant.Type] to the list of [enum Variant.Type] values that
 ## are considered compatible with it, i.e. which blackboard variable types may
 ## be bound to a variable of a given type (used by [method _populate_popup],
@@ -319,21 +319,32 @@ func setup_variable_editor(n : BehaviorNode,property:Dictionary,bb:Array[Blackbo
 	size_flags_horizontal=Control.SIZE_SHRINK_BEGIN
 	editor.property_changed.connect(change_property)
 	editor.update_property()
-	node.changed.connect(editor.update_property)
+	node.changed.connect(editor.update_property,CONNECT_DEFERRED)
 	node.blackboard_key_set.connect(sync_blackboard_keys)
 	
 	bb_link_button.about_to_popup.connect(_populate_popup,CONNECT_DEFERRED)
 	bb_unlink_button.pressed.connect(node.set_node_property_blackboard_key.bind(key))
+	
 	popup.index_pressed.connect(_on_popup_index_pressed)
+	popup.clear()
 	
 	for child in get_all_children(editor):
 		child.mouse_filter=Control.MOUSE_FILTER_PASS
+	
+	var saved_key: StringName = property["blackboard_key"]
+	if saved_key != &"":
+		for v in bb:
+			if v.name==saved_key:
+				linked_property=v
+				bb_reference.text=saved_key
+				linked=true
 	return true
 
 ## Callback for [signal EditorProperty.property_changed], forwarded from
 ## [member var_property_editor]; applies the new value to [member node].
 func change_property(property: StringName, new_value: Variant, field: StringName, changing: bool) -> void:
-	node.set(property, new_value)
+	if not changing:
+		node.set(property, new_value)
 
 func sync_blackboard_keys(k : StringName = &"",bb_key : StringName = &""):
 	if key == k:
