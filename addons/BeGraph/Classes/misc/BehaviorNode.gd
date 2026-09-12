@@ -8,6 +8,8 @@ extends Resource
 ##Return value for the [method tick] method.
 enum Status{SUCCESS,FAILURE,RUNNING}
 
+const INTERNAL_USAGE := PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_READ_ONLY | PROPERTY_USAGE_EDITOR
+
 ## Describes what the node does. Logic to determine which node is next in execution is written here.
 @abstract func tick() -> Status
 
@@ -28,18 +30,18 @@ enum Status{SUCCESS,FAILURE,RUNNING}
 @abstract func set_properties()-> void
 
 ## Instruction displayed in node. To set this parameter, use the [method set_instruction] method
-@export_custom(PROPERTY_HINT_MULTILINE_TEXT, "", PROPERTY_USAGE_STORAGE|PROPERTY_USAGE_READ_ONLY|PROPERTY_USAGE_EDITOR)var instruction : String = ""
+@export_custom(PROPERTY_HINT_MULTILINE_TEXT, "", INTERNAL_USAGE)var instruction : String = ""
 
 @export_group("Debug")
 
 ## Defines multiple successors for this node depending on the logic of the node itself. To set conditions, use the [method set_conditions] method, providing a [code]PackedStringArray[/code].[br]Conditions can have only one successor
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE|PROPERTY_USAGE_READ_ONLY|PROPERTY_USAGE_EDITOR)var conditions : Array[Dictionary]
+@export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE)var conditions : Array[Dictionary]
 
 ##Contains all of the [BehaviorProperty] for this node.
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE|PROPERTY_USAGE_READ_ONLY|PROPERTY_USAGE_EDITOR)var behavior_properties:Array[Dictionary]
+@export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE)var behavior_properties:Array[Dictionary]
 
 ## For display purposes only, this parameter defines a node's category. Set using [method set_node_category]
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE|PROPERTY_USAGE_READ_ONLY|PROPERTY_USAGE_EDITOR)var node_category : String = ""
+@export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE)var node_category : String = ""
 
 ##Regular expression used to get variables from the text
 var regex :RegEx= RegEx.create_from_string(r"\{([^{}]+)\}")
@@ -51,20 +53,21 @@ var regex :RegEx= RegEx.create_from_string(r"\{([^{}]+)\}")
 @export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE)var output : bool = false
 
 ##If true, lets the node have more than one successor per output slot ([param next] is allowed to have a size greater than 0)
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE|PROPERTY_USAGE_READ_ONLY|PROPERTY_USAGE_EDITOR)var allows_multiple_outputs : bool = false
+@export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE)var allows_multiple_outputs : bool = false
 
 @export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE) var position_in_graph : Vector2
 
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE|PROPERTY_USAGE_READ_ONLY|PROPERTY_USAGE_EDITOR) var is_starting_node : bool :
+@export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE) var is_starting_node : bool :
 	get():
 		if node_category == "access_point_node": 
 			return true
 		return false
 
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE|PROPERTY_USAGE_READ_ONLY|PROPERTY_USAGE_EDITOR) var _graph_ref : WeakRef
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE|PROPERTY_USAGE_READ_ONLY|PROPERTY_USAGE_EDITOR) var _next_ref : Array[WeakRef] = []
+@export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE) var _graph_ref : WeakRef
+@export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE) var _next_ref : Array[WeakRef] = []
 
 signal blackboard_key_set(property:StringName,blackboard_key:StringName)
+signal conditions_changed
 
 @export_group("Properties")
 
@@ -141,7 +144,6 @@ func _add_behavior_property(
 ## key. Returns [code]true[/code] if the property was found and set, or
 ## [code]false[/code] otherwise.
 func _set(property: StringName, value: Variant) -> bool:
-	print_stack()
 	for prop in behavior_properties:
 		if prop["name"] == property:
 			prop["value"] = value

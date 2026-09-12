@@ -73,8 +73,9 @@ func set_node(n:BehaviorNode) -> void:
 	delete_button.pressed.connect(delete_request.emit.bind([self.name]),CONNECT_DEFERRED)
 	tb.add_child(delete_button)
 	
+	node.conditions_changed.connect(_on_conditions_changed)
 	set_node_color("BeGraph/colors/node_colors/%s" % node.node_category)
-	
+
 ## Renders one row per entry in [member BehaviorNode.conditions]: makes
 ## [member h_box_container] visible and, for each condition, creates a new
 ## flow container populated via [method _render_placeholders] and enables a

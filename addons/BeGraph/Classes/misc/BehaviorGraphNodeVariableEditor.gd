@@ -328,9 +328,6 @@ func setup_variable_editor(n : BehaviorNode,property:Dictionary,bb:Array[Blackbo
 	popup.index_pressed.connect(_on_popup_index_pressed)
 	popup.clear()
 	
-	for child in get_all_children(editor):
-		child.mouse_filter=Control.MOUSE_FILTER_PASS
-	
 	var saved_key: StringName = property["blackboard_key"]
 	if saved_key != &"":
 		for v in bb:

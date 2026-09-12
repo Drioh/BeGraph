@@ -12,10 +12,7 @@ func tick() -> Status:
 	var value : int = get("value")
 	if value < 0 or value >= conditions.size():
 		return Status.FAILURE
-	var next_node : BehaviorNode = conditions[value]["next"]
-	if next_node == null:
-		return Status.FAILURE
-	return next_node.tick()
+	return tick_condition(value)
 
 func set_node_category()->String: return "control_flow_node"
 func set_input()->bool: return true
@@ -34,12 +31,15 @@ func set_conditions() -> PackedStringArray:
 ## Intercetta le modifiche a "enum_values" per tenere sincronizzati sia il
 ## dropdown di "value" sia le porte di output (conditions).
 func _set(property: StringName, value: Variant) -> bool:
-	var previous_size : int = -1
+	var previous_size := -1
 	if property == "enum_values":
 		previous_size = get("enum_values").size()
+
+	var handled := super._set(property, value)
+
+	if handled and property == "enum_values":
 		_sync_from_enum_values(previous_size)
-		return true
-	return false
+	return handled
 
 func _sync_from_enum_values(previous_size: int = -1) -> void:
 	var values : PackedStringArray = get("enum_values")
@@ -59,7 +59,7 @@ func _sync_from_enum_values(previous_size: int = -1) -> void:
 		conditions.append({"text": values[i], "next": kept_next})
 
 	output = false
-	#conditions_changed.emit()   # aggiorna solo le righe/porte del GraphNode: non tocca l'Inspector
+	conditions_changed.emit()   # aggiorna solo le righe/porte del GraphNode: non tocca l'Inspector
 
 	# Il dropdown di "value" legge hint_string solo quando l'Inspector viene
 	# ricostruito: lo facciamo SOLO quando la dimensione dell'array cambia,

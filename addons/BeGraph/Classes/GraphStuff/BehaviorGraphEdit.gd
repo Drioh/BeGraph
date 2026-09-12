@@ -272,10 +272,11 @@ func _build_node_popup(path: String) -> PopupMenu:
 			continue
 		var full_path := path.path_join(file_name)
 		var id := popup.item_count
-		popup.add_item(_label_for_script(full_path), id)
-		var icon: Texture2D = _icon_for_script(full_path)
-		if not icon == null:
-			popup.set_item_icon(id, icon)
+		
+		var script_metadata = _script_metadata(full_path)
+		popup.add_item(script_metadata["label"], id)
+		if not script_metadata["icon"] == null:
+			popup.set_item_icon(id, script_metadata["icon"])
 		popup.set_item_metadata(id, full_path)
 
 	popup.id_pressed.connect(_on_node_popup_id_pressed.bind(popup))
@@ -288,28 +289,12 @@ func _on_node_popup_id_pressed(id: int, popup: PopupMenu) -> void:
 	if script_path != null:
 		add_node(script_path)
 
-## Returns the display label for the script at [param script_path]: uses its
-## [code]DISPLAY_NAME[/code] constant if defined and non-empty, otherwise falls
-## back to the file's base name.
-func _label_for_script(script_path: String) -> String:
-	var scr := load(script_path) as GDScript
+func _script_metadata(path: String) -> Dictionary:
+	var scr := load(path) as GDScript
 	if scr == null:
-		return script_path.get_file().get_basename()
+		return {"label": path.get_file().get_basename(), "icon": null}
 	var consts := scr.get_script_constant_map()
-	if consts.has("DISPLAY_NAME") and consts["DISPLAY_NAME"] != "":
-		return consts["DISPLAY_NAME"]
-	return script_path.get_file().get_basename()
-
-## Returns the icon associated with the script at [param script_path], read
-## from its [code]DISPLAY_ICON[/code] constant, or [code]null[/code] if the
-## script defines none.
-func _icon_for_script(script_path: String) -> Texture2D:
-	var scr := load(script_path) as GDScript
-	if scr == null:
-		return null
-	var consts := scr.get_script_constant_map()
-	if consts.has("DISPLAY_ICON") and consts["DISPLAY_ICON"] != "":
-		return load(consts["DISPLAY_ICON"])
-	return null
-
-#endregion
+	return {
+		"label": consts.get("DISPLAY_NAME", path.get_file().get_basename()),
+		"icon": load(consts["DISPLAY_ICON"]) if consts.has("DISPLAY_ICON") else null
+	}

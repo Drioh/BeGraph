@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://ca0cevcqjpnsq" path="res://addons/BeGraph/Classes/misc/BehaviorNode.gd" id="2_xonew"]
 [ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="3_y3mkl"]
 [ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="4_ihbpk"]
+[ext_resource type="Script" uid="uid://3hx7e04r6a4t" path="res://addons/BeGraph/Classes/Nodes/Flow/EnumSelector.gd" id="5_ihbpk"]
 [ext_resource type="Script" uid="uid://be01k3jh4ckwt" path="res://addons/BeGraph/Classes/Nodes/Actions/Print.gd" id="5_y3mkl"]
 
 [sub_resource type="Resource" id="Resource_p8ve5"]
@@ -77,8 +78,46 @@ position_in_graph = Vector2(897, 138)
 _graph_ref = Object(WeakRef,"script":null)
 
 
+[sub_resource type="Resource" id="Resource_g03ti"]
+resource_name = "_GraphNode_24893"
+script = ExtResource("5_ihbpk")
+instruction = "Enum Selector: {value}"
+conditions = Array[Dictionary]([{
+"next": null,
+"text": "Value 0"
+}, {
+"next": null,
+"text": "Value 1"
+}])
+behavior_properties = Array[Dictionary]([{
+"blackboard_key": &"",
+"class_name": "",
+"hint": 0,
+"hint_string": "",
+"name": "enum_values",
+"type": 34,
+"usage": 4102,
+"value": PackedStringArray("Value 0", "Value 1")
+}, {
+"blackboard_key": &"",
+"class_name": "",
+"hint": 2,
+"hint_string": "Value 0,Value 1",
+"name": "value",
+"type": 2,
+"usage": 4102,
+"value": 0
+}])
+node_category = "control_flow_node"
+input = true
+position_in_graph = Vector2(940.1503, 457.07132)
+_graph_ref = Object(WeakRef,"script":null)
+
+enum_values = PackedStringArray("Value 0", "Value 1")
+value = 0
+
 [resource]
 script = ExtResource("4_ihbpk")
 blackboard = Array[ExtResource("1_3gp3i")]([SubResource("Resource_p8ve5")])
-nodes = Array[ExtResource("2_xonew")]([SubResource("Resource_3gp3i"), SubResource("Resource_ihbpk"), SubResource("Resource_xonew")])
+nodes = Array[ExtResource("2_xonew")]([SubResource("Resource_3gp3i"), SubResource("Resource_ihbpk"), SubResource("Resource_xonew"), SubResource("Resource_g03ti")])
 metadata/_custom_type_script = "uid://d25yjg1utgxu"
