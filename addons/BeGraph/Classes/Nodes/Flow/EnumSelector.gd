@@ -22,16 +22,16 @@ func set_allows_multiple_outputs() -> bool: return false
 func set_properties()-> void:
 	## Editabile dall'Inspector (pulsante matita sul titlebar del nodo):
 	## aggiungi, rimuovi, rinomina o riordina le voci liberamente.
-	_add_behavior_property("enum_values", PackedStringArray(["Value 0", "Value 1"]))
-	_add_behavior_property("value", 0, PROPERTY_HINT_ENUM, "Value 0,Value 1")
+	_add_behavior_property("enum_values", PackedStringArray([]))
+	_add_behavior_property("value", 0, PROPERTY_HINT_ENUM,"enum_values")
 
 func set_conditions() -> PackedStringArray:
-	return PackedStringArray(["Value 0", "Value 1"])
+	return PackedStringArray([])
 
 ## Intercetta le modifiche a "enum_values" per tenere sincronizzati sia il
 ## dropdown di "value" sia le porte di output (conditions).
 func _set(property: StringName, value: Variant) -> bool:
-	var previous_size := -1
+	var previous_size :int= -1
 	if property == "enum_values":
 		previous_size = get("enum_values").size()
 

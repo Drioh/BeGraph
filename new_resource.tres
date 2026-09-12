@@ -78,8 +78,8 @@ position_in_graph = Vector2(897, 138)
 _graph_ref = Object(WeakRef,"script":null)
 
 
-[sub_resource type="Resource" id="Resource_g03ti"]
-resource_name = "_GraphNode_24893"
+[sub_resource type="Resource" id="Resource_y3mkl"]
+resource_name = "_GraphNode_25130"
 script = ExtResource("5_ihbpk")
 instruction = "Enum Selector: {value}"
 conditions = Array[Dictionary]([{
@@ -88,6 +88,9 @@ conditions = Array[Dictionary]([{
 }, {
 "next": null,
 "text": "Value 1"
+}, {
+"next": null,
+"text": "Ciao"
 }])
 behavior_properties = Array[Dictionary]([{
 "blackboard_key": &"",
@@ -97,12 +100,12 @@ behavior_properties = Array[Dictionary]([{
 "name": "enum_values",
 "type": 34,
 "usage": 4102,
-"value": PackedStringArray("Value 0", "Value 1")
+"value": PackedStringArray("Value 0", "Value 1", "Ciao")
 }, {
 "blackboard_key": &"",
 "class_name": "",
 "hint": 2,
-"hint_string": "Value 0,Value 1",
+"hint_string": "Value 0,Value 1,Ciao",
 "name": "value",
 "type": 2,
 "usage": 4102,
@@ -110,14 +113,14 @@ behavior_properties = Array[Dictionary]([{
 }])
 node_category = "control_flow_node"
 input = true
-position_in_graph = Vector2(940.1503, 457.07132)
+position_in_graph = Vector2(1337.3824, 524.24915)
 _graph_ref = Object(WeakRef,"script":null)
 
-enum_values = PackedStringArray("Value 0", "Value 1")
+enum_values = PackedStringArray("Value 0", "Value 1", "Ciao")
 value = 0
 
 [resource]
 script = ExtResource("4_ihbpk")
 blackboard = Array[ExtResource("1_3gp3i")]([SubResource("Resource_p8ve5")])
-nodes = Array[ExtResource("2_xonew")]([SubResource("Resource_3gp3i"), SubResource("Resource_ihbpk"), SubResource("Resource_xonew"), SubResource("Resource_g03ti")])
+nodes = Array[ExtResource("2_xonew")]([SubResource("Resource_3gp3i"), SubResource("Resource_ihbpk"), SubResource("Resource_xonew"), SubResource("Resource_y3mkl")])
 metadata/_custom_type_script = "uid://d25yjg1utgxu"

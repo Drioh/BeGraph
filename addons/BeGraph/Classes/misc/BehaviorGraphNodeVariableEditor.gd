@@ -292,7 +292,6 @@ func setup_variable_editor(n : BehaviorNode,property:Dictionary,bb:Array[Blackbo
 	var hint : int = property["hint"]
 	var hint_string: String =  property["hint_string"]
 	var usage : int = property["usage"]
-	
 	var editor: EditorProperty = EditorInspector.instantiate_property_editor(
 		node,
 		type, 
@@ -302,13 +301,13 @@ func setup_variable_editor(n : BehaviorNode,property:Dictionary,bb:Array[Blackbo
 		EDITOR_USAGES|usage, 
 		true
 	)
+
 	if editor == null:
 		return false
 	
 	editor.set_object_and_property(node, key)
 	editor.draw_label=false
 	editor.selectable=false
-	
 	h_box_container.add_child(editor)
 	h_box_container.move_child(editor,1)
 	
@@ -319,8 +318,10 @@ func setup_variable_editor(n : BehaviorNode,property:Dictionary,bb:Array[Blackbo
 	size_flags_horizontal=Control.SIZE_SHRINK_BEGIN
 	editor.property_changed.connect(change_property)
 	editor.update_property()
-	node.changed.connect(editor.update_property,CONNECT_DEFERRED)
+
+	node.changed.connect(var_property_editor.update_property,CONNECT_DEFERRED)
 	node.blackboard_key_set.connect(sync_blackboard_keys)
+	node.conditions_changed.connect(refresh_editor.bind(property))
 	
 	bb_link_button.about_to_popup.connect(_populate_popup,CONNECT_DEFERRED)
 	bb_unlink_button.pressed.connect(node.set_node_property_blackboard_key.bind(key))
@@ -336,6 +337,32 @@ func setup_variable_editor(n : BehaviorNode,property:Dictionary,bb:Array[Blackbo
 				bb_reference.text=saved_key
 				linked=true
 	return true
+
+func refresh_editor(property: Dictionary) -> void:
+	if var_property_editor:
+		var_property_editor.get_parent().remove_child(var_property_editor)
+		var_property_editor.queue_free()
+		var_property_editor = null
+
+	type = property["type"]
+	var editor: EditorProperty = EditorInspector.instantiate_property_editor(
+		node, type, key, property["hint"], property["hint_string"],
+		EDITOR_USAGES | property["usage"], true
+	)
+	if editor == null:
+		return
+
+	editor.set_object_and_property(node, key)
+	editor.draw_label = false
+	editor.selectable = false
+	h_box_container.add_child(editor)
+	h_box_container.move_child(editor, 1)
+
+	var_property_editor = editor
+	var_property_editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var_property_editor.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	editor.property_changed.connect(change_property)
+	editor.update_property()
 
 ## Callback for [signal EditorProperty.property_changed], forwarded from
 ## [member var_property_editor]; applies the new value to [member node].

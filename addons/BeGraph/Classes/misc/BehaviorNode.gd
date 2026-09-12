@@ -121,16 +121,16 @@ func _add_behavior_property(
 	name:String = "", 
 	default_value : Variant = null,
 	hint:int=PROPERTY_HINT_NONE, 
-	hint_string:String="", 
+	hint_string:Variant="", 
 	classname:String="", 
 	usage:int=PROPERTY_USAGE_SCRIPT_VARIABLE|PROPERTY_USAGE_EDITOR|PROPERTY_USAGE_STORAGE)->void:
-	
+
 	var entry : Dictionary={
 		"name":name,
 		"class_name":classname,
 		"type":typeof(default_value),
 		"hint":hint,
-		"hint_string":hint_string,
+		"hint_string":str(hint_string) if not hint_string is not Callable else hint_string,
 		"usage":usage|PROPERTY_USAGE_SCRIPT_VARIABLE|PROPERTY_USAGE_EDITOR|PROPERTY_USAGE_STORAGE,
 		"value":default_value,
 		"blackboard_key":&""
@@ -149,6 +149,8 @@ func _set(property: StringName, value: Variant) -> bool:
 			prop["value"] = value
 			if prop["usage"] & PROPERTY_USAGE_NIL_IS_VARIANT:
 				prop["type"] = typeof(null)
+			if prop["hint"] == PROPERTY_HINT_ENUM:
+				prop["hint_string"] = ", ".join(get(prop["hint_string"]))
 			changed.emit()
 			return true
 	return false
