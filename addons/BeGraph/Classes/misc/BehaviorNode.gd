@@ -59,8 +59,7 @@ var regex :RegEx= RegEx.create_from_string(r"\{([^{}]+)\}")
 
 @export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE) var is_starting_node : bool :
 	get():
-		if node_category == "access_point_node": 
-			return true
+		if node_category == "access_point_node": return true
 		return false
 
 @export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE) var _graph_ref : WeakRef
@@ -105,8 +104,7 @@ func set_conditions() -> PackedStringArray :
 ##If one or more conditions are set, [param output] gets set to [code]false[/code]
 func build_conditions() -> void :
 	var conditions_texts : PackedStringArray = set_conditions()
-	if conditions_texts.size() == 0: 
-		return #return if there is no condition set
+	if conditions_texts.size() == 0: return #return if there is no condition set
 	
 	output = false #output automatically set to false
 	for condition_text in conditions_texts:
@@ -121,7 +119,8 @@ func _add_behavior_property(
 	name:String = "", 
 	default_value : Variant = null,
 	hint:int=PROPERTY_HINT_NONE, 
-	hint_string:Variant="", 
+	hint_string:Variant="",
+	custom_info:String="",
 	classname:String="", 
 	usage:int=PROPERTY_USAGE_SCRIPT_VARIABLE|PROPERTY_USAGE_EDITOR|PROPERTY_USAGE_STORAGE)->void:
 
@@ -131,6 +130,7 @@ func _add_behavior_property(
 		"type":typeof(default_value),
 		"hint":hint,
 		"hint_string":str(hint_string) if not hint_string is not Callable else hint_string,
+		"custom_info":custom_info,
 		"usage":usage|PROPERTY_USAGE_SCRIPT_VARIABLE|PROPERTY_USAGE_EDITOR|PROPERTY_USAGE_STORAGE,
 		"value":default_value,
 		"blackboard_key":&""
@@ -146,11 +146,36 @@ func _add_behavior_property(
 func _set(property: StringName, value: Variant) -> bool:
 	for prop in behavior_properties:
 		if prop["name"] == property:
+			var old_value:Variant = prop["value"]
 			prop["value"] = value
-			if prop["usage"] & PROPERTY_USAGE_NIL_IS_VARIANT:
-				prop["type"] = typeof(null)
-			if prop["hint"] == PROPERTY_HINT_ENUM:
-				prop["hint_string"] = ", ".join(get(prop["hint_string"]))
+			
+			if prop["usage"] & PROPERTY_USAGE_NIL_IS_VARIANT: prop["type"] = typeof(null)
+			
+			if prop["type"]==TYPE_PACKED_STRING_ARRAY and prop["custom_info"]=="conditions":
+				var previous_size:int = old_value.size()
+				if previous_size==0: prop["value"] = PackedStringArray(["Value 0"])
+				
+				if previous_size<value.size(): prop["value"][-1]="new enum value"
+				
+				var values = prop["value"]
+				for p in behavior_properties:
+					if p["custom_info"] == prop["name"]:
+						p["hint_string"] = ",".join(values)
+						if int(p["value"]) >= values.size(): p["value"] = 0
+				
+				var old_conditions : Array[Dictionary] = conditions.duplicate(true)
+				conditions.clear()
+				for i in values.size():
+					var kept_next : WeakRef = old_conditions[i]["next"] if i < old_conditions.size() else null
+					conditions.append({"text": values[i], "next": kept_next})
+					
+				output = false
+				conditions_changed.emit()
+				
+				var cond_1 : bool = previous_size != -1 and previous_size != values.size()
+				var cond_2 : bool = old_value==prop["value"]
+				if cond_1 or cond_2: notify_property_list_changed.call_deferred()
+					
 			changed.emit()
 			return true
 	return false
@@ -184,10 +209,8 @@ func _get(property: StringName) -> Variant:
 func get_node_property_info(property:StringName,info:String="") -> Variant:
 	for prop in behavior_properties:
 		if prop["name"]==property:
-			if info == "":
-				return prop
-			if prop[info]:
-				return prop[info]
+			if info == "": return prop
+			if prop[info]: return prop[info]
 			push_error("no key '%s' for a node property"%info)
 			return
 	push_error("property '%s' not found"%property)
@@ -196,15 +219,13 @@ func get_node_property_info(property:StringName,info:String="") -> Variant:
 ##Checks if there is a property with the given name in [param behavior_properties]
 func _has(property:StringName) -> bool:
 	for prop in behavior_properties:
-		if prop["name"] == property:
-			return true
+		if prop["name"] == property: return true
 	return false
 
 ## Returns [code]true[/code] if the variable associated to the given [code]key[/code] properties a blackboard
 func is_blackboard_reference_enabled(key:StringName)->bool:
 	for property in behavior_properties:
-		if property["name"] == key:
-			return property["blackboard_key"] != &""
+		if property["name"] == key: return property["blackboard_key"] != &""
 	return false
 
 func add_next(n : BehaviorNode, from_port : int) -> void:
@@ -214,28 +235,28 @@ func add_next(n : BehaviorNode, from_port : int) -> void:
 		return
 	else:
 		var current : WeakRef = conditions[from_port]["next"]
-		if current == null or current.get_ref() != n:
-			conditions[from_port]["next"] = weakref(n)
+		if current == null or current.get_ref() != n: conditions[from_port]["next"] = weakref(n)
 		return
 
 func remove_next(n : BehaviorNode, from_port : int) -> void:
 	if output:
 		for i in range(_next_ref.size() - 1, -1, -1):
 			var target = _next_ref[i].get_ref()
-			if target == n or target == null:  # rimuovi anche i weakref "morti"
-				_next_ref.remove_at(i)
+			#rimuovi anche i weakref morti
+			if target == n or target == null: _next_ref.remove_at(i)
 		return
 	else:
 		var current : WeakRef = conditions[from_port]["next"]
-		if current != null and (current.get_ref() == n or current.get_ref() == null):
-			conditions[from_port]["next"] = null
+		
+		var cond_1 : bool = current != null
+		var cond_2 : bool = current.get_ref() == n or current.get_ref() == null
+		if  cond_1 and cond_2: conditions[from_port]["next"] = null
 		return
 
 func tick_next(index:int = 0) -> Status:
 	if index < _next_ref.size():
 		var target = _next_ref[index].get_ref()
-		if target:
-			return target.tick()
+		if target: return target.tick()
 		push_error("BehaviorNode %s: successore all'indice %s è stato liberato" % [self, index])
 		return Status.FAILURE
 	push_error("BehaviorNode %s has less than %s successors" % [self, index+1])
@@ -245,8 +266,7 @@ func tick_condition(index:int = 0) -> Status:
 	if index < conditions.size():
 		var next_ref : WeakRef = conditions[index]["next"]
 		var target = next_ref.get_ref() if next_ref else null
-		if target:
-			return target.tick()
+		if target: return target.tick()
 		push_error("BehaviorNode %s: condizione %s non ha un successore valido" % [self, index])
 		return Status.FAILURE
 	push_error("BehaviorNode %s has less than %s conditions" % [self, index+1])

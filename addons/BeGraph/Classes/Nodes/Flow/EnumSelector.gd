@@ -22,47 +22,5 @@ func set_allows_multiple_outputs() -> bool: return false
 func set_properties()-> void:
 	## Editabile dall'Inspector (pulsante matita sul titlebar del nodo):
 	## aggiungi, rimuovi, rinomina o riordina le voci liberamente.
-	_add_behavior_property("enum_values", PackedStringArray([]))
-	_add_behavior_property("value", 0, PROPERTY_HINT_ENUM,"enum_values")
-
-func set_conditions() -> PackedStringArray:
-	return PackedStringArray([])
-
-## Intercetta le modifiche a "enum_values" per tenere sincronizzati sia il
-## dropdown di "value" sia le porte di output (conditions).
-func _set(property: StringName, value: Variant) -> bool:
-	var previous_size :int= -1
-	if property == "enum_values":
-		previous_size = get("enum_values").size()
-
-	var handled := super._set(property, value)
-
-	if handled and property == "enum_values":
-		_sync_from_enum_values(previous_size)
-	return handled
-
-func _sync_from_enum_values(previous_size: int = -1) -> void:
-	var values : PackedStringArray = get("enum_values")
-	if values.is_empty():
-		values = PackedStringArray(["Value 0"])
-
-	for prop in behavior_properties:
-		if prop["name"] == "value":
-			prop["hint_string"] = ",".join(values)
-			if int(prop["value"]) >= values.size():
-				prop["value"] = 0
-
-	var old_conditions : Array[Dictionary] = conditions.duplicate(true)
-	conditions.clear()
-	for i in values.size():
-		var kept_next : BehaviorNode = old_conditions[i]["next"] if i < old_conditions.size() else null
-		conditions.append({"text": values[i], "next": kept_next})
-
-	output = false
-	conditions_changed.emit()   # aggiorna solo le righe/porte del GraphNode: non tocca l'Inspector
-
-	# Il dropdown di "value" legge hint_string solo quando l'Inspector viene
-	# ricostruito: lo facciamo SOLO quando la dimensione dell'array cambia,
-	# mai durante la digitazione di un singolo elemento.
-	if previous_size != -1 and previous_size != values.size():
-		notify_property_list_changed.call_deferred()
+	_add_behavior_property("enum_values", PackedStringArray([]),PROPERTY_HINT_NONE,"","conditions")
+	_add_behavior_property("value", 0, PROPERTY_HINT_ENUM,"","enum_values")
