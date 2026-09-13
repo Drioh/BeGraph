@@ -1,18 +1,11 @@
 @tool
-## Inline editor control for a single [BehaviorNode] variable, shown inside a
-## [BehaviorGraphNode]. Displays either a standard [EditorProperty] for the
-## variable's value, or, when the variable is bound to a blackboard entry, a
-## read-only reference label with an option to unlink it. Also supports
-## drag-and-drop binding of blackboard variables of a compatible type.
+## Inline editor control for a single [BehaviorNode] variable, shown inside a [BehaviorGraphNode]. Displays either a standard [EditorProperty] for the variable's value, or, when the variable is bound to a blackboard entry, a read-only reference label with an option to unlink it. Also supports drag-and-drop binding of blackboard variables of a compatible type.
 class_name BehaviorGraphNodeVariableEditor
 extends PanelContainer
 
-## Property usage flags passed when instantiating the inline [EditorProperty].
+## Property usage flags used when instantiating the inline [EditorProperty].
 const EDITOR_USAGES = PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_STORAGE
-## Maps each [enum Variant.Type] to the list of [enum Variant.Type] values that
-## are considered compatible with it, i.e. which blackboard variable types may
-## be bound to a variable of a given type (used by [method _populate_popup],
-## [method check_key], [method _can_drop_data] and [method _notification]).
+## Maps each [enum Variant.Type] to the list of [enum Variant.Type] values that are considered compatible with it.
 const CONVERSION_DICT: Dictionary = {
 	TYPE_NIL: [
 		TYPE_NIL,
@@ -208,34 +201,26 @@ const CONVERSION_DICT: Dictionary = {
 	],
 }
 
-## Container holding, in order: the blackboard-link/unlink UI and the inline
-## [EditorProperty] (or blackboard reference label).
+## Container holding, in order: the blackboard-link/unlink UI and the inline [EditorProperty] (or blackboard reference label).
 @onready var h_box_container: HBoxContainer = %HBoxContainer
 
 ## Icon representing the variable's [enum Variant.Type].
 @onready var type_icon: TextureRect = %TypeIcon
-## The [EditorProperty] instantiated for this variable's value, used when the
-## variable is not bound to a blackboard entry.
+## The [EditorProperty] instantiated for this variable's value, used when the variable is not bound to a blackboard entry.
 var var_property_editor: EditorProperty
-## Label shown instead of [member var_property_editor] when the variable is
-## bound to a blackboard entry; displays the bound key's name.
+## Label shown instead of [member var_property_editor] when the variable is bound to a blackboard entry; displays the bound key's name.
 @onready var bb_reference: Label = %BBReference
-## Button that opens the blackboard-selection popup, used to bind this
-## variable to a local or shared blackboard entry.
+## Button that opens the blackboard-selection popup, used to bind this variable to a local or shared blackboard entry.
 @onready var bb_link_button: MenuButton = %BBLinkButton
-## Button used to remove an existing blackboard binding, reverting to the
-## plain value editor.
+## Button used to remove an existing blackboard binding, reverting to the plain value editor.
 @onready var bb_unlink_button: Button = %BBUnlinkButton
-## Overlay panel used to give drag-and-drop visual feedback (valid/invalid
-## drop target) while dragging a blackboard variable over this control.
+## Overlay panel used to give drag-and-drop visual feedback (valid/invalid drop target) while dragging a blackboard variable over this control.
 @onready var fallback_layer: PanelContainer = %FallbackLayer
 
-## Root popup shown by [member bb_link_button], containing the local and
-## shared blackboard submenus.
+## Root popup shown by [member bb_link_button], containing the available blackboard variables compatible with [member type].
 @onready var popup :PopupMenu= bb_link_button.get_popup()
 
-## The [enum Variant.Type] of the variable being edited. Setting it also
-## refreshes [member type_icon].
+## The [enum Variant.Type] of the variable being edited. Setting it also refreshes [member type_icon].
 @onready var type : int:
 	set(value):
 		type=value
@@ -245,6 +230,7 @@ var var_property_editor: EditorProperty
 ## The [BehaviorNode] resource that owns the variable being edited.
 @onready var node : BehaviorNode
 
+## The [BlackboardVariable] currently bound to this control, [code]null[/code] if the variable isn't bound to a blackboard entry.
 var linked_property : BlackboardVariable = null:
 	set(v):
 		if v:
@@ -261,6 +247,7 @@ var linked_property : BlackboardVariable = null:
 				node._graph_ref.get_ref().changed.disconnect(check_property)
 			node._graph_ref.get_ref().changed.connect(check_property)
 			
+## Whether blackboard reference or the plain value editor is displayed. Setting this toggles the visibility of those two pairs of controls accordingly, and clears [member linked_property] when switched back off.
 @onready var linked : bool = false:
 	set(value):
 		if value:
@@ -278,12 +265,8 @@ var linked_property : BlackboardVariable = null:
 			bb_reference.hide()
 			bb_unlink_button.hide()
 		linked = value
-## Initializes this control for editing property [param k] (of type [param t])
-## on [param n], using [param l_bb] and [param s_bb] as the local/shared
-## blackboards. Instantiates the matching [EditorProperty] via
-## [method EditorInspector.instantiate_property_editor] and wires up value
-## change propagation in both directions. Returns [code]false[/code] if no
-## editor could be created for this property's type.
+
+## Initializes this control for editing [param property] on [param n], using [param bb] as the graph's blackboard. Instantiates the matching [EditorProperty] via [method EditorInspector.instantiate_property_editor] and wires up value change propagation in both directions, restoring an existing blackboard binding if [param property] has one saved. Returns [code]false[/code] if no editor could be created for this property's type.
 func setup_variable_editor(n : BehaviorNode,property:Dictionary,bb:Array[BlackboardVariable]) -> bool:
 	node = n
 	
@@ -332,12 +315,15 @@ func setup_variable_editor(n : BehaviorNode,property:Dictionary,bb:Array[Blackbo
 	var saved_key: StringName = property["blackboard_key"]
 	if saved_key != &"":
 		for v in bb:
-			if v.name==saved_key:
-				linked_property=v
-				bb_reference.text=saved_key
-				linked=true
+			if v.name!=saved_key:
+				continue
+			linked_property=v
+			bb_reference.text=saved_key
+			linked=true
 	return true
 
+## Rebuilds [member var_property_editor] from scratch using the [param property] info dictionary.[br]
+## Used when the underlying property's type/hint changes dynamically, e.g. after [signal BehaviorNode.conditions_changed] fires for an enum-backed value.
 func refresh_editor(property: Dictionary) -> void:
 	if var_property_editor:
 		var_property_editor.get_parent().remove_child(var_property_editor)
@@ -364,12 +350,12 @@ func refresh_editor(property: Dictionary) -> void:
 	editor.property_changed.connect(change_property)
 	editor.update_property()
 
-## Callback for [signal EditorProperty.property_changed], forwarded from
-## [member var_property_editor]; applies the new value to [member node].
+## Callback for [signal EditorProperty.property_changed], forwarded from [member var_property_editor]: applies the new value to [member node].
 func change_property(property: StringName, new_value: Variant, field: StringName, changing: bool) -> void:
 	if not changing:
 		node.set(property, new_value)
 
+## Callback for [signal BehaviorNode.blackboard_key_set]: if the changed property matches [member key], updates [member linked] to reflect whether a blackboard key is now bound ([param bb_key] non-empty) or not.
 func sync_blackboard_keys(k : StringName = &"",bb_key : StringName = &""):
 	if key == k:
 		if bb_key == &"":
@@ -379,30 +365,22 @@ func sync_blackboard_keys(k : StringName = &"",bb_key : StringName = &""):
 				linked = true
 				bb_reference.text = String(bb_key)
 
-## Callback for [signal MenuButton.about_to_popup] on [member bb_link_button].
-## Repopulates [member local_variable_submenu] and [member shared_variable_submenu]
-## with the variables from each blackboard whose type is compatible with
-## [member type] (per [constant CONVERSION_DICT]), each with its type icon.
+## Callback for [signal MenuButton.about_to_popup] on [member bb_link_button]. Repopulates [member popup] with every variable from the owning graph's blackboard whose type is compatible with [member type] (per [constant CONVERSION_DICT]), each with its type icon; shows a disabled placeholder item if none is compatible.
 func _populate_popup() -> void:
 	popup.clear()
 	var theme := EditorInterface.get_editor_theme()
 	for blackboard_property in node._graph_ref.get_ref().blackboard:
 		var t: int = typeof(blackboard_property.value)
-		if t in CONVERSION_DICT[type]:
-			popup.add_item(blackboard_property.name)
-			popup.set_item_icon(-1, theme.get_icon(type_string(t), "EditorIcons"))
-	
+		if t not in CONVERSION_DICT[type]:
+			continue
+		popup.add_item(blackboard_property.name)
+		popup.set_item_icon(-1, theme.get_icon(type_string(t), "EditorIcons"))
+
 	if popup.item_count == 0:
 		popup.add_item("no properties to pick from blackboard")
 		popup.set_item_disabled(-1,true)
 
-## Callback fired when an item is selected from [param sub_menu] (either
-## [member local_variable_submenu] or [member shared_variable_submenu]).
-## Switches the display to the blackboard reference label, binds [member node]'s
-## property to the selected key via [method BehaviorNode.set_blackboard_reference],
-## and (re)connects the appropriate blackboard's [signal Resource.changed]
-## signal (and that of the bound variable) to [method check_key], making sure
-## only one blackboard is listened to at a time.
+## Callback fired when an item is selected from [member popup]. Switches the display to the blackboard reference label, binds [member node]'s property to the selected key via [method BehaviorNode.set_node_property_blackboard_key], and stores the matching [BlackboardVariable] in [member linked_property].
 func _on_popup_index_pressed(index : int) -> void:
 	linked = true
 	var property_name :String = popup.get_item_text(index)
@@ -412,67 +390,64 @@ func _on_popup_index_pressed(index : int) -> void:
 	bb_reference.text = property_name
 	node.set_node_property_blackboard_key(key, property_name)
 
-## Returns [code]true[/code] if [param data] represents a blackboard variable
-## resource whose value type is compatible with [member type] and the drop
-## position lands on a valid slot within this control.
+## Returns [code]true[/code] if [param data] represents a blackboard variable resource with a value type compatible with [member type].
 func _can_drop_data(at_position, data):
+	if data is not Dictionary:
+		return false
+	if not data.has("resource"):
+		return false
+
 	var global_pos = get_global_transform() * at_position
-	if (data.has("resource")):
-		var cond_1:bool=_get_slot_at(self,global_pos)!=null and typeof(data["resource"].value) in CONVERSION_DICT[type]
-		var cond_2 : bool = typeof(data["resource"].value) == TYPE_NIL
-		return cond_1 or cond_2
-	return false
-## Handles a successful drop of a blackboard variable resource: determines
-## whether it came from the local or shared blackboard (based on its resource
-## path) and binds [member node]'s property to that blackboard/key via
-## [method BehaviorNode.set_blackboard_reference].
+	var cond_1:bool=_get_slot_at(self,global_pos)!=null and typeof(data["resource"].value) in CONVERSION_DICT[type]
+	var cond_2 : bool = typeof(data["resource"].value) == TYPE_NIL
+	return cond_1 or cond_2
+
+## Handles a successful drop of a blackboard variable resource: binds [member node]'s property to the dropped variable's name via [method BehaviorNode.set_node_property_blackboard_key] and updates [member linked_property]/[member bb_reference] accordingly.
 func _drop_data(at_position, data):
 	var k : StringName = data["resource"].name
 	bb_reference.text = String(k)
 	linked_property=data["resource"]
 	node.set_node_property_blackboard_key(key, k)
 
-func update_bb_name(n:StringName):
+## Callback for [signal BlackboardVariable.name_changed] on [member linked_property]: updates [member bb_reference] and re-binds [member node]'s property to the new name.
+func update_bb_name(n:StringName)->void:
 	bb_reference.text=n
 	node.set_node_property_blackboard_key(key,n)
 
-func update_bb_value(v:Variant):
+## Callback for [signal BlackboardVariable.value_changed] on [member linked_property]: if the new value's type is no longer compatible with [member type], unbinds the property and switches back to the plain value editor.
+func update_bb_value(v:Variant)->void:
 	if not typeof(v) in CONVERSION_DICT[type]:
 		node.set_node_property_blackboard_key(key)
 		linked=false
 
-## Recursively searches [param node]'s [Control] descendants for the one whose
-## global rect contains [param global_pos], returning the first (deepest)
-## match found, or [code]null[/code] if none does.
+## Recursively searches [param node]'s [Control] descendants for the one whose global rect contains [param global_pos], returning the first (deepest) match found, or [code]null[/code] if none does.
 func _get_slot_at(node, global_pos):
 	for child in node.get_children():
 		if child is Control:
 			if child.get_global_rect().has_point(global_pos):
-				# se è già uno slot valido (foglia), ritornalo
+				# if leaf, return
 				return child
-			# continua comunque la ricorsione nei figli
+			# continue recursion
 			var found = _get_slot_at(child, global_pos)
 			if found:
 				return found
 	return null
 
-## Recursively collects [param in_node] and every one of its descendants into
-## a flat array (appending to, and returning, [param arr]).
+## Recursively collects [param in_node] and every one of its descendants into a flat array (appending to, and returning, [param arr]).
 func get_all_children(in_node,arr:=[]):
 	arr.push_back(in_node)
 	for child in in_node.get_children():
 		arr = get_all_children(child,arr)
 	return arr
 
+## Callback for the owning [BehaviorGraph]'s [signal Resource.changed]: unbinds [member linked_property] (reverting to the plain value editor) if it is no longer present in [param blackboard].
 func check_property(blackboard:Array[BlackboardVariable])->void:
 	if linked_property != null:
 		if linked_property not in blackboard:
 			node.set_node_property_blackboard_key(key)
 			linked=false
 
-## ovides drag-and-drop visual feedback: while a compatible/incompatible
-## blackboard variable resource is being dragged over this control, tints
-## [member fallback_layer] accordingly; clears the tint once the drag ends.
+## Provides drag-and-drop visual feedback: while a compatible/incompatible blackboard variable resource is being dragged over this control, tints [member fallback_layer] accordingly; clears the tint once the drag ends.
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_DRAG_BEGIN:
 		var drag_data = get_viewport().gui_get_drag_data()

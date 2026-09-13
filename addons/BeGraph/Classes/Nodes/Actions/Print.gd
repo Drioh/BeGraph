@@ -21,5 +21,5 @@ func set_output()->bool : return true
 func set_allows_multiple_outputs() -> bool: return false
 
 func set_properties()-> void:
-	_add_behavior_property("value",null ,PROPERTY_HINT_NONE,"","",PROPERTY_USAGE_NIL_IS_VARIANT)
+	_add_behavior_property("value",null ,PROPERTY_HINT_NONE,"","","",PROPERTY_USAGE_NIL_IS_VARIANT)
 	

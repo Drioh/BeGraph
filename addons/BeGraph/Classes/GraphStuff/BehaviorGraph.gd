@@ -1,4 +1,5 @@
 @tool
+## Resource describing a full behavior graph: the collection of [BehaviorNode]s it contains, the connections between them, and its own local [BlackboardVariable] list. Instantiated and edited through [BehaviorGraphEdit] and executed at runtime by one or more [BehaviorAgent]s.
 class_name BehaviorGraph
 extends Resource
 
@@ -19,6 +20,7 @@ extends Resource
 ##Used for saving purposes, this variable contains a copy of [param connections] from the graph edit. This value gets its value when a graph gets saved
 @export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY) var connections : Array[Dictionary]
 
+## Creates the graph's first [AccessPointNode] (named [code]"start_node"[/code]) if [member nodes] is empty, guaranteeing every new [BehaviorGraph] has at least one valid entry point.
 func _init() -> void:
 	if nodes.size()==0:
 		var first_node = AccessPointNode.new()
@@ -27,19 +29,25 @@ func _init() -> void:
 
 
 #region Node methods
+
+## Appends [param node] to [member nodes] and points its [member BehaviorNode._graph_ref] back to this graph.
 func add_node(node:BehaviorNode):
 	node._graph_ref=weakref(self)
 	nodes.append(node)
 
+## Removes [param node] from [member nodes].
 func remove_node(node:BehaviorNode):
 	nodes.erase(node)
 
+## Appends [param connection] (a [code]{from_node, from_port, to_node, to_port}[/code] [Dictionary]) to [member connections].
 func add_connection(connection:Dictionary):
 	connections.append(connection)
 
+## Removes [param connection] from [member connections].
 func remove_connection(connection:Dictionary):
 	connections.erase(connection)
 
+## Returns every [BehaviorNode] in [member nodes] whose [member BehaviorNode.node_category] matches [param category]. Logs an error (and returns an empty array) if no node matches.
 func get_nodes_by_category(category : String) -> Array[BehaviorNode]:
 	var ret : Array[BehaviorNode] = []
 	for node in nodes:
@@ -49,6 +57,7 @@ func get_nodes_by_category(category : String) -> Array[BehaviorNode]:
 		push_error("Nodes not found for category '%s'"%category)
 	return ret
 
+## Returns the [BehaviorNode] in [member nodes] whose [member Resource.resource_name] matches [param name], or [code]null[/code] (logging an error) if none is found.
 func get_node(name:StringName)->BehaviorNode:
 	for node in nodes:
 		if node.resource_name==name:
@@ -57,6 +66,7 @@ func get_node(name:StringName)->BehaviorNode:
 	return
 #endregion
 
+## Returns the [BlackboardVariable] in [member blackboard] named [param key], or [code]null[/code] (logging an error) if none is found.
 func get_blackboard_property(key:StringName)->BlackboardVariable:
 	for variable in blackboard:
 		if variable.name == key:

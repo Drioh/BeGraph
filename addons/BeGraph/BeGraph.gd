@@ -1,11 +1,17 @@
 @tool
+## Main [EditorPlugin] script for the BeGraph addon: registers the bottom dock used to edit [BehaviorGraph] resources, keeps a set of [ProjectSettings] (node category colors, blackboard-binding colors, node script path) in sync, and wires up the dock's save/save-as/close buttons.
 extends EditorPlugin
 
+## The dock container added to the editor via [method EditorPlugin.add_dock].
 var dock : EditorDock
+## The root [Control] instantiated from [code]BeGraphDock.tscn[/code], containing the actual graph editor UI.
 var begraph_dock : Control
+## File dialog used by [method _on_save_as_pressed] to pick a destination path for a new [BehaviorGraph] resource.
 var file_dialog: EditorFileDialog
+## Tracks whether [member dock] is currently added to the editor, to avoid double add/remove calls.
 var _dock_added : bool = false
 
+## Default background/border colors for the built-in node categories, applied to [ProjectSettings] by [method _sync_settings]. Each entry maps a category id to a [code][background_color, border_color][/code] pair.
 const BASE_CATEGORIES: Dictionary = {
 	"action_node": [Color(0.161, 0.161, 0.161, 1.0), Color(0.824, 0.784, 0.745, 1.0)],
 	"access_point_node": [Color(0.075, 0.161, 0.157, 1.0), Color(0.467, 1.0, 0.6, 1.0)],
@@ -13,17 +19,26 @@ const BASE_CATEGORIES: Dictionary = {
 	"comment_node": [Color(0.447, 0.318, 0.263, 1.0), Color(1.0, 0.722, 0.537, 1.0)],
 }
 
+## [ProjectSettings] key storing the directory scanned for available node scripts (see [constant BehaviorGraphEdit.NODE_PATH]).
 const NODES_PATH_KEY :String= "BeGraph/nodes_path"
+## [ProjectSettings] key storing the color used for a placeholder whose referenced key/value could not be resolved.
 const NULL_COLOR_KEY :String= "BeGraph/colors/null_variable_color"
 
+## [ProjectSettings] key storing the background color shown while dragging a blackboard variable over a compatible inline editor.
 const ALLOWED_VARIABLE_BG :String = "BeGraph/colors/allowed_variable_color_background"
+## [ProjectSettings] key storing the border color shown while dragging a blackboard variable over a compatible inline editor.
 const ALLOWED_VARIABLE_BORDER :String ="BeGraph/colors/allowed_variable_color_border"
+## [ProjectSettings] key storing the background color shown while dragging a blackboard variable over an incompatible inline editor.
 const NOT_ALLOWED_VARIABLE_BG :String ="BeGraph/colors/not_allowed_variable_color_background"
+## [ProjectSettings] key storing the border color shown while dragging a blackboard variable over an incompatible inline editor.
 const NOT_ALLOWED_VARIABLE_BORDER :String ="BeGraph/colors/not_allowed_variable_color_border"
 
+## [ProjectSettings] key storing the list of user-defined (custom) node category ids, in addition to [constant BASE_CATEGORIES].
 const CUSTOM_CATEGORIES_KEY :String= "BeGraph/colors/node_colors/custom_categories"
+## Common prefix for every per-category color [ProjectSettings] key (both base and custom categories).
 const COLORS_PREFIX :String= "BeGraph/colors/node_colors/"
 
+# Instantiates the dock scene, configures it as a bottom, horizontally- or floating-dockable panel, listens for resource deletions in the filesystem dock (to unload a graph being edited if its file gets removed), and syncs the addon's [ProjectSettings].
 func _enter_tree():
 	begraph_dock = preload("res://addons/BeGraph/UI/BeGraphDock.tscn").instantiate()
 	dock = EditorDock.new()
@@ -36,6 +51,7 @@ func _enter_tree():
 	_sync_settings()
 	
 
+# Removes every [ProjectSettings] entry written by this addon, removes the dock, and disconnects the filesystem-dock signal.
 func _exit_tree():
 	_sync_settings(true)
 	_remove_dock()
@@ -43,20 +59,23 @@ func _exit_tree():
 	fs_dock.resource_removed.disconnect(_on_resource_removed)
 	dock.queue_free()
 
+# Called when the plugin is enabled; currently a no-op.
 func _enable_plugin() -> void:
 	pass
 
+## Callback for [signal FileSystemDock.resource_removed]: unloads the currently edited graph (via [method BeGraphDock.load_graph]) if the removed resource is the one currently open in the dock.
 func _on_resource_removed (resource:Resource)->void:
 	if resource == begraph_dock.loaded_graph:
 		begraph_dock.load_graph(null)
 
-func _disable_plugin() -> void:
-	
-	_remove_dock()
 
+func _disable_plugin() -> void: _remove_dock()
+
+# Overrides [method EditorPlugin._handles]: this plugin's custom editing behavior applies to [BehaviorGraph] and [BehaviorNode] resources.
 func _handles(object: Object) -> bool:
 	return object is BehaviorGraph or object is BehaviorNode
 
+# Overrides [method EditorPlugin._edit]: when a [BehaviorGraph] is selected for editing, shows the dock and loads the graph into it (saving the previously loaded graph first, if any, and if it's a different resource).
 func _edit(object: Object) -> void:
 	if object is BehaviorGraph:
 		_make_visible(true)
@@ -65,39 +84,46 @@ func _edit(object: Object) -> void:
 				_on_save_pressed()
 			begraph_dock.load_graph(object)
 
+# Overrides [method EditorPlugin._make_visible]: shows or hides the dock and, the first time it's made visible, connects the dock's close/save/save-as buttons to their handlers.
 func _make_visible(visible: bool) -> void:
-	if visible or EditorInterface.get_inspector().get_edited_object() is BehaviorGraph:
-		_add_dock()
-		dock.make_visible()
-		if not begraph_dock.close_button.pressed.is_connected(_on_close_pressed):
-			begraph_dock.close_button.pressed.connect(_on_close_pressed)
-		if not begraph_dock.save_button.pressed.is_connected(_on_save_pressed):
-			begraph_dock.save_button.pressed.connect(_on_save_pressed)
-		if not begraph_dock.save_as_button.pressed.is_connected(_on_save_as_pressed):
-			begraph_dock.save_as_button.pressed.connect(_on_save_as_pressed)
-	else:
+	if not (visible or EditorInterface.get_inspector().get_edited_object() is BehaviorGraph):
 		_remove_dock()
+	
+	_add_dock()
+	dock.make_visible()
+	if not begraph_dock.close_button.pressed.is_connected(_on_close_pressed):
+		begraph_dock.close_button.pressed.connect(_on_close_pressed)
+	if not begraph_dock.save_button.pressed.is_connected(_on_save_pressed):
+		begraph_dock.save_button.pressed.connect(_on_save_pressed)
+	if not begraph_dock.save_as_button.pressed.is_connected(_on_save_as_pressed):
+		begraph_dock.save_as_button.pressed.connect(_on_save_as_pressed)
 
+## Adds [member dock] to the editor (via [method EditorPlugin.add_dock]) if it isn't already added.
 func _add_dock() -> void:
 	if not _dock_added:
 		add_dock(dock)
 		_dock_added = true
 
+## Removes [member dock] from the editor if it is currently added.
 func _remove_dock() -> void:
 	if _dock_added:
 		remove_dock(dock)
 		_dock_added = false
 
+## Callback for the dock's close button; hides the dock.
 func _on_close_pressed() -> void:
 	_remove_dock()
 
+## Callback for the dock's save button; saves the currently loaded [BehaviorGraph] to its existing resource path via [ResourceSaver].
 func _on_save_pressed() -> void:
 	var result : int = ResourceSaver.save(begraph_dock.loaded_graph)
-	if result == 0: 
-		print("saving \"%s\" to path:%s"%[begraph_dock.loaded_graph,begraph_dock.loaded_graph.resource_path])
-	else:
+	if result != 0: 
 		print("Couldn't save resource %s"%begraph_dock.loaded_graph)
+	
+	print("saving \"%s\" to path:%s"%[begraph_dock.loaded_graph, begraph_dock.loaded_graph.resource_path])
 
+
+## Callback for the dock's save-as button; opens an [EditorFileDialog] set to save a [code].tres[/code] file, defaulting to [code]NewBehaviorGraph.tres[/code].
 func _on_save_as_pressed()->void:
 	file_dialog = EditorFileDialog.new()
 	file_dialog.file_mode = EditorFileDialog.FILE_MODE_SAVE_FILE
@@ -109,12 +135,15 @@ func _on_save_as_pressed()->void:
 	EditorInterface.get_base_control().add_child(file_dialog)
 	file_dialog.popup_centered_ratio()
 
+## Callback for [signal EditorFileDialog.file_selected] from the save-as dialog: saves the currently loaded graph to [param path], rescans the filesystem, and reloads the dock from the newly-saved file.
 func _on_file_selected(path: String) -> void:
 	ResourceSaver.save(begraph_dock.loaded_graph, path)
 	EditorInterface.get_resource_filesystem().scan()
 	begraph_dock.load_graph(load(path))
 #region SETTINGS
 
+## Writes every [ProjectSettings] entry owned by this addon: the node-scripts path, the null-variable color, the custom-categories list, the blackboard drag/drop colors, and the background/border colors for every base and custom node category. [br]
+## Clears settings in the process if [param remove_all] is [code]true[/code]).
 func _sync_settings(remove_all: bool = false) -> void:
 	_write_setting(NODES_PATH_KEY, "res://addons/BeGraph/Classes/Nodes/", PROPERTY_HINT_DIR)
 	_write_setting(NULL_COLOR_KEY, Color(0.8, 0.0, 0.133, 1.0))
@@ -129,7 +158,7 @@ func _sync_settings(remove_all: bool = false) -> void:
 	var custom_ids: PackedStringArray = ProjectSettings.get_setting(CUSTOM_CATEGORIES_KEY, PackedStringArray())
 	var valid_ids: Array = []
 	for raw in custom_ids:
-		var id := String(raw).strip_edges()
+		var id :String= String(raw).strip_edges()
 		if id != "" and not BASE_CATEGORIES.has(id):
 			valid_ids.append(id)
 
@@ -158,11 +187,12 @@ func _sync_settings(remove_all: bool = false) -> void:
 			if ProjectSettings.has_setting(key):
 				ProjectSettings.clear(key)
 
+## Writes the [code]background_color[/code]/[code]border_color[/code] [ProjectSettings] pair for node category [param id].
 func _write_category_colors(id: String, background: Color, border: Color) -> void:
 	_write_setting("%s%s/background_color" % [COLORS_PREFIX, id], background, PROPERTY_HINT_NONE, false)
 	_write_setting("%s%s/border_color" % [COLORS_PREFIX, id], border, PROPERTY_HINT_NONE, false)
 
-# category write
+## Sets [param key] to [param default_value] in [ProjectSettings] (unless it already exists and [param overwrite] is [code]false[/code]), registers its initial value and property info (with the given [param hint]), and marks it as a "basic" setting so it's visible without enabling advanced settings.
 func _write_setting(key: String, default_value, hint: int = PROPERTY_HINT_NONE, overwrite: bool = false) -> void:
 	if overwrite or not ProjectSettings.has_setting(key):
 		ProjectSettings.set_setting(key, default_value)

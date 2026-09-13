@@ -1,18 +1,14 @@
 @tool
-## A [GraphEdit] used to visually build and edit a [BehaviorGraph].[br]
-## Handles node creation (via a categorized popup menu built from the files found
-## in [constant NODE_PATH]), connecting/disconnecting nodes, and keeping the
-## underlying [BehaviorNode] resources in sync with the visual graph connections.
+## A [GraphEdit] that visually builds and edits a [BehaviorGraph]: creates nodes from a categorized popup (built from [constant NODE_PATH]), handles connecting/disconnecting them, and keeps the underlying [BehaviorNode] resources in sync with the visual graph.
 class_name BehaviorGraphEdit
 extends GraphEdit
 
 #region Constants
 
-## Root directory scanned for available node scripts (.gd files), used to build
-## the node-creation popup menu. Subdirectories become submenus.
+## Root directory scanned for node scripts to populate the creation popup. Subdirectories become submenus.
 const NODE_PATH = "res://addons/BeGraph/Classes/Nodes/"
 
-## Scene used to instantiate a new [BehaviorGraphNode] visual node.
+## Scene instantiated for each new [BehaviorGraphNode].
 const NODE = preload("res://addons/BeGraph/UI/BehaviorGraphNode.tscn")
 
 #endregion
@@ -20,14 +16,13 @@ const NODE = preload("res://addons/BeGraph/UI/BehaviorGraphNode.tscn")
 
 #region State
 
-## The [BehaviorGraph] resource currently being edited by this graph.
+## The [BehaviorGraph] currently being edited.
 var current_graph: BehaviorGraph
 
-## Root [PopupMenu] shown when the user requests to create a new node
-## (built dynamically from [constant NODE_PATH]).
+## Root popup shown for node creation, rebuilt from [constant NODE_PATH] on each request.
 var _node_popup: PopupMenu
 
-## Label displaying the name/path of the currently loaded [BehaviorGraph].
+## Label for the loaded graph's name/path, shared with [member BeGraphDock.graph_label].[br]Unused in this script — kept up to date by [method BeGraphDock.load_graph].
 @onready var graph_label: Label = %GraphLabel
 
 #endregion
@@ -35,6 +30,7 @@ var _node_popup: PopupMenu
 
 #region Lifecycle
 
+## Connects [GraphEdit]'s node/connection/popup signals to their handlers.
 func _ready() -> void:
 	delete_nodes_request.connect(_on_delete_nodes_request)
 	connection_request.connect(connect_nodes)
@@ -46,9 +42,7 @@ func _ready() -> void:
 
 #region Graph loading
 
-## Loads the given [BehaviorGraph] into the editor: stores the reference,
-## updates [member graph_label] with its name/path, and caches its local and
-## shared blackboards for use by child node editors.
+## Clears the current visual graph (connections and [BehaviorGraphNode] children), loads [param graph] as [member current_graph], and rebuilds it via [method load_nodes] and [method load_connections].
 func set_graph(graph: BehaviorGraph) -> void:
 	current_graph = null
 
@@ -56,16 +50,16 @@ func set_graph(graph: BehaviorGraph) -> void:
 		clear_connections()
 
 	for child in get_children().duplicate():
-		if child is BehaviorGraphNode:
-			remove_child(child)
-			child.free()
+		if child is not BehaviorGraphNode:
+			continue
+		remove_child(child)
+		child.free()
 	current_graph = graph
 
 	load_nodes()
 	load_connections()
 
-## Instantiates a [BehaviorGraphNode] for every [BehaviorNode] stored in
-## [member current_graph.nodes], restoring its name, position and delete handling.
+## Instantiates a [BehaviorGraphNode] for every node in [member current_graph], restoring its name, position, and delete handling.
 func load_nodes() -> void:
 	for node_to_load in current_graph.nodes:
 		var node: BehaviorGraphNode = NODE.instantiate()
@@ -86,44 +80,37 @@ func load_connections() -> void:
 
 #region Node management
 
-## Instantiates a new [BehaviorGraphNode] visual node, adds it as a child of
-## this graph, and, if [param script_path] is provided, assigns it the
-## [BehaviorNode] script found at that path.
+## Adds a new [BehaviorGraphNode], assigns it a [BehaviorNode] script, positions it at the mouse, and registers it in [member current_graph].
 func add_node(script_path: String = "") -> void:
+	if script_path == "":
+		push_error("Script path not valid")
+		return
+		
 	var node: BehaviorGraphNode = NODE.instantiate()
 	add_child(node)
+	
 	node.graph_edit = self
-	if script_path != "":
-		node.set_node_script(script_path)
-		node.position_offset = (get_local_mouse_position() + scroll_offset) / zoom
-		node.node.position_in_graph = node.position_offset
-		current_graph.add_node(node.node)
+	node.set_node_script(script_path)
+	node.position_offset = (get_local_mouse_position() + scroll_offset) / zoom
+	node.node.position_in_graph = node.position_offset
+	node.delete_request.connect(_on_delete_nodes_request)
+	
+	current_graph.add_node(node.node)
 
-		node.delete_request.connect(_on_delete_nodes_request)
-
-## Disconnette (visivamente e sul BehaviorNode sottostante) ogni connessione
-## uscente da [param graph_node] la cui porta non esiste più dopo un cambio
-## nel numero di condizioni.
+## Disconnects any outgoing connection from [param graph_node] whose port no longer exists after its condition count changed.
 func prune_invalid_connections_from(graph_node: BehaviorGraphNode) -> void:
 	var n := graph_node.node.conditions.size()
-	# offset di 2 = h_flow_container + h_box_container, i due figli fissi
-	# prima delle righe di condizione (verifica questo numero nel tuo setup!)
 	var max_valid_port : int = 1 + n if n > 0 else 0
 	for c in get_connection_list_from_node(graph_node.name):
 		if c["from_port"] > max_valid_port:
 			disconnect_nodes(c["from_node"], c["from_port"], c["to_node"], c["to_port"])
 
-## Callback for [signal GraphEdit.delete_nodes_request]. Removes each requested
-## node (identified by [StringName]) from the graph, provided
-## [member BehaviorGraphNode.can_be_deleted] is [code]true[/code] for all of
-## them; also removes any connections attached to a deleted node and, if the
-## node being deleted is currently inspected, switches the inspector back to
-## [member current_graph].
+## Deletes the given nodes, refusing to delete a graph's last remaining starting point; also removes their connections and hands the inspector back to [member current_graph] if needed.[br] 
 func _on_delete_nodes_request(nodes: Array[StringName]) -> void:
 	for n in nodes:
 		var nod = get_node(NodePath(n)) as BehaviorGraphNode
 
-		if nod.node.is_starting_node && current_graph.get_starting_nodes().size() == 1:
+		if nod.node.is_starting_node and current_graph.get_nodes_by_category("access_point_node").size() == 1:
 			push_error("node %s cannot ben deleted. There must be at least one access point" % nod)
 			return
 		for c in get_connection_list_from_node(n):
@@ -144,10 +131,8 @@ func _on_delete_nodes_request(nodes: Array[StringName]) -> void:
 
 #region Connections
 
-## Callback for [signal GraphEdit.connection_request]. Validates the connection
-## (no self-connections, and respects [member BehaviorNode.allows_multiple_outputs]),
-## then updates both the underlying [BehaviorNode.next] array and the visual
-## connection between the two [BehaviorGraphNode]s.
+## Validates and applies a new connection: no self-connections, one connection per condition, and respects [member BehaviorNode.allows_multiple_outputs]. [br] 
+## Updates [member BehaviorNode._next_ref]/[member BehaviorNode.conditions] via [method BehaviorNode.add_next], [member BehaviorGraph.connections], and the visual connection.
 func connect_nodes(from_node: StringName, from_port: int, to_node: StringName, to_port: int) -> void:
 	if from_node == to_node:
 		push_error("Cannot connect a node to itself")
@@ -181,9 +166,7 @@ func connect_nodes(from_node: StringName, from_port: int, to_node: StringName, t
 
 	connect_node(from_node, from_port, to_node, to_port)
 
-## Callback for [signal GraphEdit.disconnection_request]. Removes the successor
-## reference from the source [BehaviorNode.next] array (if present) and removes
-## the visual connection between the two [BehaviorGraphNode]s.
+## Removes a connection: updates the source [BehaviorNode] via [method BehaviorNode.remove_next], [member BehaviorGraph.connections], and the visual connection.
 func disconnect_nodes(from_node: StringName, from_port: int, to_node: StringName, to_port: int) -> void:
 	var f_node: BehaviorGraphNode = get_node(NodePath(from_node))
 	var t_node: BehaviorGraphNode = get_node(NodePath(to_node))
@@ -200,8 +183,7 @@ func disconnect_nodes(from_node: StringName, from_port: int, to_node: StringName
 
 	disconnect_node(from_node, from_port, to_node, to_port)
 
-## Returns the [StringName] of every node in the graph that is the source
-## ("from") end of at least one connection.
+## Names of every node that is the source of at least one connection.
 func get_connection_starting_nodes() -> Array[StringName]:
 	var ret: Array[StringName] = []
 	for c in connections:
@@ -209,17 +191,7 @@ func get_connection_starting_nodes() -> Array[StringName]:
 			ret.append(c["from_node"])
 	return ret
 
-## Returns the [StringName] of every node in the graph that is the destination
-## ("to") end of at least one connection.
-func get_connection_ending_nodes() -> Array[StringName]:
-	var ret: Array[StringName] = []
-	for c in connections:
-		if c["to_node"] not in ret:
-			ret.append(c["to_node"])
-	return ret
-
-## Returns [code]true[/code] if [param from_node] already has an outgoing
-## connection originating from [param from_port].
+## Returns [code]true[/code] if [param from_node] already has a connection from [param from_port].
 func is_connection_from_node_from_port_enabled(from_node: StringName, from_port: int) -> bool:
 	for c in get_connection_list_from_node(from_node):
 		if c["from_node"] == from_node and c["from_port"] == from_port:
@@ -231,9 +203,7 @@ func is_connection_from_node_from_port_enabled(from_node: StringName, from_port:
 
 #region Node-creation popup
 
-## Callback for [signal GraphEdit.popup_request]. Builds the node-creation
-## popup menu (from [constant NODE_PATH]) and displays it at the current mouse
-## position.
+## Builds and opens the node-creation popup at the current mouse position.
 func _on_popup_request(at_position: Vector2) -> void:
 	_node_popup = _build_node_popup(NODE_PATH)
 	add_child(_node_popup)
@@ -241,11 +211,7 @@ func _on_popup_request(at_position: Vector2) -> void:
 	_node_popup.position = DisplayServer.mouse_get_position()
 	_node_popup.popup()
 
-## Recursively builds a [PopupMenu] mirroring the directory structure found at
-## [param path]: subdirectories become nested submenus (only included if they
-## contain at least one valid entry), and each [code].gd[/code] file becomes a
-## selectable item labeled via [method _label_for_script]. Returns [code]null[/code]
-## if [param path] does not exist.
+## Recursively mirrors [param path]'s folder structure into a [PopupMenu]: subfolders become submenus (dropped if empty), [code].gd[/code] files become items labeled via [method _script_metadata]. Returns [code]null[/code] if [param path] doesn't exist.
 func _build_node_popup(path: String) -> PopupMenu:
 	if not DirAccess.dir_exists_absolute(path):
 		push_error("Path not valid: %s" % path)
@@ -255,10 +221,9 @@ func _build_node_popup(path: String) -> PopupMenu:
 	var dirs := DirAccess.get_directories_at(path)
 	dirs.sort()
 	for dir_name in dirs:
-		var sub := _build_node_popup(path.path_join(dir_name))
-		if sub == null or sub.item_count == 0:
-			if sub:
-				sub.queue_free()
+		var sub :PopupMenu= _build_node_popup(path.path_join(dir_name))
+		if sub.item_count == 0:
+			sub.queue_free()
 			continue
 		sub.name = dir_name
 
@@ -282,13 +247,13 @@ func _build_node_popup(path: String) -> PopupMenu:
 	popup.id_pressed.connect(_on_node_popup_id_pressed.bind(popup))
 	return popup
 
-## Callback fired when an item in the node-creation popup is selected; creates
-## a new node using the script path stored in the item's metadata.
+## Creates a node from the script path stored in the selected item's metadata.
 func _on_node_popup_id_pressed(id: int, popup: PopupMenu) -> void:
 	var script_path = popup.get_item_metadata(id)
 	if script_path != null:
 		add_node(script_path)
 
+## Reads a script's [code]DISPLAY_NAME[/code] and [code]DISPLAY_ICON[/code] constants, falling back to its filename and no icon.
 func _script_metadata(path: String) -> Dictionary:
 	var scr := load(path) as GDScript
 	if scr == null:
