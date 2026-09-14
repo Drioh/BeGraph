@@ -313,13 +313,15 @@ func setup_variable_editor(n : BehaviorNode,property:Dictionary,bb:Array[Blackbo
 	popup.clear()
 	
 	var saved_key: StringName = property["blackboard_key"]
-	if saved_key != &"":
-		for v in bb:
-			if v.name!=saved_key:
-				continue
-			linked_property=v
-			bb_reference.text=saved_key
-			linked=true
+	if saved_key == &"":
+		return true
+	
+	for v in bb:
+		if v.name!=saved_key:
+			continue
+		linked_property=v
+		bb_reference.text=saved_key
+		linked=true
 	return true
 
 ## Rebuilds [member var_property_editor] from scratch using the [param property] info dictionary.[br]
@@ -360,10 +362,9 @@ func sync_blackboard_keys(k : StringName = &"",bb_key : StringName = &""):
 	if key == k:
 		if bb_key == &"":
 			linked =false
-		else:
-			if var_property_editor.visible: 
-				linked = true
-				bb_reference.text = String(bb_key)
+		elif var_property_editor.visible: 
+			linked = true
+			bb_reference.text = String(bb_key)
 
 ## Callback for [signal MenuButton.about_to_popup] on [member bb_link_button]. Repopulates [member popup] with every variable from the owning graph's blackboard whose type is compatible with [member type] (per [constant CONVERSION_DICT]), each with its type icon; shows a disabled placeholder item if none is compatible.
 func _populate_popup() -> void:
@@ -451,7 +452,10 @@ func check_property(blackboard:Array[BlackboardVariable])->void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_DRAG_BEGIN:
 		var drag_data = get_viewport().gui_get_drag_data()
-		var cond_1 : bool = drag_data.has("resource") and typeof(drag_data["resource"].value) in CONVERSION_DICT[type]
+		if not drag_data.has("resource"):
+			return
+		
+		var cond_1 : bool = typeof(drag_data["resource"].value) in CONVERSION_DICT[type]
 		var cond_2 : bool = typeof(drag_data["resource"].value) == TYPE_NIL
 		if cond_1 or cond_2:
 			fallback_layer.set_indexed("theme_override_styles/panel:bg_color",ProjectSettings.get_setting("BeGraph/colors/allowed_variable_color_background"))

@@ -2,10 +2,30 @@
 
 [ext_resource type="Script" uid="uid://bse806knnrtb1" path="res://addons/BeGraph/Classes/misc/BeGraphDock.gd" id="1_cgses"]
 [ext_resource type="Texture2D" uid="uid://csnxon045mpad" path="res://addons/BeGraph/Icons/edit_icon.svg" id="2_vf8wo"]
+[ext_resource type="Texture2D" uid="uid://bhe6mgc7l0t4f" path="res://addons/BeGraph/Icons/new_icon.svg" id="3_3ptl5"]
 [ext_resource type="Texture2D" uid="uid://bqgwx8fm6ojbg" path="res://addons/BeGraph/Icons/save_icon.svg" id="3_5bs10"]
 [ext_resource type="Texture2D" uid="uid://dudipaux5f7v" path="res://addons/BeGraph/Icons/close_icon.svg" id="3_vf8wo"]
 [ext_resource type="Script" uid="uid://q1edsrsnappb" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraphEdit.gd" id="4_5bs10"]
+[ext_resource type="Texture2D" uid="uid://dp7v8krbo2g8n" path="res://addons/BeGraph/Icons/load_icon.svg" id="4_fo02r"]
 [ext_resource type="Texture2D" uid="uid://32kkp5pbn562" path="res://addons/BeGraph/Icons/save_as_icon.svg" id="4_vf8wo"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hdwr6"]
+content_margin_left = 4.0
+content_margin_top = 2.0
+content_margin_right = 2.0
+content_margin_bottom = 2.0
+bg_color = Color(0.078431375, 0.078431375, 0.078431375, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_rnfta"]
+color = Color(0.16078432, 0.16078432, 0.16078432, 1)
+grow_begin = -2.0
+grow_end = -2.0
+thickness = 2
+vertical = true
 
 [node name="BeGraphDock" type="Control" unique_id=1658419202]
 layout_mode = 3
@@ -38,55 +58,90 @@ size_flags_horizontal = 3
 
 [node name="EditButton" type="Button" parent="VBoxContainer/HBoxContainer" unique_id=1713292376]
 unique_name_in_owner = true
-custom_maximum_size = Vector2(24, 24)
+custom_maximum_size = Vector2(-1, 24)
 layout_mode = 2
-size_flags_horizontal = 4
+size_flags_horizontal = 8
 size_flags_vertical = 4
-offset_transform_enabled = true
 offset_transform_scale = Vector2(0.8, 0.8)
 tooltip_text = "Print info for all nodes in this graph"
+text = "Manage Graph"
 icon = ExtResource("2_vf8wo")
 flat = true
-icon_alignment = 1
+alignment = 2
 
-[node name="VSeparator" type="VSeparator" parent="VBoxContainer/HBoxContainer" unique_id=471265851]
+[node name="PanelContainer" type="PanelContainer" parent="VBoxContainer/HBoxContainer" unique_id=213504907]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_hdwr6")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/HBoxContainer/PanelContainer" unique_id=300397549]
+custom_maximum_size = Vector2(-1, 24)
 layout_mode = 2
 
-[node name="SaveButton" type="Button" parent="VBoxContainer/HBoxContainer" unique_id=1276617218]
+[node name="NewButton" type="Button" parent="VBoxContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=1778180357]
 unique_name_in_owner = true
 custom_maximum_size = Vector2(24, 24)
 layout_mode = 2
-size_flags_horizontal = 4
-size_flags_vertical = 4
 offset_transform_enabled = true
 offset_transform_scale = Vector2(0.8, 0.8)
-tooltip_text = "Print info for all nodes in this graph"
+tooltip_text = "Create New Behavior Graph"
+icon = ExtResource("3_3ptl5")
+flat = true
+icon_alignment = 1
+
+[node name="LoadButton" type="Button" parent="VBoxContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=1317708645]
+unique_name_in_owner = true
+custom_maximum_size = Vector2(24, 24)
+layout_mode = 2
+offset_transform_enabled = true
+offset_transform_scale = Vector2(0.8, 0.8)
+tooltip_text = "Load Behavior Graph"
+icon = ExtResource("4_fo02r")
+flat = true
+icon_alignment = 1
+
+[node name="VSeparator2" type="VSeparator" parent="VBoxContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=1984982261]
+custom_maximum_size = Vector2(24, 24)
+layout_mode = 2
+offset_transform_scale = Vector2(0.8, 0.8)
+theme_override_constants/separation = 2
+theme_override_styles/separator = SubResource("StyleBoxLine_rnfta")
+
+[node name="SaveButton" type="Button" parent="VBoxContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=1276617218]
+unique_name_in_owner = true
+custom_maximum_size = Vector2(24, 24)
+layout_mode = 2
+offset_transform_enabled = true
+offset_transform_scale = Vector2(0.8, 0.8)
+tooltip_text = "Save Behavior Graph"
 icon = ExtResource("3_5bs10")
 flat = true
 icon_alignment = 1
 
-[node name="SaveAsButton" type="Button" parent="VBoxContainer/HBoxContainer" unique_id=1802126656]
+[node name="SaveAsButton" type="Button" parent="VBoxContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=1802126656]
 unique_name_in_owner = true
 custom_maximum_size = Vector2(24, 24)
 layout_mode = 2
-size_flags_horizontal = 4
-size_flags_vertical = 4
 offset_transform_enabled = true
 offset_transform_scale = Vector2(0.8, 0.8)
-tooltip_text = "Print info for all nodes in this graph"
+tooltip_text = "Save Behavior Graph as..."
 icon = ExtResource("4_vf8wo")
 flat = true
 icon_alignment = 1
 
-[node name="CloseButton" type="Button" parent="VBoxContainer/HBoxContainer" unique_id=228367462]
+[node name="VSeparator" type="VSeparator" parent="VBoxContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=1143243255]
+custom_maximum_size = Vector2(24, 24)
+layout_mode = 2
+offset_transform_scale = Vector2(0.8, 0.8)
+theme_override_constants/separation = 2
+theme_override_styles/separator = SubResource("StyleBoxLine_rnfta")
+
+[node name="CloseButton" type="Button" parent="VBoxContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=228367462]
 unique_name_in_owner = true
 custom_maximum_size = Vector2(24, 24)
 layout_mode = 2
-size_flags_horizontal = 4
-size_flags_vertical = 4
 offset_transform_enabled = true
-offset_transform_scale = Vector2(0.9, 0.9)
-tooltip_text = "Print info for all nodes in this graph"
+offset_transform_scale = Vector2(0.8, 0.8)
+tooltip_text = "Close Behavior Graph dock"
 icon = ExtResource("3_vf8wo")
 flat = true
 icon_alignment = 1

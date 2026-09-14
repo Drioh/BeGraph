@@ -11,6 +11,9 @@ var file_dialog: EditorFileDialog
 ## Tracks whether [member dock] is currently added to the editor, to avoid double add/remove calls.
 var _dock_added : bool = false
 
+var _pending_graph : BehaviorGraph = null
+
+var _confirm_dialog : ConfirmationDialog
 ## Default background/border colors for the built-in node categories, applied to [ProjectSettings] by [method _sync_settings]. Each entry maps a category id to a [code][background_color, border_color][/code] pair.
 const BASE_CATEGORIES: Dictionary = {
 	"action_node": [Color(0.161, 0.161, 0.161, 1.0), Color(0.824, 0.784, 0.745, 1.0)],
@@ -46,8 +49,18 @@ func _enter_tree():
 	dock.title = "Behavior Graph"
 	dock.default_slot = EditorDock.DOCK_SLOT_BOTTOM
 	dock.available_layouts = EditorDock.DOCK_LAYOUT_HORIZONTAL | EditorDock.DOCK_LAYOUT_FLOATING
+	
+	_confirm_dialog = ConfirmationDialog.new()
+	_confirm_dialog.dialog_text = "Abandon current Behavior Graph without saving changes?"
+	_confirm_dialog.ok_button_text = "Save changes and open a new graph"
+	_confirm_dialog.cancel_button_text = "Cancel edit"
+	_confirm_dialog.confirmed.connect(_on_abandon_confirmed)
+	_confirm_dialog.canceled.connect(_on_abandon_canceled)
+	EditorInterface.get_base_control().add_child(_confirm_dialog)
+	
 	var fs_dock = get_editor_interface().get_file_system_dock()
 	fs_dock.resource_removed.connect(_on_resource_removed)
+	fs_dock.files_moved.connect(_on_files_moved)
 	_sync_settings()
 	
 
@@ -57,6 +70,8 @@ func _exit_tree():
 	_remove_dock()
 	var fs_dock = get_editor_interface().get_file_system_dock()
 	fs_dock.resource_removed.disconnect(_on_resource_removed)
+	fs_dock.files_moved.disconnect(_on_files_moved)
+	_confirm_dialog.queue_free()
 	dock.queue_free()
 
 # Called when the plugin is enabled; currently a no-op.
@@ -64,9 +79,16 @@ func _enable_plugin() -> void:
 	pass
 
 ## Callback for [signal FileSystemDock.resource_removed]: unloads the currently edited graph (via [method BeGraphDock.load_graph]) if the removed resource is the one currently open in the dock.
-func _on_resource_removed (resource:Resource)->void:
+func _on_resource_removed(resource: Resource) -> void:
 	if resource == begraph_dock.loaded_graph:
 		begraph_dock.load_graph(null)
+		_remove_dock() # chiude la tab
+
+func _on_files_moved(old_file: String, new_file: String) -> void:
+	if begraph_dock.loaded_graph == null:
+		return
+	if begraph_dock.loaded_graph.resource_path == old_file or begraph_dock.loaded_graph.resource_path == new_file:
+		begraph_dock.refresh_label()
 
 
 func _disable_plugin() -> void: _remove_dock()
@@ -79,24 +101,25 @@ func _handles(object: Object) -> bool:
 func _edit(object: Object) -> void:
 	if object is BehaviorGraph:
 		_make_visible(true)
-		if not begraph_dock.loaded_graph == object:
-			if begraph_dock.loaded_graph != null:
-				_on_save_pressed()
-			begraph_dock.load_graph(object)
+		_request_open_graph(object)
 
 # Overrides [method EditorPlugin._make_visible]: shows or hides the dock and, the first time it's made visible, connects the dock's close/save/save-as buttons to their handlers.
 func _make_visible(visible: bool) -> void:
-	if not (visible or EditorInterface.get_inspector().get_edited_object() is BehaviorGraph):
+	if visible or EditorInterface.get_inspector().get_edited_object() is BehaviorGraph:
+		_add_dock()
+		dock.make_visible()
+		if not begraph_dock.close_button.pressed.is_connected(_on_close_pressed):
+			begraph_dock.close_button.pressed.connect(_on_close_pressed)
+		if not begraph_dock.save_button.pressed.is_connected(_on_save_pressed):
+			begraph_dock.save_button.pressed.connect(_on_save_pressed)
+		if not begraph_dock.save_as_button.pressed.is_connected(_on_save_as_pressed):
+			begraph_dock.save_as_button.pressed.connect(_on_save_as_pressed)
+		if not begraph_dock.new_button.pressed.is_connected(_on_new_pressed):
+			begraph_dock.new_button.pressed.connect(_on_new_pressed)
+		if not begraph_dock.load_button.pressed.is_connected(_on_load_pressed):
+			begraph_dock.load_button.pressed.connect(_on_load_pressed)
+	else:
 		_remove_dock()
-	
-	_add_dock()
-	dock.make_visible()
-	if not begraph_dock.close_button.pressed.is_connected(_on_close_pressed):
-		begraph_dock.close_button.pressed.connect(_on_close_pressed)
-	if not begraph_dock.save_button.pressed.is_connected(_on_save_pressed):
-		begraph_dock.save_button.pressed.connect(_on_save_pressed)
-	if not begraph_dock.save_as_button.pressed.is_connected(_on_save_as_pressed):
-		begraph_dock.save_as_button.pressed.connect(_on_save_as_pressed)
 
 ## Adds [member dock] to the editor (via [method EditorPlugin.add_dock]) if it isn't already added.
 func _add_dock() -> void:
@@ -114,26 +137,90 @@ func _remove_dock() -> void:
 func _on_close_pressed() -> void:
 	_remove_dock()
 
-## Callback for the dock's save button; saves the currently loaded [BehaviorGraph] to its existing resource path via [ResourceSaver].
+#region Graph opening / saving
+
+func _request_open_graph(new_graph: BehaviorGraph) -> void:
+	if new_graph == begraph_dock.loaded_graph:
+		return
+	if begraph_dock.loaded_graph != null:
+		_pending_graph = new_graph
+		_confirm_dialog.popup_centered()
+	else:
+		begraph_dock.load_graph(new_graph)
+
+func _on_abandon_confirmed() -> void:
+	var graph : BehaviorGraph = _pending_graph
+	_pending_graph = null
+	_save_loaded_graph(func(): begraph_dock.load_graph(graph))
+
+func _on_abandon_canceled() -> void:
+	var graph : BehaviorGraph = _pending_graph
+	_pending_graph = null
+	begraph_dock.load_graph(graph)
+
+func _save_loaded_graph(on_saved: Callable) -> void:
+	var graph : Resource = begraph_dock.loaded_graph
+	var path : String = graph.resource_path
+	if path == "" or not ResourceLoader.exists(path):
+		_prompt_save_path(graph, on_saved)
+		return
+	if ResourceSaver.save(graph) != OK:
+		push_error("Couldn't save resource %s" % graph)
+		return
+	on_saved.call()
+
+func _prompt_save_path(graph: Resource, on_saved: Callable) -> void:
+	var d := EditorFileDialog.new()
+	d.file_mode = EditorFileDialog.FILE_MODE_SAVE_FILE
+	d.access = EditorFileDialog.ACCESS_RESOURCES
+	d.add_filter("*.tres", "Behavior Graph")
+	d.current_file = "NewBehaviorGraph.tres"
+	d.file_selected.connect(func(path: String):
+		ResourceSaver.save(graph, path)
+		EditorInterface.get_resource_filesystem().scan()
+		on_saved.call()
+		d.queue_free()
+	)
+	d.canceled.connect(d.queue_free)
+	EditorInterface.get_base_control().add_child(d)
+	d.popup_centered_ratio()
+
 func _on_save_pressed() -> void:
-	var result : int = ResourceSaver.save(begraph_dock.loaded_graph)
-	if result != 0: 
-		print("Couldn't save resource %s"%begraph_dock.loaded_graph)
-	
-	print("saving \"%s\" to path:%s"%[begraph_dock.loaded_graph, begraph_dock.loaded_graph.resource_path])
+	_save_loaded_graph(func():
+		print("saved \"%s\" to %s" % [begraph_dock.loaded_graph, begraph_dock.loaded_graph.resource_path])
+	)
 
-
-## Callback for the dock's save-as button; opens an [EditorFileDialog] set to save a [code].tres[/code] file, defaulting to [code]NewBehaviorGraph.tres[/code].
-func _on_save_as_pressed()->void:
+func _on_save_as_pressed() -> void:
 	file_dialog = EditorFileDialog.new()
 	file_dialog.file_mode = EditorFileDialog.FILE_MODE_SAVE_FILE
 	file_dialog.access = EditorFileDialog.ACCESS_RESOURCES
 	file_dialog.add_filter("*.tres", "Behavior Graph")
 	file_dialog.current_file = "NewBehaviorGraph.tres"
 	file_dialog.file_selected.connect(_on_file_selected)
-
 	EditorInterface.get_base_control().add_child(file_dialog)
 	file_dialog.popup_centered_ratio()
+
+func _on_new_pressed() -> void:
+	_request_open_graph(BehaviorGraph.new())
+
+func _on_load_pressed() -> void:
+	var d := EditorFileDialog.new()
+	d.file_mode = EditorFileDialog.FILE_MODE_OPEN_FILE
+	d.access = EditorFileDialog.ACCESS_RESOURCES
+	d.add_filter("*.tres", "Behavior Graph")
+	d.file_selected.connect(func(path: String):
+		var res := load(path)
+		if res is BehaviorGraph:
+			_request_open_graph(res)
+		else:
+			push_error("\"%s\" is not a valid Behavior Graph" % path)
+		d.queue_free()
+	)
+	d.canceled.connect(d.queue_free)
+	EditorInterface.get_base_control().add_child(d)
+	d.popup_centered_ratio()
+
+#endregion
 
 ## Callback for [signal EditorFileDialog.file_selected] from the save-as dialog: saves the currently loaded graph to [param path], rescans the filesystem, and reloads the dock from the newly-saved file.
 func _on_file_selected(path: String) -> void:

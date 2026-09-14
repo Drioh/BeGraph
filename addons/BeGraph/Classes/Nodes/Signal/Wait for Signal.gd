@@ -37,19 +37,6 @@ func tick() -> Status:
 
 	return Status.RUNNING
 
-## Accetta sia un [NodePath] assoluto (risolto dalla radice dell'albero di
-## scena) sia un riferimento diretto a un [Node] (utile se [param node] è
-## collegato a una variabile di blackboard che contiene già il nodo).
-func _resolve_node(value: Variant) -> Node:
-	if value is Node:
-		return value
-	if value is NodePath and value != NodePath(""):
-		var tree := Engine.get_main_loop() as SceneTree
-		if tree == null:
-			return null
-		return tree.root.get_node_or_null(value)
-	return null
-
 func _on_signal_fired() -> void:
 	_signal_fired = true
 

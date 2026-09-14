@@ -8,6 +8,8 @@ enum ProcessThread { IDLE, PHYSICS, MANUAL }
 ## Mirrors [enum BehaviorNode.Status]; the result of a single [method tick].
 enum Status { SUCCESS, FAILURE, RUNNING }
 
+signal behavior_signal(args: Array)
+
 ## If [code]false[/code], disables both [method Node._process] and [method Node._physics_process] ticking for this agent.
 @export var enabled: bool = true:
 	set(value):
@@ -87,6 +89,7 @@ func _ready() -> void:
 			push_error("Starting Node not set for Behavior Agent %s" % self)
 			process_mode = Node.PROCESS_MODE_DISABLED
 			return
+		behavior_graph
 
 ## Ticks [member starting_node] every idle frame when [member graph_process_mode] is [constant ProcessThread.IDLE] (outside the editor).
 func _process(_delta: float) -> void:

@@ -20,6 +20,9 @@ extends Resource
 ##Used for saving purposes, this variable contains a copy of [param connections] from the graph edit. This value gets its value when a graph gets saved
 @export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY) var connections : Array[Dictionary]
 
+##The agent running this graph
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY) var _agent : Node
+
 ## Creates the graph's first [AccessPointNode] (named [code]"start_node"[/code]) if [member nodes] is empty, guaranteeing every new [BehaviorGraph] has at least one valid entry point.
 func _init() -> void:
 	if nodes.size()==0:

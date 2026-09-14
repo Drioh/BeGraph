@@ -152,6 +152,7 @@ func build_conditions() -> void :
 
 ## Utility function to build a property to inject into [method set_properties].[br]
 ## Uses a custom property definition, different than the one returned by [method get_property_list]:
+##[codeblock]
 ##var entry : Dictionary={
 ##    "name":StringName # a normal script variable uses String,
 ##    "class_name":StringName,
@@ -280,10 +281,17 @@ func get_node_property_info(property:StringName,info:String="") -> Variant:
 	push_error("property '%s' not found"%property)
 	return 
 
+func get_agent()->Node:
+	var graph :BehaviorGraph = _graph_ref.get_ref()
+	if graph._agent == null:
+		push_error("Agent not set for graph %s"%graph)
+		return
+	return graph._agent
+
 ## Checks if there is a property with the given name in [param behavior_properties]
 func _has(property:StringName) -> bool:
 	for prop in behavior_properties:
-		if prop["name"] != property: 
+		if prop["name"] == property: 
 			return true
 	return false
 
@@ -345,3 +353,14 @@ func tick_condition(index:int = 0) -> Status:
 		return Status.FAILURE
 	push_error("BehaviorNode %s has less than %s conditions" % [self, index+1])
 	return Status.FAILURE
+
+## Accepts either an absolute [NodePath] (resolved from the tree root) or a direct reference to a [Node] (useful if [param node] is connected fo a blackboard variable containing the node).
+func _resolve_node(value: Variant) -> Node:
+	if value is Node:
+		return value
+	if value is NodePath and value != NodePath(""):
+		var tree := Engine.get_main_loop() as SceneTree
+		if tree == null:
+			return null
+		return tree.root.get_node_or_null(value)
+	return null
