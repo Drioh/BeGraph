@@ -1,0 +1,79 @@
+[gd_scene format=3 uid="uid://cojjm3j73wyb0"]
+
+[ext_resource type="Script" uid="uid://cwkv5vcb6cfmh" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraphAccessPoint.gd" id="1_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+content_margin_left = 12.0
+content_margin_top = 7.0
+content_margin_right = 12.0
+content_margin_bottom = 10.0
+bg_color = Color(0.075, 0.161, 0.157, 1)
+corner_radius_bottom_left = 24
+expand_margin_top = 1.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel_sel"]
+content_margin_left = 12.0
+content_margin_top = 7.0
+content_margin_right = 12.0
+content_margin_bottom = 10.0
+bg_color = Color(0.075, 0.161, 0.157, 1)
+border_width_left = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.467, 1, 0.6, 1)
+corner_radius_bottom_left = 24
+expand_margin_top = 1.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_titlebar"]
+content_margin_left = 12.0
+content_margin_top = 5.0
+content_margin_bottom = 5.0
+bg_color = Color(0.075, 0.161, 0.157, 1)
+corner_radius_top_left = 24
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_titlebar_sel"]
+content_margin_left = 12.0
+content_margin_top = 5.0
+content_margin_bottom = 5.0
+bg_color = Color(0.075, 0.161, 0.157, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_color = Color(0.467, 1, 0.6, 1)
+corner_radius_top_left = 24
+
+[node name="AccessPointGraphNode" type="GraphNode" unique_id=1258243778]
+custom_minimum_size = Vector2(100, 0)
+offset_right = 200.0
+offset_bottom = 60.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+theme_override_styles/panel_selected = SubResource("StyleBoxFlat_panel_sel")
+theme_override_styles/titlebar = SubResource("StyleBoxFlat_titlebar")
+theme_override_styles/titlebar_selected = SubResource("StyleBoxFlat_titlebar_sel")
+title = "AccessPointGraphNode"
+slot/0/left_enabled = false
+slot/0/left_type = 0
+slot/0/left_color = Color(1, 1, 1, 1)
+slot/0/left_icon = null
+slot/0/right_enabled = true
+slot/0/right_type = 0
+slot/0/right_color = Color(0.467, 1, 0.6, 1)
+slot/0/right_icon = null
+slot/0/draw_stylebox = true
+script = ExtResource("1_script")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1766715848]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBoxContainer" unique_id=1578780427]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "label:"
+
+[node name="LabelEdit" type="LineEdit" parent="HBoxContainer" unique_id=1329704358]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 16
+placeholder_text = "label name"
+flat = true

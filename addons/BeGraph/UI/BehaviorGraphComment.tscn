@@ -1,0 +1,97 @@
+[gd_scene format=3 uid="uid://cqqwovqeaho03"]
+
+[ext_resource type="Script" uid="uid://bewafpxl8wec6" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraphComment.gd" id="1_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+content_margin_left = 10.0
+content_margin_top = 7.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.395689, 0.24233243, 0.05306792, 1)
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+expand_margin_top = 1.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel_sel"]
+content_margin_left = 10.0
+content_margin_top = 7.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.395689, 0.24233243, 0.05306792, 1)
+border_width_left = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.6071979, 0.507516, 0.38449416, 1)
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+expand_margin_top = 1.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_titlebar"]
+content_margin_left = 10.0
+content_margin_top = 5.0
+content_margin_bottom = 5.0
+bg_color = Color(0.395689, 0.24233243, 0.05306792, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_titlebar_sel"]
+content_margin_left = 10.0
+content_margin_top = 5.0
+content_margin_bottom = 5.0
+bg_color = Color(0.395689, 0.24233243, 0.05306792, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_color = Color(0.6071979, 0.507516, 0.38449416, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_7gy1d"]
+
+[node name="CommentGraphNode" type="GraphNode" unique_id=1866018828]
+custom_minimum_size = Vector2(100, 0)
+offset_right = 300.0
+offset_bottom = 190.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+theme_override_styles/panel_selected = SubResource("StyleBoxFlat_panel_sel")
+theme_override_styles/titlebar = SubResource("StyleBoxFlat_titlebar")
+theme_override_styles/titlebar_selected = SubResource("StyleBoxFlat_titlebar_sel")
+title = "CommentGraphNode"
+slot/0/left_enabled = false
+slot/0/left_type = 0
+slot/0/left_color = Color(1, 1, 1, 1)
+slot/0/left_icon = null
+slot/0/right_enabled = false
+slot/0/right_type = 0
+slot/0/right_color = Color(1, 1, 1, 1)
+slot/0/right_icon = null
+slot/0/draw_stylebox = true
+slot/1/left_enabled = false
+slot/1/left_type = 0
+slot/1/left_color = Color(1, 1, 1, 1)
+slot/1/left_icon = null
+slot/1/right_enabled = false
+slot/1/right_type = 0
+slot/1/right_color = Color(1, 1, 1, 1)
+slot/1/right_icon = null
+slot/1/draw_stylebox = true
+script = ExtResource("1_script")
+
+[node name="CommentEdit" type="TextEdit" parent="." unique_id=175678867]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(280, 90)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxEmpty_7gy1d")
+placeholder_text = "Comment Text"
+wrap_mode = 1
+
+[node name="ColorPicker" type="ColorPicker" parent="." unique_id=1816044916]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+sampler_visible = false
+color_modes_visible = false
+sliders_visible = false
+hex_visible = false
+presets_visible = false

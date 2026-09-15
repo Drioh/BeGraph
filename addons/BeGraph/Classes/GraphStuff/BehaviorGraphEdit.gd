@@ -50,7 +50,7 @@ func set_graph(graph: BehaviorGraph) -> void:
 		clear_connections()
 
 	for child in get_children().duplicate():
-		if child is not BehaviorGraphNode:
+		if child is not BehaviorGraphNodeBase:
 			continue
 		remove_child(child)
 		child.free()
@@ -61,13 +61,13 @@ func set_graph(graph: BehaviorGraph) -> void:
 
 ## Instantiates a [BehaviorGraphNode] for every node in [member current_graph], restoring its name, position, and delete handling.
 func load_nodes() -> void:
-	for node_to_load in current_graph.nodes:
-		var node: BehaviorGraphNode = NODE.instantiate()
+	for node_to_load in current_graph.nodes.values():
+		var node: BehaviorGraphNodeBase = _scene_for(node_to_load).instantiate()
 		add_child(node)
 		node.name = node_to_load.resource_name
 		node.graph_edit = self
 		node.set_node(node_to_load)
-		node.node._graph_ref=weakref(current_graph)
+		node.node._graph_ref = weakref(current_graph)
 		node.position_offset = node_to_load.position_in_graph
 		node.delete_request.connect(_on_delete_nodes_request)
 		
@@ -85,20 +85,22 @@ func add_node(script_path: String = "") -> void:
 	if script_path == "":
 		push_error("Script path not valid")
 		return
-		
-	var node: BehaviorGraphNode = NODE.instantiate()
+
+	var behavior_node: BehaviorNode = load(script_path).new()
+
+	var node: BehaviorGraphNodeBase = _scene_for(behavior_node).instantiate()
 	add_child(node)
-	
+
 	node.graph_edit = self
-	node.set_node_script(script_path)
 	node.position_offset = (get_local_mouse_position() + scroll_offset) / zoom
-	node.node.position_in_graph = node.position_offset
+	behavior_node.position_in_graph = node.position_offset
+	node.set_node(behavior_node)
 	node.delete_request.connect(_on_delete_nodes_request)
-	
-	current_graph.add_node(node.node)
+
+	current_graph.add_node(behavior_node)
 
 ## Disconnects any outgoing connection from [param graph_node] whose port no longer exists after its condition count changed.
-func prune_invalid_connections_from(graph_node: BehaviorGraphNode) -> void:
+func prune_invalid_connections_from(graph_node: BehaviorGraphNodeBase) -> void:
 	var n := graph_node.node.conditions.size()
 	var max_valid_port : int = 1 + n if n > 0 else 0
 	for c in get_connection_list_from_node(graph_node.name):
@@ -108,7 +110,7 @@ func prune_invalid_connections_from(graph_node: BehaviorGraphNode) -> void:
 ## Deletes the given nodes, refusing to delete a graph's last remaining starting point; also removes their connections and hands the inspector back to [member current_graph] if needed.[br] 
 func _on_delete_nodes_request(nodes: Array[StringName]) -> void:
 	for n in nodes:
-		var nod = get_node(NodePath(n)) as BehaviorGraphNode
+		var nod = get_node(NodePath(n)) as BehaviorGraphNodeBase
 
 		if nod.node.is_starting_node and current_graph.get_nodes_by_category("access_point_node").size() == 1:
 			push_error("node %s cannot ben deleted. There must be at least one access point" % nod)
@@ -138,8 +140,8 @@ func connect_nodes(from_node: StringName, from_port: int, to_node: StringName, t
 		push_error("Cannot connect a node to itself")
 		return
 
-	var f_node: BehaviorGraphNode = get_node(NodePath(from_node))
-	var t_node: BehaviorGraphNode = get_node(NodePath(to_node))
+	var f_node: BehaviorGraphNodeBase = get_node(NodePath(from_node))
+	var t_node: BehaviorGraphNodeBase = get_node(NodePath(to_node))
 
 	if f_node.node.conditions.size() > 0:
 		# Each condition can have only one connection: if this condition already
@@ -168,8 +170,8 @@ func connect_nodes(from_node: StringName, from_port: int, to_node: StringName, t
 
 ## Removes a connection: updates the source [BehaviorNode] via [method BehaviorNode.remove_next], [member BehaviorGraph.connections], and the visual connection.
 func disconnect_nodes(from_node: StringName, from_port: int, to_node: StringName, to_port: int) -> void:
-	var f_node: BehaviorGraphNode = get_node(NodePath(from_node))
-	var t_node: BehaviorGraphNode = get_node(NodePath(to_node))
+	var f_node: BehaviorGraphNodeBase = get_node(NodePath(from_node))
+	var t_node: BehaviorGraphNodeBase = get_node(NodePath(to_node))
 
 	var c: Dictionary = {
 		"from_node": from_node,
@@ -263,3 +265,9 @@ func _script_metadata(path: String) -> Dictionary:
 		"label": consts.get("DISPLAY_NAME", path.get_file().get_basename()),
 		"icon": load(consts["DISPLAY_ICON"]) if consts.has("DISPLAY_ICON") else null
 	}
+
+func _scene_for(n: BehaviorNode) -> PackedScene:
+	var consts: Dictionary = n.get_script().get_script_constant_map()
+	if consts.has("DISPLAY_SCENE"):
+		return load(consts["DISPLAY_SCENE"])
+	return NODE

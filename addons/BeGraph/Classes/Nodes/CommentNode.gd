@@ -1,8 +1,14 @@
 @tool
 extends BehaviorNode
+class_name BehaviorComment
 
 const DISPLAY_NAME : String = "Comment"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/comment_node_icon.svg"
+const DISPLAY_SCENE : String = "res://addons/BeGraph/UI/BehaviorGraphComment.tscn"
+
+@export var comment_title : String
+@export var comment_text : String
+@export var color: Color = Color(0.542, 0.337, 0.084, 1.0)
 
 func set_instruction() -> String:return "{comment}"
 

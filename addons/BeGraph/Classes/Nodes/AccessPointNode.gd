@@ -4,9 +4,12 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Access Point"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/access_point_node_icon.svg"
+const DISPLAY_SCENE : String = "res://addons/BeGraph/UI/BehaviorGraphAccessPoint.tscn"
+
+@export var label : String
 
 func set_instruction() -> String:
-	return "Access Point: {label}"
+	return ""
 
 func tick() -> Status:
 	if _next_ref.size()>0:
@@ -21,5 +24,4 @@ func set_output()->bool:return true
 
 func set_allows_multiple_outputs() -> bool: return false
 
-func set_properties()-> void:
-	_add_behavior_property("label",TYPE_STRING)
+func set_properties()-> void: return

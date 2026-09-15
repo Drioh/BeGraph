@@ -96,7 +96,7 @@ var regex :RegEx= RegEx.create_from_string(r"\{([^{}]+)\}")
 ## Weak reference to the [BehaviorGraph] this node belongs to. Used to resolve blackboard bindings and to notify the graph of connection changes.
 @export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE) var _graph_ref : WeakRef
 ## Weak references to this node's successor(s), used when [member output] is [code]true[/code].
-@export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE) var _next_ref : Array[WeakRef] = []
+@export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE) var _next_ref : Array[StringName]
 
 ## Emitted whenever a property's blackboard binding is enabled or disabled via [method set_node_property_blackboard_key].
 signal blackboard_key_set(property:StringName,blackboard_key:StringName)
@@ -166,7 +166,7 @@ func build_conditions() -> void :
 ##}
 ##[/codeblock]
 func _add_behavior_property(
-	name:String = "", 
+	name:StringName = &"", 
 	default_value : Variant = null,
 	hint:int=PROPERTY_HINT_NONE, 
 	hint_string:Variant="",
@@ -265,7 +265,8 @@ func _get(property: StringName) -> Variant:
 			return prop["value"] #gets value from behavior_property
 		
 		var graph : BehaviorGraph = _graph_ref.get_ref()
-		return graph.get_blackboard_property(key).value
+		if graph:
+			return graph.get_blackboard_property(key).value
 	return null
 
 ## Returns the value stored under the given key (e.g. [code]"type"[/code], [code]"hint"[/code], [code]"blackboard_key"[/code]) if [param info] is provided. [br]
@@ -305,29 +306,25 @@ func is_blackboard_reference_enabled(key:StringName)->bool:
 ## Adds [param n] as a successor of this node. If [member output] is [code]true[/code] (no [member conditions] set), [param n] is appended to [member _next_ref] (unless already present); [param from_port] is unused in this case. Otherwise, [param n] becomes the successor of the condition at index [param from_port], replacing any previous one.
 func add_next(n : BehaviorNode, from_port : int) -> void:
 	if output:
-		if not _next_ref.any(func(r): return r.get_ref() == n):
-			_next_ref.append(weakref(n))
+		if not _next_ref.has(n.resource_name):
+			_next_ref.append(n.resource_name)
 		return
 	else:
-		var current : WeakRef = conditions[from_port]["next"]
-		if current == null or current.get_ref() != n: 
-			conditions[from_port]["next"] = weakref(n)
+		var current : StringName = conditions[from_port]["next"] if conditions[from_port]["next"] else &""
+		if current == &"" or current != n.resource_name: 
+			conditions[from_port]["next"] = n.resource_name
 		return
 
 ## Removes [param n] as a successor of this node (see [method add_next] for how successors are stored depending on [member output]/[member conditions]). Also prunes any dead (freed) weak references found along the way.
 func remove_next(n : BehaviorNode, from_port : int) -> void:
 	if output:
-		for i in range(_next_ref.size() - 1, -1, -1):
-			var target = _next_ref[i].get_ref()
-			#removes dead weakref
-			if target == n or target == null: 
-				_next_ref.remove_at(i)
+		_next_ref.erase(n.resource_name)
 		return
 	else:
-		var current : WeakRef = conditions[from_port]["next"]
+		var current : StringName = conditions[from_port]["next"]
 		
 		var cond_1 : bool = current != null
-		var cond_2 : bool = current.get_ref() == n or current.get_ref() == null
+		var cond_2 : bool = current == n.resource_name or current== null
 		if  cond_1 and cond_2: 
 			conditions[from_port]["next"] = null
 		return
@@ -335,9 +332,9 @@ func remove_next(n : BehaviorNode, from_port : int) -> void:
 ## Ticks the successor stored at [param index] inside [member _next_ref] and returns its [enum Status].
 func tick_next(index:int = 0) -> Status:
 	if index < _next_ref.size():
-		var target = _next_ref[index].get_ref()
+		var target = _next_ref[index]
 		if target: 
-			return target.tick()
+			return (_graph_ref.get_ref() as BehaviorGraph).nodes[target].tick()
 		push_error("BehaviorNode %s: successor at index %s was freed" % [self, index])
 		return Status.FAILURE
 	push_error("BehaviorNode %s has less than %s successors" % [self, index+1])
@@ -346,9 +343,9 @@ func tick_next(index:int = 0) -> Status:
 ## Ticks the successor bound to the condition at [param index] inside [member conditions] and returns its [enum Status].
 func tick_condition(index:int = 0) -> Status:
 	if index < conditions.size():
-		var next_ref : WeakRef = conditions[index]["next"]
-		var target = next_ref.get_ref() if next_ref else null
-		if target: return target.tick()
+		var target : StringName = conditions[index]["next"]
+		if target: 
+			return (_graph_ref.get_ref() as BehaviorGraph).nodes[target].tick()
 		push_error("BehaviorNode %s: condition %s has no valid successor" % [self, index])
 		return Status.FAILURE
 	push_error("BehaviorNode %s has less than %s conditions" % [self, index+1])
@@ -356,11 +353,12 @@ func tick_condition(index:int = 0) -> Status:
 
 ## Accepts either an absolute [NodePath] (resolved from the tree root) or a direct reference to a [Node] (useful if [param node] is connected fo a blackboard variable containing the node).
 func _resolve_node(value: Variant) -> Node:
-	if value is Node:
-		return value
-	if value is NodePath and value != NodePath(""):
-		var tree := Engine.get_main_loop() as SceneTree
-		if tree == null:
-			return null
-		return tree.root.get_node_or_null(value)
+	if not Engine.is_editor_hint():
+		if value is Node:
+			return value
+		if value is NodePath and value != NodePath(""):
+			var tree := Engine.get_main_loop() as SceneTree
+			if tree == null:
+				return null
+			return tree.current_scene.get_node_or_null(value)
 	return null

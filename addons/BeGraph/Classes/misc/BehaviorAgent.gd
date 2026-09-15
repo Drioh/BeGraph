@@ -50,10 +50,10 @@ func _update_process_flags() -> void:
 func _get_property_list() -> Array[Dictionary]:
 	var ret: Array[Dictionary] = []
 	if behavior_graph != null:
-		var names := behavior_graph.get_nodes_by_category("access_point_node")
+		var nodes := behavior_graph.get_nodes_by_category("access_point_node")
 		var hint_string := ""
-		hint_string = ",".join(names)
-
+		for node in nodes:
+			hint_string = ",".join(PackedStringArray([node.label]))
 		ret.append({
 			"name": "starting_point",
 			"type": TYPE_INT,
@@ -80,26 +80,38 @@ func _set(property: StringName, value: Variant) -> bool:
 
 ## At runtime (not in the editor), validates that both [member behavior_graph] and [member starting_node] are set; disables this node entirely ([constant Node.PROCESS_MODE_DISABLED]) and logs an error otherwise.
 func _ready() -> void:
+	print("CIAO")
 	if not Engine.is_editor_hint():
 		if behavior_graph == null:
 			push_error("Behavior Graph not set for Behavior Agent %s" % self)
 			process_mode = Node.PROCESS_MODE_DISABLED
 			return
+		
+		for c in behavior_graph.connections:
+			var from_node : BehaviorNode = behavior_graph.get_node(c["from_node"])
+			var to_node : BehaviorNode = behavior_graph.get_node(c["to_node"])
+			if from_node == null or to_node == null:
+				push_error("Impossibile ricostruire la connessione %s -> %s" % [c["from_node"], c["to_node"]])
+				continue
+			from_node.add_next(to_node, c["from_port"])
+		
 		if starting_node == null:
 			push_error("Starting Node not set for Behavior Agent %s" % self)
 			process_mode = Node.PROCESS_MODE_DISABLED
 			return
-		behavior_graph
+		for node in behavior_graph.nodes.values():
+			node._graph_ref = weakref(behavior_graph)
+			
 
 ## Ticks [member starting_node] every idle frame when [member graph_process_mode] is [constant ProcessThread.IDLE] (outside the editor).
 func _process(_delta: float) -> void:
-	if not Engine.is_editor_hint():
+	if not Engine.is_editor_hint() && enabled:
 		if starting_node != null:
 			starting_node.tick()
 
 ## Ticks [member starting_node] every physics frame when [member graph_process_mode] is [constant ProcessThread.PHYSICS] (outside the editor).
 func _physics_process(_delta: float) -> void:
-	if not Engine.is_editor_hint():
+	if not Engine.is_editor_hint() && enabled:
 		if starting_node != null:
 			starting_node.tick()
 
@@ -114,13 +126,13 @@ func _select_starting_node(index: int) -> void:
 	if behavior_graph == null:
 		starting_node = null
 		return
-		
-	var names := behavior_graph.get_nodes_by_category("access_point_node")
+
+	var names := behavior_graph.get_nodes_names_by_category("access_point_node")
 	if names == null:
 		starting_node = null
 		return
-		
+
 	if index >= 0 and index < names.size():
-		starting_node = behavior_graph.get_starting_node(names[index])
+		starting_node = behavior_graph.get_node(names[index])
 	else:
 		starting_node = null

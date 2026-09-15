@@ -36,5 +36,5 @@ func set_allows_multiple_outputs() -> bool: return false
 
 func set_properties()-> void:
 	_add_behavior_property("scene_path", "")
-	_add_behavior_property("parent", NodePath("."))
+	_add_behavior_property("parent", NodePath(""))
 	_add_behavior_property("position", Vector3.ZERO)

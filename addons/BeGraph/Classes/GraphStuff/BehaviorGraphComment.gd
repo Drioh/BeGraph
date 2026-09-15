@@ -1,0 +1,71 @@
+@tool
+## Visual [GraphNode] per un [CommentNode]: box colorato a spigoli vivi con TITOLO ([LineEdit]) e COMMENTO ([TextEdit]), più un [ColorPickerButton] in titlebar legato a [member CommentNode.color]. Nessuno slot: i commenti non si connettono a nulla.
+class_name BehaviorGraphComment
+extends BehaviorGraphNodeBase
+
+const COMMENT_COLOR : Color = Color(0.75, 0.536, 0.211, 0.529)
+
+@onready var color_picker: ColorPicker = %ColorPicker
+@onready var comment_edit: TextEdit = %CommentEdit
+
+var title_edit: LineEdit = LineEdit.new()
+var color_picker_button : Button = Button.new()
+
+## Nasconde il nome interno del nodo (c'è già il campo TITOLO) e aggiunge il color picker prima di edit/delete.
+func _add_titlebar_buttons(tb: HBoxContainer, edit_button: Button, delete_button: Button) -> void:
+	tb.get_child(0).visible = false
+	
+	title_edit.flat=true
+	title_edit.placeholder_text="Comment Title"
+	title_edit.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+	title_edit.add_theme_font_size_override("font_size",18)
+	tb.add_child(title_edit)
+	
+	color_picker_button.custom_minimum_size=Vector2(35,35)
+	color_picker_button.pressed.connect(func():
+		color_picker.visible=!color_picker.visible
+		reset_size.call_deferred()
+		)
+	color_picker_button.icon=load("res://addons/BeGraph/Icons/color_picker_icon.svg")
+	color_picker_button.flat=true
+	tb.add_child(color_picker_button)
+
+	tb.add_child(delete_button)
+
+func _on_node_set() -> void:
+	var comment: BehaviorComment = node
+	title_edit.text = comment.comment_title
+	comment_edit.text = comment.comment_text
+	color_picker.color = comment.color
+	resizable=true
+	_apply_color(comment.color)
+
+	title_edit.text_changed.connect(func(t: String): 
+		comment.comment_title = t
+		tooltip_text = t
+		)
+	comment_edit.text_changed.connect(func(): comment.comment_text = comment_edit.text)
+	color_picker.color_changed.connect(func(c: Color):
+		comment.color = c
+		_apply_color(c)
+	)
+	comment.changed.connect(_sync_from_node, CONNECT_DEFERRED)
+
+## Riallinea i controlli se la risorsa viene modificata dall'inspector (bottone edit).
+func _sync_from_node() -> void:
+	var comment: BehaviorComment = node
+	if title_edit.text != comment.comment_title: title_edit.text = comment.comment_title
+	if comment_edit.text != comment.comment_text: comment_edit.text = comment.comment_text
+	if color_picker.color != comment.color:
+		color_picker.color = comment.color
+		_apply_color(comment.color)
+
+func _apply_color(c: Color) -> void:
+	var border := c.lightened(0.35)
+	color_picker_button.self_modulate=c
+	set_indexed("theme_override_styles/panel:bg_color", c)
+	set_indexed("theme_override_styles/titlebar:bg_color", c)
+	set_indexed("theme_override_styles/panel_selected:bg_color", c)
+	set_indexed("theme_override_styles/panel_selected:border_color", border)
+	set_indexed("theme_override_styles/titlebar_selected:bg_color", c)
+	set_indexed("theme_override_styles/titlebar_selected:border_color", border)
