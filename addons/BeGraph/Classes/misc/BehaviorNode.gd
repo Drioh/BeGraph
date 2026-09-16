@@ -283,11 +283,16 @@ func get_node_property_info(property:StringName,info:String="") -> Variant:
 	return 
 
 func get_agent()->Node:
-	var graph :BehaviorGraph = _graph_ref.get_ref()
-	if graph._agent == null:
-		push_error("Agent not set for graph %s"%graph)
-		return
-	return graph._agent
+	var graph : BehaviorGraph = _graph_ref.get_ref()
+	if graph == null:
+		push_error("Graph reference lost for node %s" % resource_name)
+		return null
+	var agent : Node = graph.get_agent_node()
+	if agent == null:
+		push_error("Agent not set for graph %s" % graph)
+		return null
+	return agent
+
 
 ## Checks if there is a property with the given name in [param behavior_properties]
 func _has(property:StringName) -> bool:
@@ -357,8 +362,10 @@ func _resolve_node(value: Variant) -> Node:
 		if value is Node2D or value is Node3D:
 			return value
 		if value is NodePath and value != NodePath(""):
-			var tree : SceneTree= Engine.get_main_loop()
-			if tree == null:
+			var agent : Node = get_agent()
+			if agent == null or agent.owner == null:
+				push_error("BehaviorNode %s: cannot resolve scene root for %s" % [resource_name, value])
 				return null
-			return tree.current_scene.get_node_or_null(value)
+			print((value as NodePath).is_absolute())
+			return agent.get_node_or_null(value)
 	return null

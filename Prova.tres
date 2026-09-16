@@ -2,17 +2,20 @@
 
 [ext_resource type="Script" uid="uid://da0t4052e3fsp" path="res://addons/BeGraph/Classes/misc/BlackboardVariable.gd" id="1_sguni"]
 [ext_resource type="Script" uid="uid://ca0cevcqjpnsq" path="res://addons/BeGraph/Classes/misc/BehaviorNode.gd" id="2_0y5uo"]
+[ext_resource type="Resource" uid="uid://b00pat2p0pkar" path="res://Variabile di test.tres" id="2_gad0g"]
 [ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="3_gad0g"]
 [ext_resource type="Script" uid="uid://cqtl1rxtl657i" path="res://addons/BeGraph/Classes/Nodes/Actions/Patrol.gd" id="4_0y5uo"]
 [ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="4_k7ocg"]
 
-[sub_resource type="Resource" id="Resource_k7ocg"]
+[sub_resource type="Resource" id="Resource_0y5uo"]
+resource_local_to_scene = true
 script = ExtResource("1_sguni")
 name = &"Positions"
-value = [NodePath("Point1"), NodePath("Point2"), NodePath("Point3")]
+value = [NodePath("Point1"), NodePath("Point2"), NodePath("Point3"), null]
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
-[sub_resource type="Resource" id="Resource_0y5uo"]
+[sub_resource type="Resource" id="Resource_k7ocg"]
+resource_local_to_scene = true
 script = ExtResource("1_sguni")
 name = &"Self"
 value = NodePath("Sprite2D")
@@ -90,7 +93,7 @@ position_in_graph = Vector2(92, 115)
 _graph_ref = Object(WeakRef,"script":null)
 
 node = NodePath("Sprite2D")
-points = [NodePath("Point1"), NodePath("Point2"), NodePath("Point3")]
+points = [NodePath("Point1"), NodePath("Point2"), NodePath("Point3"), null]
 mode = 1
 speed = 100.0
 duration = 5.0
@@ -109,8 +112,9 @@ _graph_ref = Object(WeakRef,"script":null)
 _next_ref = Array[StringName]([&"BehaviorGraphNode"])
 
 [resource]
+resource_local_to_scene = true
 script = ExtResource("4_k7ocg")
-blackboard = Array[ExtResource("1_sguni")]([SubResource("Resource_k7ocg"), SubResource("Resource_0y5uo")])
+blackboard = Array[ExtResource("1_sguni")]([SubResource("Resource_0y5uo"), SubResource("Resource_k7ocg"), ExtResource("2_gad0g")])
 nodes = Dictionary[StringName, ExtResource("2_0y5uo")]({
 &"BehaviorGraphNode": SubResource("Resource_gad0g"),
 &"start_node": SubResource("Resource_byvd5")

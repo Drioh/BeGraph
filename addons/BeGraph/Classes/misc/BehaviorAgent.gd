@@ -22,7 +22,11 @@ signal behavior_signal(args: Array)
 	set(value):
 		if behavior_graph == value:
 			return
-		behavior_graph = value
+		if value == null:
+			behavior_graph = null
+			notify_property_list_changed.call_deferred()
+			return
+		behavior_graph = value.duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
 		_starting_point_idx = 0
 		_select_starting_node(_starting_point_idx)
 		notify_property_list_changed.call_deferred()
@@ -86,6 +90,10 @@ func _ready() -> void:
 			push_error("Behavior Graph not set for Behavior Agent %s" % self)
 			process_mode = Node.PROCESS_MODE_DISABLED
 			return
+		
+		behavior_graph = behavior_graph.duplicate(true)
+		behavior_graph.set_agent(self)
+		_select_starting_node(_starting_point_idx)
 		
 		for c in behavior_graph.connections:
 			var from_node : BehaviorNode = behavior_graph.get_node(c["from_node"])

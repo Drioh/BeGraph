@@ -21,7 +21,7 @@ extends Resource
 @export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY) var connections : Array[Dictionary]
 
 ##The agent running this graph
-@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY) var _agent : Node
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY) var _agent_ref : WeakRef = weakref(null)
 
 ## Creates the graph's first [AccessPointNode] (named [code]"start_node"[/code]) if [member nodes] is empty, guaranteeing every new [BehaviorGraph] has at least one valid entry point.
 func _init() -> void:
@@ -86,3 +86,9 @@ func get_blackboard_property(key:StringName)->BlackboardVariable:
 			return variable
 	push_error("Key '%s' not found inside of '%s''s blackboard"%[key,self])
 	return null
+
+func set_agent(n: Node) -> void:
+	_agent_ref = weakref(n)
+
+func get_agent_node() -> Node:
+	return _agent_ref.get_ref()

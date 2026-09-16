@@ -21,12 +21,10 @@ func tick() -> Status:
 	var first_time : bool = true
 	var points : Array
 	
-	
-	
-	
 
 	if first_time:
 		node = _resolve_node(get("node"))
+		print(get("node"))
 		if node == null:
 			push_error("\"%s\" couldn't resolve node to move" % resource_name)
 			return Status.FAILURE
@@ -93,7 +91,7 @@ func set_output()->bool : return true
 func set_allows_multiple_outputs() -> bool: return false
 
 func set_properties()-> void:
-	_add_behavior_property("node", NodePath(""),PROPERTY_HINT_NODE_TYPE,"Node2D,Node3D","","",PROPERTY_USAGE_NODE_PATH_FROM_SCENE_ROOT )
+	_add_behavior_property("node", NodePath(""),PROPERTY_HINT_NODE_TYPE,"Node2D,Node3D","","",PROPERTY_USAGE_NODE_PATH_FROM_SCENE_ROOT)
 	_add_behavior_property("points", [])
 	_add_behavior_property("mode", 0, PROPERTY_HINT_ENUM, "Speed,Duration")
 	_add_behavior_property("speed", float(100.0))
