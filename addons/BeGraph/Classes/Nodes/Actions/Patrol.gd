@@ -10,34 +10,47 @@ var _index : int = 0
 var _start_time : int = -1
 var _start_position : Vector3
 
+
+
 func set_instruction() -> String:
 	return "Patrol {node} between {points}(mode: {mode})"
 
 func tick() -> Status:
-	var points : Array = get("points")
-	if points.is_empty():
-		return Status.FAILURE
-
-	var node : Node = _resolve_node(get("node"))
-	if node == null:
-		push_error("\"%s\" couldn't resolve node to move" % resource_name)
-		return Status.FAILURE
+	var _points_nodepaths = get("points")
+	var node : Node
+	var first_time : bool = true
+	var points : Array
+	
+	
+	
 	
 
+	if first_time:
+		node = _resolve_node(get("node"))
+		if node == null:
+			push_error("\"%s\" couldn't resolve node to move" % resource_name)
+			return Status.FAILURE
+		for p in _points_nodepaths:
+			points.append(_resolve_node(p))
+	first_time=false
+	if points.is_empty():
+		return Status.FAILURE
+	
 	var destination : Vector3 
 	if points[_index] is not Vector3:
 		if points[_index] is Node3D:
-			destination = points[_index].position
+			destination = points[_index].global_position
 		elif points[_index] is Node2D:
-			destination = Vector3(points[_index].position.x,points[_index].position.y,0)
-	else:
+			destination = Vector3(points[_index].global_position.x,points[_index].global_position.y,0)
+	elif points[_index] is Vector3:
 		destination = points[_index]
+	
 	if _start_time == -1:
 		_start_time = Time.get_ticks_msec()
 		_start_position = _get_position(node)
+	
 
 	var t : float = _progress(_start_position, destination)
-	print("sono t: %s"%t)
 	_set_position(node, _start_position.lerp(destination, t))
 
 	if t < 1.0:

@@ -10,6 +10,7 @@ enum Status { SUCCESS, FAILURE, RUNNING }
 
 signal behavior_signal(args: Array)
 
+
 ## If [code]false[/code], disables both [method Node._process] and [method Node._physics_process] ticking for this agent.
 @export var enabled: bool = true:
 	set(value):
@@ -80,7 +81,6 @@ func _set(property: StringName, value: Variant) -> bool:
 
 ## At runtime (not in the editor), validates that both [member behavior_graph] and [member starting_node] are set; disables this node entirely ([constant Node.PROCESS_MODE_DISABLED]) and logs an error otherwise.
 func _ready() -> void:
-	print("CIAO")
 	if not Engine.is_editor_hint():
 		if behavior_graph == null:
 			push_error("Behavior Graph not set for Behavior Agent %s" % self)

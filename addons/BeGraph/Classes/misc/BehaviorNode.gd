@@ -354,10 +354,10 @@ func tick_condition(index:int = 0) -> Status:
 ## Accepts either an absolute [NodePath] (resolved from the tree root) or a direct reference to a [Node] (useful if [param node] is connected fo a blackboard variable containing the node).
 func _resolve_node(value: Variant) -> Node:
 	if not Engine.is_editor_hint():
-		if value is Node:
+		if value is Node2D or value is Node3D:
 			return value
 		if value is NodePath and value != NodePath(""):
-			var tree := Engine.get_main_loop() as SceneTree
+			var tree : SceneTree= Engine.get_main_loop()
 			if tree == null:
 				return null
 			return tree.current_scene.get_node_or_null(value)

@@ -17,6 +17,7 @@ metadata/_snap_enabled = true
 [node name="Node2D" type="Node2D" unique_id=1496466534]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=761324414]
+position = Vector2(105, 64)
 texture = SubResource("GradientTexture2D_hdwr6")
 
 [node name="BehaviorAgent" type="Node" parent="Sprite2D" unique_id=933315304]

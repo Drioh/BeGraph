@@ -1,0 +1,36 @@
+[gd_scene format=3 uid="uid://darchkoe02k7p"]
+
+[ext_resource type="Script" uid="uid://cj0fv54i6ere" path="res://addons/BeGraph/Classes/misc/BehaviorAgent.gd" id="1_7tmfp"]
+[ext_resource type="Resource" uid="uid://c6acbrbtbdgl6" path="res://Prova.tres" id="2_7tmfp"]
+
+[sub_resource type="Gradient" id="Gradient_7tmfp"]
+interpolation_mode = 1
+colors = PackedColorArray(0, 0, 0, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_hdwr6"]
+gradient = SubResource("Gradient_7tmfp")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(0.5, 0)
+metadata/_snap_enabled = true
+
+[node name="Node2D" type="Node2D" unique_id=1496466534]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=761324414]
+position = Vector2(105, 64)
+texture = SubResource("GradientTexture2D_hdwr6")
+
+[node name="BehaviorAgent" type="Node" parent="Sprite2D" unique_id=933315304]
+script = ExtResource("1_7tmfp")
+behavior_graph = ExtResource("2_7tmfp")
+starting_point = 0
+metadata/_custom_type_script = "uid://cj0fv54i6ere"
+
+[node name="Point1" type="Node2D" parent="." unique_id=1626982480]
+position = Vector2(325, 416)
+
+[node name="Point2" type="Node2D" parent="." unique_id=602253696]
+position = Vector2(736, 147)
+
+[node name="Point3" type="Node2D" parent="." unique_id=2122544764]
+position = Vector2(866, 403)

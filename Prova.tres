@@ -18,18 +18,6 @@ name = &"Self"
 value = NodePath("Sprite2D")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
-[sub_resource type="Resource" id="Resource_byvd5"]
-resource_name = "start_node"
-script = ExtResource("3_gad0g")
-label = "Dai"
-node_category = "access_point_node"
-output = true
-position_in_graph = Vector2(-414, 161)
-is_starting_node = true
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"BehaviorGraphNode"])
-
 [sub_resource type="Resource" id="Resource_gad0g"]
 resource_name = "BehaviorGraphNode"
 script = ExtResource("4_0y5uo")
@@ -53,7 +41,7 @@ behavior_properties = Array[Dictionary]([{
 "name": &"points",
 "type": 28,
 "usage": 4102,
-"value": []
+"value": [NodePath("Point1"), NodePath("Point2"), NodePath("Point3")]
 }, {
 "blackboard_key": &"",
 "class_name": "",
@@ -107,6 +95,18 @@ mode = 1
 speed = 100.0
 duration = 5.0
 loop = true
+
+[sub_resource type="Resource" id="Resource_byvd5"]
+resource_name = "start_node"
+script = ExtResource("3_gad0g")
+label = "Dai"
+node_category = "access_point_node"
+output = true
+position_in_graph = Vector2(-414, 161)
+is_starting_node = true
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"BehaviorGraphNode"])
 
 [resource]
 script = ExtResource("4_k7ocg")
