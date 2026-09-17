@@ -24,7 +24,6 @@ func tick() -> Status:
 
 	if first_time:
 		node = _resolve_node(get("node"))
-		print(get("node"))
 		if node == null:
 			push_error("\"%s\" couldn't resolve node to move" % resource_name)
 			return Status.FAILURE
