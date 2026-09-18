@@ -27,6 +27,9 @@ var _node_popup: PopupMenu
 
 #endregion
 
+## Emitted whenever the selection changes to a single [BehaviorGraphNodeBase]; carries its
+## underlying [BehaviorNode], or [code]null[/code] when nothing is selected.
+signal selected_node_changed(node: BehaviorNode)
 
 #region Lifecycle
 
@@ -36,7 +39,8 @@ func _ready() -> void:
 	connection_request.connect(connect_nodes)
 	disconnection_request.connect(disconnect_nodes)
 	popup_request.connect(_on_popup_request)
-
+	node_selected.connect(_on_node_selected)
+	node_deselected.connect(_on_node_deselected)
 #endregion
 
 
@@ -45,6 +49,7 @@ func _ready() -> void:
 ## Clears the current visual graph (connections and [BehaviorGraphNode] children), loads [param graph] as [member current_graph], and rebuilds it via [method load_nodes] and [method load_connections].
 func set_graph(graph: BehaviorGraph) -> void:
 	current_graph = null
+	selected_node_changed.emit(null)
 
 	if connections.size() > 0:
 		clear_connections()
@@ -69,7 +74,7 @@ func load_nodes() -> void:
 		node.set_node(node_to_load)
 		node.node._graph_ref = weakref(current_graph)
 		node.position_offset = node_to_load.position_in_graph
-		node.delete_request.connect(_on_delete_nodes_request)
+
 		
 ## Recreates every visual connection stored in [member current_graph.connections].
 func load_connections() -> void:
@@ -95,8 +100,6 @@ func add_node(script_path: String = "") -> void:
 	node.position_offset = (get_local_mouse_position() + scroll_offset) / zoom
 	behavior_node.position_in_graph = node.position_offset
 	node.set_node(behavior_node)
-	node.delete_request.connect(_on_delete_nodes_request)
-
 	current_graph.add_node(behavior_node)
 
 ## Disconnects any outgoing connection from [param graph_node] whose port no longer exists after its condition count changed.
@@ -127,7 +130,16 @@ func _on_delete_nodes_request(nodes: Array[StringName]) -> void:
 			EditorInterface.inspect_object(current_graph)
 		current_graph.remove_node(nod.node)
 		remove_child(nod)
+	selected_node_changed.emit(null)
+	
+## Callback for [signal GraphEdit.node_selected]: forwards the selected node's [BehaviorNode].
+func _on_node_selected(node: Node) -> void:
+	if node is BehaviorGraphNodeBase:
+		selected_node_changed.emit(node.node)
 
+## Callback for [signal GraphEdit.node_deselected]: nothing is selected anymore.
+func _on_node_deselected(_node: Node) -> void:
+	selected_node_changed.emit(null)
 #endregion
 
 

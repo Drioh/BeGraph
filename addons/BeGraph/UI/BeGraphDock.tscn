@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" uid="uid://dp7v8krbo2g8n" path="res://addons/BeGraph/Icons/load_icon.svg" id="4_fo02r"]
 [ext_resource type="Texture2D" uid="uid://32kkp5pbn562" path="res://addons/BeGraph/Icons/save_as_icon.svg" id="4_vf8wo"]
 [ext_resource type="Texture2D" uid="uid://clw4llfqosy5e" path="res://addons/BeGraph/Icons/info_icon.svg" id="7_fo02r"]
+[ext_resource type="Script" uid="uid://duh5vdogx664y" path="res://addons/BeGraph/Classes/misc/BehaviorNodeInfoPanel.gd" id="10_grsls"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hdwr6"]
 content_margin_left = 4.0
@@ -180,3 +181,4 @@ unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
+script = ExtResource("10_grsls")

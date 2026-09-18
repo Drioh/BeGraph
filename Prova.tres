@@ -91,7 +91,7 @@ behavior_properties = Array[Dictionary]([{
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(92, 115)
+position_in_graph = Vector2(138, 69)
 _graph_ref = Object(WeakRef,"script":null)
 
 node = NodePath("..")

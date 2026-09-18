@@ -32,6 +32,7 @@ func _ready() -> void:
 	info_button.pressed.connect(func():
 		if info_button.button_pressed: info_panel.show()
 		else: info_panel.hide())
+	graph_edit.selected_node_changed.connect(_on_selected_node_changed)
 ## Opens [member loaded_graph] in the main editor's inspector/resource editor.
 func edit_graph()->void:
 	EditorInterface.edit_resource(loaded_graph)
@@ -51,3 +52,8 @@ func refresh_label() -> void:
 		return
 	var graph_info: String = loaded_graph.resource_name if loaded_graph.resource_name != "" else loaded_graph.resource_path
 	graph_label.text = "Loaded Behavior Graph: %s" % graph_info
+
+## Forwards the selected node (and the loaded graph's blackboard) to the info panel.
+func _on_selected_node_changed(node: BehaviorNode) -> void:
+	var blackboard : Array[BlackboardVariable] = loaded_graph.blackboard if loaded_graph else []
+	info_panel.show_node(node, blackboard)

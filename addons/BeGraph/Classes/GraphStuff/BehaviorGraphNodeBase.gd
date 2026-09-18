@@ -25,24 +25,14 @@ func set_node(n: BehaviorNode) -> void:
 	tb.add_theme_constant_override("separation", 0)
 	tb.get_child(0).add_theme_font_size_override("font_size", 18)
 
-	var edit_button := Button.new()
-	edit_button.flat = true
-	edit_button.icon = load("res://addons/BeGraph/Icons/edit_icon.svg")
-	edit_button.pressed.connect(EditorInterface.edit_resource.bind(node), CONNECT_DEFERRED)
-
 	var delete_button := Button.new()
 	delete_button.flat = true
 	delete_button.icon = load("res://addons/BeGraph/Icons/close_icon.svg")
-	delete_button.pressed.connect(delete_request.emit.bind([self.name]), CONNECT_DEFERRED)
-
-	_add_titlebar_buttons(tb, edit_button, delete_button)
-	_on_node_set()
-
-## Override per personalizzare quali bottoni finiscono in titlebar (e in che ordine). Default: edit, separatore, delete.
-func _add_titlebar_buttons(tb: HBoxContainer, edit_button: Button, delete_button: Button) -> void:
-	tb.add_child(edit_button)
-	tb.add_child(VSeparator.new())
+	var del_array : Array[StringName] = [StringName(self.name)]
+	delete_button.pressed.connect(graph_edit._on_delete_nodes_request.bind(del_array))
 	tb.add_child(delete_button)
+
+	_on_node_set()
 
 ## Override per costruire il corpo di questo nodo / collegare i suoi controlli specifici, una volta che [member node] è disponibile.
 func _on_node_set() -> void:
