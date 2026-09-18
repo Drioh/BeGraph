@@ -8,8 +8,11 @@ enum ProcessThread { IDLE, PHYSICS, MANUAL }
 ## Mirrors [enum BehaviorNode.Status]; the result of a single [method tick].
 enum Status { SUCCESS, FAILURE, RUNNING }
 
+const OBP : String = "overridable_blackboard_properties"
+
 signal behavior_signal(args: Array)
 
+@export var bb_props: Dictionary[StringName,Variant]
 
 ## If [code]false[/code], disables both [method Node._process] and [method Node._physics_process] ticking for this agent.
 @export var enabled: bool = true:
@@ -26,10 +29,11 @@ signal behavior_signal(args: Array)
 			behavior_graph = null
 			notify_property_list_changed.call_deferred()
 			return
-		behavior_graph = value.duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
+		behavior_graph = value
 		_starting_point_idx = 0
-		_select_starting_node(_starting_point_idx)
+		#_select_starting_node(_starting_point_idx)
 		notify_property_list_changed.call_deferred()
+var _behavior_graph : BehaviorGraph
 
 ## Which loop drives this agent's ticking. Setting this to [constant ProcessThread.MANUAL] also disables [member enabled], since manual mode expects [method tick] to be called explicitly by user code.
 @export var graph_process_mode: ProcessThread = ProcessThread.IDLE:
@@ -44,6 +48,7 @@ var _starting_point_idx: int = 0
 ## The [BehaviorNode] (the chosen access point's entry into the graph) that gets ticked by [method _process] / [method _physics_process] / [method tick].
 var starting_node: BehaviorNode = null
 
+var interface : Node = self
 
 ## Enables/disables [method Node._process] and [method Node._physics_process] based on [member enabled] and [member graph_process_mode].
 func _update_process_flags() -> void:
@@ -66,6 +71,7 @@ func _get_property_list() -> Array[Dictionary]:
 			"hint_string": hint_string,
 			"usage": PROPERTY_USAGE_DEFAULT
 		})
+		ret.append_array(get_overridable_property_list())
 	return ret
 
 
@@ -73,13 +79,20 @@ func _get_property_list() -> Array[Dictionary]:
 func _get(property: StringName) -> Variant:
 	if property == "starting_point":
 		return _starting_point_idx
+	if property.begins_with(OBP):
+		var key := StringName(property.get_slice("/", 1))
+		if bb_props.has(key):
+			return bb_props[key]
 	return null
 
 ## Overrides [method Object._set] to update [member _starting_point_idx] and re-resolve [member starting_node] whenever [code]starting_point[/code] is changed from the inspector.
 func _set(property: StringName, value: Variant) -> bool:
 	if property == "starting_point":
 		_starting_point_idx = value
-		_select_starting_node(_starting_point_idx)
+		#_select_starting_node(_starting_point_idx)
+		return true
+	if property.begins_with(OBP):
+		bb_props[StringName(property.get_slice("/",1))] = value
 		return true
 	return false
 
@@ -91,15 +104,15 @@ func _ready() -> void:
 			process_mode = Node.PROCESS_MODE_DISABLED
 			return
 		
-		behavior_graph = behavior_graph.duplicate(true)
-		behavior_graph.set_agent(self)
+		_behavior_graph = behavior_graph.duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
+		_behavior_graph.set_agent(self)
 		_select_starting_node(_starting_point_idx)
 		
-		for c in behavior_graph.connections:
-			var from_node : BehaviorNode = behavior_graph.get_node(c["from_node"])
-			var to_node : BehaviorNode = behavior_graph.get_node(c["to_node"])
+		for c in _behavior_graph.connections:
+			var from_node : BehaviorNode = _behavior_graph.get_node(c["from_node"])
+			var to_node : BehaviorNode = _behavior_graph.get_node(c["to_node"])
 			if from_node == null or to_node == null:
-				push_error("Impossibile ricostruire la connessione %s -> %s" % [c["from_node"], c["to_node"]])
+				push_error("Can't build connection %s -> %s" % [c["from_node"], c["to_node"]])
 				continue
 			from_node.add_next(to_node, c["from_port"])
 		
@@ -107,9 +120,14 @@ func _ready() -> void:
 			push_error("Starting Node not set for Behavior Agent %s" % self)
 			process_mode = Node.PROCESS_MODE_DISABLED
 			return
-		for node in behavior_graph.nodes.values():
-			node._graph_ref = weakref(behavior_graph)
-			
+		
+		for node in _behavior_graph.nodes.values():
+			node._graph_ref = weakref(_behavior_graph)
+
+		for p in bb_props:
+			var v = get("%s/%s"%[OBP,p])
+			if v!=null:
+				override_blackboard_property(p,v)
 
 ## Ticks [member starting_node] every idle frame when [member graph_process_mode] is [constant ProcessThread.IDLE] (outside the editor).
 func _process(_delta: float) -> void:
@@ -141,6 +159,39 @@ func _select_starting_node(index: int) -> void:
 		return
 
 	if index >= 0 and index < names.size():
-		starting_node = behavior_graph.get_node(names[index])
+		starting_node = _behavior_graph.get_node(names[index])
 	else:
 		starting_node = null
+
+func override_blackboard_property(property:StringName, value : Variant)->void:
+	_behavior_graph.get_blackboard_property(property).value = value
+
+func is_overridable_blackboard_property(property:StringName)->bool:
+	return property.begins_with(OBP)
+
+func set_overridable_blackboard_property(property:StringName,value:Variant,interface : Node)->bool:
+	self.interface = interface
+	if property.begins_with(OBP):
+		return _set(property,value)
+	push_error("%s is not the name for an overridable blackboard property"%property)
+	return false
+
+func get_overridable_blackboard_property(property:StringName)->Variant:
+	if property.begins_with(OBP):
+		return _get(property)
+	push_error("%s is not the name for an overridable blackboard property"%property)
+	return 
+
+func get_overridable_property_list()->Array[Dictionary]:
+	var base_usage := PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_NIL_IS_VARIANT
+	var ret : Array[Dictionary]
+	for bb_var in behavior_graph.blackboard:
+		if bb_var.export_variable:
+			ret.append({
+				"name": "%s/%s"%[OBP,bb_var.name],
+				"type": typeof(bb_var._value),
+				"hint": PROPERTY_HINT_NONE,
+				"hint_string": "",
+				"usage": base_usage
+			})
+	return ret

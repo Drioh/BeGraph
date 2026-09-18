@@ -18,15 +18,20 @@ extends Control
 @onready var save_as_button: Button = %SaveAsButton
 ## Button that hides this dock.
 @onready var close_button: Button = %CloseButton
+@onready var info_button: Button = %InfoButton
 ## The [BehaviorGraphEdit] instance used to visually edit [member loaded_graph].
 @onready var graph_edit: BehaviorGraphEdit = %GraphEdit
 
+@onready var info_panel: PanelContainer = %InfoPanel
 ## The [BehaviorGraph] resource currently loaded in this dock, or [code]null[/code] if none is loaded.
 var loaded_graph : BehaviorGraph = null
 
 ## Connects [member edit_button] to [method edit_graph].
 func _ready() -> void:
 	edit_button.pressed.connect(edit_graph)
+	info_button.pressed.connect(func():
+		if info_button.button_pressed: info_panel.show()
+		else: info_panel.hide())
 ## Opens [member loaded_graph] in the main editor's inspector/resource editor.
 func edit_graph()->void:
 	EditorInterface.edit_resource(loaded_graph)

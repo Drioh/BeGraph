@@ -366,5 +366,5 @@ func _resolve_node(value: Variant) -> Node:
 			if agent == null or agent.owner == null:
 				push_error("BehaviorNode %s: cannot resolve scene root for %s" % [resource_name, value])
 				return null
-			return agent.get_node_or_null(value)
+			return agent.interface.get_node(value)
 	return null

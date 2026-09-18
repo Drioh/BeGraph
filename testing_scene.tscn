@@ -1,178 +1,47 @@
 [gd_scene format=3 uid="uid://darchkoe02k7p"]
 
 [ext_resource type="PackedScene" uid="uid://cl45e2arjx5nt" path="res://Proviamop.tscn" id="1_00g8v"]
-[ext_resource type="Script" uid="uid://cj0fv54i6ere" path="res://addons/BeGraph/Classes/misc/BehaviorAgent.gd" id="1_7tmfp"]
-[ext_resource type="Script" uid="uid://da0t4052e3fsp" path="res://addons/BeGraph/Classes/misc/BlackboardVariable.gd" id="2_uxw26"]
-[ext_resource type="Script" uid="uid://ca0cevcqjpnsq" path="res://addons/BeGraph/Classes/misc/BehaviorNode.gd" id="3_00g8v"]
-[ext_resource type="Script" uid="uid://cqtl1rxtl657i" path="res://addons/BeGraph/Classes/Nodes/Actions/Patrol.gd" id="4_7yy31"]
-[ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="5_wlvp0"]
-[ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="6_kedo2"]
 
-[sub_resource type="Gradient" id="Gradient_uxw26"]
-interpolation_mode = 1
-offsets = PackedFloat32Array(0.008810572, 1)
-colors = PackedColorArray(0, 0.8862745, 0, 1, 1, 1, 1, 0)
+[sub_resource type="Gradient" id="Gradient_7coi5"]
 
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_00g8v"]
-gradient = SubResource("Gradient_uxw26")
-fill = 1
-fill_from = Vector2(0.5, 0.5)
-fill_to = Vector2(0.5, 0)
-metadata/_snap_enabled = true
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_cy14o"]
+gradient = SubResource("Gradient_7coi5")
+fill_from = Vector2(0.4957265, 0.55128205)
 
-[sub_resource type="Resource" id="Resource_00g8v"]
-resource_local_to_scene = true
-script = ExtResource("2_uxw26")
-name = &"Positions"
-value = [NodePath("../../Point4"), NodePath("../../Point5"), NodePath("../../Point6")]
-metadata/_custom_type_script = "uid://da0t4052e3fsp"
+[sub_resource type="Gradient" id="Gradient_fhslk"]
 
-[sub_resource type="Resource" id="Resource_7yy31"]
-resource_local_to_scene = true
-script = ExtResource("2_uxw26")
-name = &"Self"
-value = NodePath("..")
-metadata/_custom_type_script = "uid://da0t4052e3fsp"
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_sfsix"]
+gradient = SubResource("Gradient_fhslk")
+fill_to = Vector2(0.66239315, 0.7777778)
 
-[sub_resource type="Resource" id="Resource_wlvp0"]
-resource_local_to_scene = true
-script = ExtResource("2_uxw26")
-name = &"dasdw"
-value = Color(0.8663713, 0.31263024, 0.45862418, 1)
-metadata/_custom_type_script = "uid://da0t4052e3fsp"
+[sub_resource type="Gradient" id="Gradient_6787c"]
 
-[sub_resource type="Resource" id="Resource_kedo2"]
-resource_name = "BehaviorGraphNode"
-script = ExtResource("4_7yy31")
-instruction = "Patrol {node} between {points}(mode: {mode})"
-behavior_properties = Array[Dictionary]([{
-"blackboard_key": &"Self",
-"class_name": "",
-"custom_info": "",
-"hint": 34,
-"hint_string": "Node2D,Node3D",
-"name": &"node",
-"type": 22,
-"usage": 4198406,
-"value": NodePath("..")
-}, {
-"blackboard_key": &"Positions",
-"class_name": "",
-"custom_info": "",
-"hint": 0,
-"hint_string": "",
-"name": &"points",
-"type": 28,
-"usage": 4102,
-"value": [NodePath("../../Point4"), NodePath("../../Point5"), NodePath("../../Point6")]
-}, {
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 2,
-"hint_string": "Speed,Duration",
-"name": &"mode",
-"type": 2,
-"usage": 4102,
-"value": 1
-}, {
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 0,
-"hint_string": "",
-"name": &"speed",
-"type": 3,
-"usage": 4102,
-"value": 100.0
-}, {
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 0,
-"hint_string": "",
-"name": &"duration",
-"type": 3,
-"usage": 4102,
-"value": 5.0
-}, {
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 0,
-"hint_string": "",
-"name": &"loop",
-"type": 1,
-"usage": 4102,
-"value": true
-}])
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(92, 115)
-_graph_ref = Object(WeakRef,"script":null)
-
-node = NodePath("..")
-points = [NodePath("../../Point4"), NodePath("../../Point5"), NodePath("../../Point6")]
-mode = 1
-speed = 100.0
-duration = 5.0
-loop = true
-
-[sub_resource type="Resource" id="Resource_7gby3"]
-resource_name = "start_node"
-script = ExtResource("5_wlvp0")
-label = "Dai"
-node_category = "access_point_node"
-output = true
-position_in_graph = Vector2(-414, 161)
-is_starting_node = true
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"BehaviorGraphNode"])
-
-[sub_resource type="Resource" id="Resource_7ijg1"]
-resource_local_to_scene = true
-script = ExtResource("6_kedo2")
-blackboard = Array[ExtResource("2_uxw26")]([SubResource("Resource_00g8v"), SubResource("Resource_7yy31"), SubResource("Resource_wlvp0")])
-nodes = Dictionary[StringName, ExtResource("3_00g8v")]({
-&"BehaviorGraphNode": SubResource("Resource_kedo2"),
-&"start_node": SubResource("Resource_7gby3")
-})
-connections = Array[Dictionary]([{
-"from_node": &"start_node",
-"from_port": 0,
-"to_node": &"BehaviorGraphNode",
-"to_port": 0
-}])
-_agent_ref = Object(WeakRef,"script":null)
-
-metadata/_custom_type_script = "uid://d25yjg1utgxu"
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_jn3wn"]
+gradient = SubResource("Gradient_6787c")
+fill_to = Vector2(0.5555556, 0.47435898)
 
 [node name="Node2D" type="Node2D" unique_id=1496466534]
 
 [node name="Sprite2D" parent="." unique_id=811252767 instance=ExtResource("1_00g8v")]
-position = Vector2(105, 64)
-patrol_points = Array[NodePath]([NodePath("../Point1"), NodePath("../Point2"), NodePath("../Point3")])
-
-[node name="Sprite2D2" type="Sprite2D" parent="." unique_id=119018372]
-position = Vector2(421, 215)
-texture = SubResource("GradientTexture2D_00g8v")
-
-[node name="BehaviorAgent" type="Node" parent="Sprite2D2" unique_id=757567284]
-script = ExtResource("1_7tmfp")
-behavior_graph = SubResource("Resource_7ijg1")
-starting_point = 0
-metadata/_custom_type_script = "uid://cj0fv54i6ere"
+overridable_blackboard_properties/Positions = [NodePath("../Point1"), NodePath("../Point2"), NodePath("../Point3")]
 
 [node name="Point1" type="Node2D" parent="." unique_id=1626982480]
-position = Vector2(325, 416)
+position = Vector2(699, 330)
+
+[node name="Sprite2D" type="Sprite2D" parent="Point1" unique_id=745487982]
+texture = SubResource("GradientTexture2D_cy14o")
 
 [node name="Point2" type="Node2D" parent="." unique_id=602253696]
 position = Vector2(736, 147)
 
+[node name="Sprite2D" type="Sprite2D" parent="Point2" unique_id=1160200066]
+texture = SubResource("GradientTexture2D_sfsix")
+
 [node name="Point3" type="Node2D" parent="." unique_id=2122544764]
-position = Vector2(866, 403)
+position = Vector2(957, 226)
+
+[node name="Sprite2D" type="Sprite2D" parent="Point3" unique_id=987098895]
+texture = SubResource("GradientTexture2D_jn3wn")
 
 [node name="Point4" type="Node2D" parent="." unique_id=1963367409]
 position = Vector2(994, 170)

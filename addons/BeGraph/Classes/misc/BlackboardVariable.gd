@@ -9,8 +9,10 @@ signal value_changed(new_value: Variant)
 	set(v):
 		name = v
 		name_changed.emit(name)
+@export var export_variable : bool = false
 
 var _value: Variant = null
+
 
 func _get_property_list() -> Array[Dictionary]:
 	var base_usage := PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_SCRIPT_VARIABLE

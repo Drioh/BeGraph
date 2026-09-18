@@ -7,82 +7,71 @@ const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
 enum Mode { SPEED, DURATION }
 
 var _index : int = 0
+var current_destination
 var _start_time : int = -1
-var _start_position : Vector3
+var _last_tick_time : int = -1
+var _waiting : bool = false
+var _wait_start_time : int = -1
 
-
+var _node : Node
+var _points : Array = []
+var first_time : bool = true
+var _points_nodepaths
+var duration : float
+var wait_time : float
 
 func set_instruction() -> String:
 	return "Patrol {node} between {points}(mode: {mode})"
 
 func tick() -> Status:
-	var _points_nodepaths = get("points")
-	var node : Node
-	var first_time : bool = true
-	var points : Array
-	
-
 	if first_time:
-		node = _resolve_node(get("node"))
-		if node == null:
+		_points_nodepaths= get("points")
+		_node = _resolve_node(get("node"))
+		duration = get("duration")
+		wait_time = get("time_to_wait_upon_reaching_destination")
+		
+		if _node == null:
 			push_error("\"%s\" couldn't resolve node to move" % resource_name)
 			return Status.FAILURE
 		for p in _points_nodepaths:
-			points.append(_resolve_node(p))
+			_points.append(_resolve_node(p))
+		if _points.is_empty():
+			return Status.FAILURE
+		calculate_current_destination()
 	first_time=false
-	if points.is_empty():
-		return Status.FAILURE
 	
-	var destination : Vector3 
-	if points[_index] is not Vector3:
-		if points[_index] is Node3D:
-			destination = points[_index].global_position
-		elif points[_index] is Node2D:
-			destination = Vector3(points[_index].global_position.x,points[_index].global_position.y,0)
-	elif points[_index] is Vector3:
-		destination = points[_index]
+	var now : int = Time.get_ticks_msec()
+	
+	if _waiting:
+		if (now - _wait_start_time) / 1000.0 < wait_time:
+			return Status.RUNNING
+		_waiting = false
+		_wait_start_time = -1
+		return _advance_to_next_point()
 	
 	if _start_time == -1:
-		_start_time = Time.get_ticks_msec()
-		_start_position = _get_position(node)
+		_start_time = now
+		_last_tick_time = now
 	
+	var delta : float = (now - _last_tick_time) / 1000.0
+	_last_tick_time = now
+	
+	if(get("calculate_destination_each_frame")):
+		calculate_current_destination()
 
-	var t : float = _progress(_start_position, destination)
-	_set_position(node, _start_position.lerp(destination, t))
+	var reached : bool = _move_towards_destination(delta, now)
 
-	if t < 1.0:
+	if not reached:
 		return Status.RUNNING
 
 	_start_time = -1
-	_index += 1
-	if _index >= points.size():
-		if not get("loop"):
-			_index = points.size() - 1
-			return Status.SUCCESS
-		_index = 0
-	return Status.RUNNING
-
-func _progress(from : Vector3, to : Vector3) -> float:
-	var elapsed : float = (Time.get_ticks_msec() - _start_time) / 1000.0
-	if get("mode") == Mode.SPEED:
-		var total_distance : float = from.distance_to(to)
-		return 1.0 if total_distance == 0.0 else clamp((get("speed") * elapsed) / total_distance, 0.0, 1.0)
-	var duration : float = get("duration")
-	return 1.0 if duration <= 0.0 else clamp(elapsed / duration, 0.0, 1.0)
-
-func _get_position(n : Node) -> Vector3:
-	if n is Node2D:
-		var p : Vector2 = n.global_position
-		return Vector3(p.x, p.y, 0)
-	if n is Node3D:
-		return n.global_position
-	return Vector3.ZERO
-
-func _set_position(n : Node, pos : Vector3) -> void:
-	if n is Node2D:
-		n.global_position = Vector2(pos.x, pos.y)
-	elif n is Node3D:
-		n.global_position = pos
+	
+	if wait_time > 0.0:
+		_waiting = true
+		_wait_start_time = now
+		return Status.RUNNING
+	
+	return _advance_to_next_point()
 
 func set_node_category()->String: return "action_node"
 func set_input()->bool: return true
@@ -96,3 +85,46 @@ func set_properties()-> void:
 	_add_behavior_property("speed", float(100.0))
 	_add_behavior_property("duration", float(1.0))
 	_add_behavior_property("loop", true)
+	_add_behavior_property("calculate_destination_each_frame", false)
+	_add_behavior_property("time_to_wait_upon_reaching_destination", float(0))
+
+func _advance_to_next_point() -> Status:
+	_index += 1
+	
+	if _index >= _points.size():
+		if !get("loop"):
+			_index = _points.size() - 1
+			return Status.SUCCESS
+		_index = 0
+	calculate_current_destination()
+	return Status.RUNNING
+
+func _move_towards_destination(delta: float, now: int) -> bool:
+	var distance_remaining : float = _node.global_position.distance_to(current_destination)
+	
+	if distance_remaining <= 0.001:
+		_node.global_position = current_destination
+		return true
+	
+	var move_amount : float
+	
+	if get("mode") == Mode.SPEED:
+		move_amount = get("speed") * delta
+	else:
+		var elapsed : float = (now - _start_time) / 1000.0
+		var remaining_time : float = duration - elapsed
+		if remaining_time <= 0.0:
+			_node.global_position = current_destination
+			return true
+		move_amount = (distance_remaining / remaining_time) * delta
+	
+	_node.global_position = _node.global_position.move_toward(current_destination, move_amount)
+	return _node.global_position.distance_to(current_destination) <= 0.001
+
+func calculate_current_destination():
+	if _points[_index] is Node3D \
+		or _points[_index] is Node2D:
+			current_destination= _points[_index].global_position
+	elif _points[_index] is Vector2 \
+		or _points[_index] is Vector3:
+		current_destination= _points[_index]

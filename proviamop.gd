@@ -1,13 +1,19 @@
+@tool
 extends Sprite2D
 
-@onready var behavior_agent: BehaviorAgent = $BehaviorAgent
+@export var behavior_agent : BehaviorAgent
 
-@export var patrol_points: Array[NodePath] = []
+func _get_property_list() -> Array[Dictionary]:
+	if behavior_agent:
+		return behavior_agent.get_overridable_property_list()
+	return []
 
-func _ready() -> void:
-	if patrol_points.is_empty():
-		return
-	var points : Array[Node2D] = []
-	for p in patrol_points:
-		points.append(get_node(p))
-	behavior_agent.behavior_graph.get_blackboard_property(&"Positions").value = points
+func _get(property: StringName) -> Variant:
+	if behavior_agent and behavior_agent.is_overridable_blackboard_property(property):
+		return behavior_agent.get_overridable_blackboard_property(property)
+	return 
+
+func _set(property: StringName, value: Variant) -> bool:
+	if behavior_agent and behavior_agent.is_overridable_blackboard_property(property):
+		return behavior_agent.set_overridable_blackboard_property(property,value,self)
+	return false

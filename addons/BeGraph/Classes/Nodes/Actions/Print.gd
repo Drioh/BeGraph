@@ -4,7 +4,7 @@ extends BehaviorNode
 const DISPLAY_NAME : String = "Print message"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
 
-func tick()->Status:
+func tick(delta:float=0.016)->Status:
 	var value = get("value")
 	print(value)
 	return Status.SUCCESS

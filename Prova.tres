@@ -11,14 +11,16 @@
 resource_local_to_scene = true
 script = ExtResource("1_sguni")
 name = &"Positions"
-value = [NodePath("Point1"), NodePath("Point2"), NodePath("Point3"), null]
+export_variable = true
+value = [NodePath("Point1"), NodePath("Point2"), NodePath("Point3")]
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_k7ocg"]
 resource_local_to_scene = true
 script = ExtResource("1_sguni")
 name = &"Self"
-value = NodePath("Sprite2D")
+export_variable = true
+value = NodePath("..")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_gad0g"]
@@ -34,7 +36,7 @@ behavior_properties = Array[Dictionary]([{
 "name": &"node",
 "type": 22,
 "usage": 4198406,
-"value": NodePath("Sprite2D")
+"value": NodePath("..")
 }, {
 "blackboard_key": &"Positions",
 "class_name": "",
@@ -54,7 +56,7 @@ behavior_properties = Array[Dictionary]([{
 "name": &"mode",
 "type": 2,
 "usage": 4102,
-"value": 1
+"value": 0
 }, {
 "blackboard_key": &"",
 "class_name": "",
@@ -92,12 +94,112 @@ output = true
 position_in_graph = Vector2(92, 115)
 _graph_ref = Object(WeakRef,"script":null)
 
-node = NodePath("Sprite2D")
-points = [NodePath("Point1"), NodePath("Point2"), NodePath("Point3"), null]
-mode = 1
+node = NodePath("..")
+points = [NodePath("Point1"), NodePath("Point2"), NodePath("Point3")]
+mode = 0
 speed = 100.0
-duration = 5.0
+duration = 0.0
 loop = true
+
+[sub_resource type="Resource" id="Resource_buygw"]
+resource_name = "_GraphNode_28406"
+script = ExtResource("4_0y5uo")
+instruction = "Patrol {node} between {points}(mode: {mode})"
+behavior_properties = Array[Dictionary]([{
+"blackboard_key": &"Self",
+"class_name": "",
+"custom_info": "",
+"hint": 34,
+"hint_string": "Node2D,Node3D",
+"name": &"node",
+"type": 22,
+"usage": 4198406,
+"value": NodePath("..")
+}, {
+"blackboard_key": &"Positions",
+"class_name": "",
+"custom_info": "",
+"hint": 0,
+"hint_string": "",
+"name": &"points",
+"type": 28,
+"usage": 4102,
+"value": [NodePath("Point1"), NodePath("Point2"), NodePath("Point3")]
+}, {
+"blackboard_key": &"",
+"class_name": "",
+"custom_info": "",
+"hint": 2,
+"hint_string": "Speed,Duration",
+"name": &"mode",
+"type": 2,
+"usage": 4102,
+"value": 0
+}, {
+"blackboard_key": &"",
+"class_name": "",
+"custom_info": "",
+"hint": 0,
+"hint_string": "",
+"name": &"speed",
+"type": 3,
+"usage": 4102,
+"value": 100.0
+}, {
+"blackboard_key": &"",
+"class_name": "",
+"custom_info": "",
+"hint": 0,
+"hint_string": "",
+"name": &"duration",
+"type": 3,
+"usage": 4102,
+"value": 1.0
+}, {
+"blackboard_key": &"",
+"class_name": "",
+"custom_info": "",
+"hint": 0,
+"hint_string": "",
+"name": &"loop",
+"type": 1,
+"usage": 4102,
+"value": true
+}, {
+"blackboard_key": &"",
+"class_name": "",
+"custom_info": "",
+"hint": 0,
+"hint_string": "",
+"name": &"calculate_destination_each_frame",
+"type": 1,
+"usage": 4102,
+"value": true
+}, {
+"blackboard_key": &"",
+"class_name": "",
+"custom_info": "",
+"hint": 0,
+"hint_string": "",
+"name": &"time_to_wait_upon_reaching_destination",
+"type": 3,
+"usage": 4102,
+"value": 0.0
+}])
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(92, 345)
+_graph_ref = Object(WeakRef,"script":null)
+
+node = NodePath("..")
+points = [NodePath("Point1"), NodePath("Point2"), NodePath("Point3")]
+mode = 0
+speed = 100.0
+duration = 0.0
+loop = true
+calculate_destination_each_frame = true
+time_to_wait_upon_reaching_destination = 0.0
 
 [sub_resource type="Resource" id="Resource_byvd5"]
 resource_name = "start_node"
@@ -109,7 +211,7 @@ position_in_graph = Vector2(-414, 161)
 is_starting_node = true
 _graph_ref = Object(WeakRef,"script":null)
 
-_next_ref = Array[StringName]([&"BehaviorGraphNode"])
+_next_ref = Array[StringName]([&"_GraphNode_28406"])
 
 [resource]
 resource_local_to_scene = true
@@ -117,12 +219,15 @@ script = ExtResource("4_k7ocg")
 blackboard = Array[ExtResource("1_sguni")]([SubResource("Resource_0y5uo"), SubResource("Resource_k7ocg"), ExtResource("2_gad0g")])
 nodes = Dictionary[StringName, ExtResource("2_0y5uo")]({
 &"BehaviorGraphNode": SubResource("Resource_gad0g"),
+&"_GraphNode_28406": SubResource("Resource_buygw"),
 &"start_node": SubResource("Resource_byvd5")
 })
 connections = Array[Dictionary]([{
 "from_node": &"start_node",
 "from_port": 0,
-"to_node": &"BehaviorGraphNode",
+"to_node": &"_GraphNode_28406",
 "to_port": 0
 }])
+_agent_ref = Object(WeakRef,"script":null)
+
 metadata/_custom_type_script = "uid://d25yjg1utgxu"
