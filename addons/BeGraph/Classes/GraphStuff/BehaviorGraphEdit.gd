@@ -22,9 +22,8 @@ var current_graph: BehaviorGraph
 ## Root popup shown for node creation, rebuilt from [constant NODE_PATH] on each request.
 var _node_popup: PopupMenu
 
-## Label for the loaded graph's name/path, shared with [member BeGraphDock.graph_label].[br]Unused in this script — kept up to date by [method BeGraphDock.load_graph].
-@onready var graph_label: Label = %GraphLabel
-
+## Node that gets update when connection_to_empty gets fired
+var _pending_connection_from: Dictionary = {}
 #endregion
 
 ## Emitted whenever the selection changes to a single [BehaviorGraphNodeBase]; carries its
@@ -37,6 +36,7 @@ signal selected_node_changed(node: BehaviorNode)
 func _ready() -> void:
 	delete_nodes_request.connect(_on_delete_nodes_request)
 	connection_request.connect(connect_nodes)
+	connection_to_empty.connect(_on_connection_to_empty)
 	disconnection_request.connect(disconnect_nodes)
 	popup_request.connect(_on_popup_request)
 	node_selected.connect(_on_node_selected)
@@ -86,10 +86,10 @@ func load_connections() -> void:
 #region Node management
 
 ## Adds a new [BehaviorGraphNode], assigns it a [BehaviorNode] script, positions it at the mouse, and registers it in [member current_graph].
-func add_node(script_path: String = "") -> void:
+func add_node(script_path: String = "") -> BehaviorGraphNodeBase:
 	if script_path == "":
 		push_error("Script path not valid")
-		return
+		return null
 
 	var behavior_node: BehaviorNode = load(script_path).new()
 
@@ -100,7 +100,10 @@ func add_node(script_path: String = "") -> void:
 	node.position_offset = (get_local_mouse_position() + scroll_offset) / zoom
 	behavior_node.position_in_graph = node.position_offset
 	node.set_node(behavior_node)
+	node.delete_request.connect(_on_delete_nodes_request)
+
 	current_graph.add_node(behavior_node)
+	return node
 
 ## Disconnects any outgoing connection from [param graph_node] whose port no longer exists after its condition count changed.
 func prune_invalid_connections_from(graph_node: BehaviorGraphNodeBase) -> void:
@@ -156,14 +159,12 @@ func connect_nodes(from_node: StringName, from_port: int, to_node: StringName, t
 	var t_node: BehaviorGraphNodeBase = get_node(NodePath(to_node))
 
 	if f_node.node.conditions.size() > 0:
-		# Each condition can have only one connection: if this condition already
-		# has an exiting connection, deny a new one.
+		# Each condition can have only one connection: if this condition already has an exiting connection, deny a new one.
 		if is_connection_from_node_from_port_enabled(from_node, from_port):
 			push_error("Output %d of node %s is a condition and already has a connection" % [from_port, from_node])
 			return
 	elif not f_node.node.allows_multiple_outputs:
-		# A node that does not have conditions and that allows only one exit:
-		# if there's already an exit, deny it.
+		# A node that does not have conditions and that allows only one exit: if there's already an exit, deny it.
 		if from_node in get_connection_starting_nodes():
 			push_error("Node %s does not allow multiple outputs" % from_node)
 			return
@@ -212,6 +213,22 @@ func is_connection_from_node_from_port_enabled(from_node: StringName, from_port:
 			return true
 	return false
 
+func _on_connection_to_empty(from_node: StringName, from_port: int, release_position: Vector2)->void:
+	_pending_connection_from = {"from_node": from_node, "from_port": from_port}
+	_show_node_creation_popup()
+
+func _complete_pending_connection(new_node: BehaviorGraphNodeBase) -> void:
+	if _pending_connection_from.is_empty():
+		return
+
+	var from_node: StringName = _pending_connection_from["from_node"]
+	var from_port: int = _pending_connection_from["from_port"]
+	_pending_connection_from = {}
+
+	if new_node == null or not new_node.node.input:
+		return
+
+	connect_nodes(from_node, from_port, new_node.name, 0)
 #endregion
 
 
@@ -219,18 +236,30 @@ func is_connection_from_node_from_port_enabled(from_node: StringName, from_port:
 
 ## Builds and opens the node-creation popup at the current mouse position.
 func _on_popup_request(at_position: Vector2) -> void:
+	_pending_connection_from = {}
+	_show_node_creation_popup()
+
+func _show_node_creation_popup() -> void:
 	_node_popup = _build_node_popup(NODE_PATH)
 	add_child(_node_popup)
+
+	_node_popup.popup_hide.connect(_on_node_popup_closed.bind(_node_popup), CONNECT_ONE_SHOT | CONNECT_DEFERRED)
 
 	_node_popup.position = DisplayServer.mouse_get_position()
 	_node_popup.popup()
 
+func _on_node_popup_closed(popup: PopupMenu) -> void:
+	_pending_connection_from = {}
+	if is_instance_valid(popup):
+		popup.queue_free()
 ## Recursively mirrors [param path]'s folder structure into a [PopupMenu]: subfolders become submenus (dropped if empty), [code].gd[/code] files become items labeled via [method _script_metadata]. Returns [code]null[/code] if [param path] doesn't exist.
 func _build_node_popup(path: String) -> PopupMenu:
 	if not DirAccess.dir_exists_absolute(path):
 		push_error("Path not valid: %s" % path)
 		return null
 	var popup := PopupMenu.new()
+	popup.allow_search=true
+	popup.search_bar_enabled=true
 
 	var dirs := DirAccess.get_directories_at(path)
 	dirs.sort()
@@ -244,7 +273,7 @@ func _build_node_popup(path: String) -> PopupMenu:
 		popup.add_submenu_node_item(dir_name, sub)
 		popup.set_item_icon(-1, EditorInterface.get_editor_theme().get_icon("Folder", "EditorIcons"))
 
-	var files := DirAccess.get_files_at(path)
+	var files : PackedStringArray = DirAccess.get_files_at(path)
 	files.sort()
 	for file_name in files:
 		if not file_name.ends_with(".gd"):
@@ -264,8 +293,9 @@ func _build_node_popup(path: String) -> PopupMenu:
 ## Creates a node from the script path stored in the selected item's metadata.
 func _on_node_popup_id_pressed(id: int, popup: PopupMenu) -> void:
 	var script_path = popup.get_item_metadata(id)
-	if script_path != null:
-		add_node(script_path)
+	if script_path == null:
+		return
+	_complete_pending_connection(add_node(script_path))
 
 ## Reads a script's [code]DISPLAY_NAME[/code] and [code]DISPLAY_ICON[/code] constants, falling back to its filename and no icon.
 func _script_metadata(path: String) -> Dictionary:
