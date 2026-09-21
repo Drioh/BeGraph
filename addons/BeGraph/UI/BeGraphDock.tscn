@@ -9,7 +9,7 @@
 [ext_resource type="Texture2D" uid="uid://dp7v8krbo2g8n" path="res://addons/BeGraph/Icons/load_icon.svg" id="4_fo02r"]
 [ext_resource type="Texture2D" uid="uid://32kkp5pbn562" path="res://addons/BeGraph/Icons/save_as_icon.svg" id="4_vf8wo"]
 [ext_resource type="Texture2D" uid="uid://clw4llfqosy5e" path="res://addons/BeGraph/Icons/info_icon.svg" id="7_fo02r"]
-[ext_resource type="Script" uid="uid://duh5vdogx664y" path="res://addons/BeGraph/Classes/misc/BehaviorNodeInfoPanel.gd" id="10_grsls"]
+[ext_resource type="PackedScene" uid="uid://6x5anjokya3t" path="res://addons/BeGraph/UI/BehaviorNodeInfoPanel.tscn" id="10_grsls"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hdwr6"]
 content_margin_left = 4.0
@@ -176,9 +176,7 @@ minimap_size = Vector2(120, 80)
 show_zoom_buttons = false
 script = ExtResource("4_5bs10")
 
-[node name="InfoPanel" type="PanelContainer" parent="VBoxContainer/HBoxContainer2" unique_id=1951533573]
+[node name="InfoPanel" parent="VBoxContainer/HBoxContainer2" unique_id=226918092 instance=ExtResource("10_grsls")]
 unique_name_in_owner = true
 visible = false
-custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-script = ExtResource("10_grsls")

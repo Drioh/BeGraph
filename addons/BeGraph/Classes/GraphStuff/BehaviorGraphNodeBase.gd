@@ -23,12 +23,13 @@ func set_node(n: BehaviorNode) -> void:
 
 	var tb: HBoxContainer = get_titlebar_hbox()
 	tb.add_theme_constant_override("separation", 0)
-	tb.get_child(0).add_theme_font_size_override("font_size", 18)
+	tb.get_child(0).add_theme_font_size_override("font_size", 12)
+	tb.get_child(0).self_modulate.a = 0.5
 
 	var delete_button := Button.new()
+	var del_array : Array[StringName] = [StringName(self.name)]
 	delete_button.flat = true
 	delete_button.icon = load("res://addons/BeGraph/Icons/close_icon.svg")
-	var del_array : Array[StringName] = [StringName(self.name)]
 	delete_button.pressed.connect(graph_edit._on_delete_nodes_request.bind(del_array))
 	tb.add_child(delete_button)
 

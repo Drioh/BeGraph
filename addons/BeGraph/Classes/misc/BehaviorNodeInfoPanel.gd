@@ -4,21 +4,47 @@
 ## multiple-outputs flags, its conditions (with their linked successor, if any), and one inline
 ## editor per behavior property. Each property editor is an actual [BehaviorGraphNodeVariableEditor]
 ## — the same control used inside the graph nodes — so editing here updates the node exactly like
-## editing on the graph, and blackboard variables can be dragged onto it the same way.
+## editing on the graph, and blackboard variables can be dragged onto it the same way.[br]
+## The visual layout/style lives entirely in [code]BehaviorNodeInfoPanel.tscn[/code] (unique-named
+## nodes); this script only reads those references and writes data into them.
 class_name BehaviorNodeInfoPanel
 extends PanelContainer
 
 ## Scene reused for each property row's inline editor (same one [BehaviorGraphNode] uses).
 const BEHAVIOR_GRAPH_NODE_VARIABLE = preload("uid://bup4fdlymdgmo")
 
-var _scroll: ScrollContainer
-var _content: VBoxContainer
-var _empty_label: Label
-var _instruction_label: Label
-var _info_label: Label
-var _flags_label: Label
-var _properties_container: VBoxContainer
-var _conditions_container: VBoxContainer
+## Color applied to secondary/placeholder text generated at runtime (rows the scene can't pre-style because their content doesn't exist yet).
+var muted_color: Color = Color(0.498, 0.498, 0.498)
+
+var flag_positive_color: Color = Color(0.0, 0.302, 0.145, 1.0)
+var flag_negative_color: Color = Color(0.545, 0.0, 0.11, 1.0)
+
+## Text shown when nothing is selected.
+var no_node_text: String = "No node selected."
+## Suffix shown on a condition row whose successor slot isn't connected.
+var not_connected_text: String = "(not connected)"
+
+@onready var empty_label: Label = %EmptyLabel
+@onready var scroll: ScrollContainer = %ScrollContainer
+@onready var content: VBoxContainer = %Content
+@onready var instruction_caption_container: HBoxContainer = %InstructionCaptionContainer
+@onready var instruction_label: Label = %InstructionLabel
+@onready var info_caption_container: HBoxContainer = %InfoCaptionContainer
+@onready var info_label: Label = %InfoLabel
+@onready var flags_caption_container: HBoxContainer = %FlagsCaptionContainer
+@onready var flags_container: HBoxContainer = %FlagsContainer
+@onready var conditions_caption_container: HBoxContainer = %ConditionsCaptionContainer
+@onready var conditions_container: VBoxContainer = %ConditionsContainer
+@onready var properties_caption_container: HBoxContainer = %PropertiesCaptionContainer
+@onready var properties_container: VBoxContainer = %PropertiesContainer
+
+@onready var title_bar_color: ColorRect = %TitleBarColor
+@onready var title_label: Label = %TitleLabel
+@onready var category_label: Label = %CategoryLabel
+
+@onready var input_label: Label = %InputLabel
+@onready var output_label: Label = %OutputLabel
+@onready var multiple_outputs_label: Label = %MultipleOutputsLabel
 
 ## Blackboard of the currently loaded graph, forwarded to every property editor.
 var _blackboard: Array[BlackboardVariable] = []
@@ -26,53 +52,7 @@ var _blackboard: Array[BlackboardVariable] = []
 var _current_node: BehaviorNode = null
 
 func _ready() -> void:
-	_build_ui()
 	clear()
-
-## Builds the panel's fixed layout once: an "empty" placeholder plus a scrollable column with the
-## instruction, the info text, the flags, the conditions, and the properties list.
-func _build_ui() -> void:
-	_empty_label = Label.new()
-	_empty_label.text = "No node selected."
-	add_child(_empty_label)
-
-	_scroll = ScrollContainer.new()
-	add_child(_scroll)
-
-	_content = VBoxContainer.new()
-	_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_content.add_theme_constant_override("separation", 8)
-	_scroll.add_child(_content)
-
-	_instruction_label = _add_section("INSTRUCTION")
-	_info_label = _add_section("INFO")
-	_flags_label = _add_section("FLAGS")
-
-	_add_caption("CONDITIONS")
-	_conditions_container = VBoxContainer.new()
-	_conditions_container.add_theme_constant_override("separation", 2)
-	_content.add_child(_conditions_container)
-
-	_add_caption("PROPERTIES")
-	_properties_container = VBoxContainer.new()
-	_properties_container.add_theme_constant_override("separation", 4)
-	_properties_container.size_flags_horizontal=Control.SIZE_EXPAND_FILL
-	_content.add_child(_properties_container)
-
-## Adds a small caption row (used for section titles) to [member _content].
-func _add_caption(text: String) -> void:
-	var caption := Label.new()
-	caption.text = text
-	caption.add_theme_color_override("font_color", Color(0.498, 0.498, 0.498))
-	_content.add_child(caption)
-
-## Adds a captioned, word-wrapped section to [member _content] and returns its content [Label].
-func _add_section(title: String) -> Label:
-	_add_caption(title)
-	var content_label := Label.new()
-	content_label.autowrap_mode = TextServer.AUTOWRAP_WORD
-	_content.add_child(content_label)
-	return content_label
 
 ## Displays [param node]'s instruction, info text, flags, conditions and behavior properties,
 ## binding each property's inline editor to [param blackboard]. Pass [code]null[/code] to clear
@@ -89,15 +69,31 @@ func show_node(node: BehaviorNode, blackboard: Array[BlackboardVariable]) -> voi
 	if not node.conditions_changed.is_connected(_on_conditions_changed):
 		node.conditions_changed.connect(_on_conditions_changed)
 
-	_empty_label.hide()
-	_scroll.show()
-	_instruction_label.text = "    %s"%node.instruction
-	_info_label.text = "    %s"%node.info if not node.info.is_empty() else "    (no description provided)"
-	if node.info.is_empty():
-		_info_label.add_theme_color_override("font_color", Color(0.498, 0.498, 0.498))
-	_flags_label.text = _build_flags_text(node)
+	empty_label.hide()
+	scroll.show()
+	
+	var const_map = node.get_script().get_script_constant_map()
+	title_label.text = "%s (%s)"%[const_map["DISPLAY_NAME"],node.resource_name] if const_map.has("DISPLAY_NAME") else node.resource_name
+	
+	var color_str : String = "BeGraph/colors/node_colors/%s/border_color" % node.node_category
+	title_bar_color.color= ProjectSettings.get_setting(color_str)
+	
+	category_label.text = node.node_category
+	
+	instruction_caption_container.visible = node.instruction !=""
+	instruction_label.visible = node.instruction !=""
+	instruction_label.text = node.instruction
+	
+	info_caption_container.visible = node.info != ""
+	info_label.visible = node.info != ""
+	info_label.text = node.info
 
+
+	_build_flags(node)
+	
 	_clear_properties()
+	properties_caption_container.visible = !node.behavior_properties.is_empty()
+	properties_container.visible = !node.behavior_properties.is_empty()
 	for property in node.behavior_properties:
 		_add_property_row(node, property)
 
@@ -108,11 +104,14 @@ func clear() -> void:
 	_disconnect_current_node()
 	_clear_properties()
 	_clear_conditions()
-	_instruction_label.text = ""
-	_info_label.text = ""
-	_flags_label.text = ""
-	_scroll.hide()
-	_empty_label.show()
+	instruction_label.text = ""
+	title_label.text = ""
+	category_label.text=""
+	info_label.text = ""
+	info_label.remove_theme_color_override("font_color")
+	scroll.hide()
+	empty_label.text = no_node_text
+	empty_label.show()
 
 ## Disconnects [member _current_node]'s [signal BehaviorNode.conditions_changed], if connected.
 func _disconnect_current_node() -> void:
@@ -121,12 +120,14 @@ func _disconnect_current_node() -> void:
 	_current_node = null
 
 ## Builds the "Input / Output / Allows multiple outputs" summary text for [param node].
-func _build_flags_text(node: BehaviorNode) -> String:
-	return "    Input: %s\n    Output: %s\n    Allows multiple outputs: %s" % [
-		"🟢" if node.input else "🔴",
-		"🟢" if node.output else "🔴",
-		"🟢" if node.allows_multiple_outputs else "🔴"
-	]
+func _build_flags(node: BehaviorNode) -> void:
+	var input_color = flag_positive_color if node.input else flag_negative_color
+	var output_color = flag_positive_color if node.output else flag_negative_color
+	var multiple_output_color = flag_positive_color if node.allows_multiple_outputs else flag_negative_color
+	
+	input_label.set_indexed("theme_override_styles/normal:bg_color",input_color)
+	output_label.set_indexed("theme_override_styles/normal:bg_color",output_color)
+	multiple_outputs_label.set_indexed("theme_override_styles/normal:bg_color",multiple_output_color)
 
 ## Callback for [signal BehaviorNode.conditions_changed] on [member _current_node]: rebuilds the
 ## conditions section (its size/content may have changed, e.g. after editing an enum property).
@@ -138,12 +139,10 @@ func _refresh_conditions() -> void:
 	_clear_conditions()
 	if _current_node == null:
 		return
-	if _current_node.conditions.is_empty():
-		var none_label := Label.new()
-		none_label.text = "    (no conditions)"
-		none_label.add_theme_color_override("font_color", Color(0.498, 0.498, 0.498))
-		_conditions_container.add_child(none_label)
-		return
+	
+	conditions_caption_container.visible = !_current_node.conditions.is_empty()
+	conditions_container.visible = !_current_node.conditions.is_empty()
+
 	for condition in _current_node.conditions:
 		_add_condition_row(condition)
 
@@ -152,25 +151,25 @@ func _refresh_conditions() -> void:
 func _add_condition_row(condition: Dictionary) -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
-	_conditions_container.add_child(row)
+	conditions_container.add_child(row)
 
 	var text_label := Label.new()
-	text_label.text = "    %s"%String(condition["text"])
+	text_label.text = String(condition["text"])
 	text_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	text_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 	row.add_child(text_label)
 
 	var next: StringName = condition["next"] if condition["next"] else &""
 	var next_label := Label.new()
-	next_label.text = "-> %s" % next if next != &"" else "(not connected)"
+	next_label.text = "-> %s" % next if next != &"" else not_connected_text
 	if next == &"":
-		next_label.add_theme_color_override("font_color", Color(0.498, 0.498, 0.498))
+		next_label.add_theme_color_override("font_color", muted_color)
 	row.add_child(next_label)
 
 ## Removes every row from [member _conditions_container].
 func _clear_conditions() -> void:
-	for child in _conditions_container.get_children():
-		_conditions_container.remove_child(child)
+	for child in conditions_container.get_children():
+		conditions_container.remove_child(child)
 		child.queue_free()
 
 ## Appends one row (property name + inline [BehaviorGraphNodeVariableEditor]) for [param property],
@@ -178,14 +177,14 @@ func _clear_conditions() -> void:
 func _add_property_row(node: BehaviorNode, property: Dictionary) -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
-	row.size_flags_horizontal=Control.SIZE_EXPAND_FILL
-	_properties_container.add_child(row)
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	properties_container.add_child(row)
 
 	var name_label := Label.new()
 	name_label.text = String(property["name"])
 	name_label.custom_minimum_size = Vector2(110, 0)
 	name_label.clip_text = true
-	name_label.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(name_label)
 
 	var editor: BehaviorGraphNodeVariableEditor = BEHAVIOR_GRAPH_NODE_VARIABLE.instantiate()
@@ -198,9 +197,10 @@ func _add_property_row(node: BehaviorNode, property: Dictionary) -> void:
 		var fallback := Label.new()
 		fallback.text = "{%s}" % property["name"]
 		row.add_child(fallback)
-	editor.var_property_editor.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+	editor.var_property_editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
 ## Removes every row from [member _properties_container].
 func _clear_properties() -> void:
-	for child in _properties_container.get_children():
-		_properties_container.remove_child(child)
+	for child in properties_container.get_children():
+		properties_container.remove_child(child)
 		child.queue_free()

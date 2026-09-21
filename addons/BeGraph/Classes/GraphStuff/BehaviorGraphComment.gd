@@ -11,15 +11,28 @@ const COMMENT_COLOR : Color = Color(0.75, 0.536, 0.211, 0.529)
 var title_edit: LineEdit = LineEdit.new()
 var color_picker_button : Button = Button.new()
 
-## Nasconde il nome interno del nodo (c'è già il campo TITOLO) e aggiunge il color picker prima di edit/delete.
-func _add_titlebar_buttons(tb: HBoxContainer, edit_button: Button, delete_button: Button) -> void:
-	tb.get_child(0).visible = false
+func _on_node_set() -> void:
+	var comment: BehaviorComment = node
+	title_edit.text = comment.comment_title
+	comment_edit.text = comment.comment_text
+	color_picker.color = comment.color
+	resizable=true
+	_apply_color(comment.color)
+	
+	var tb : HBoxContainer = get_titlebar_hbox()
+
+	tb.get_child(0).queue_free()
 	
 	title_edit.flat=true
 	title_edit.placeholder_text="Comment Title"
 	title_edit.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	title_edit.add_theme_font_size_override("font_size",18)
 	tb.add_child(title_edit)
+	title_edit.text_changed.connect(func(t: String): 
+		comment.comment_title = t
+		tooltip_text = t
+		)
+	comment_edit.text_changed.connect(func(): comment.comment_text = comment_edit.text)
 	
 	color_picker_button.custom_minimum_size=Vector2(35,35)
 	color_picker_button.pressed.connect(func():
@@ -30,25 +43,13 @@ func _add_titlebar_buttons(tb: HBoxContainer, edit_button: Button, delete_button
 	color_picker_button.flat=true
 	tb.add_child(color_picker_button)
 
-	tb.add_child(delete_button)
-
-func _on_node_set() -> void:
-	var comment: BehaviorComment = node
-	title_edit.text = comment.comment_title
-	comment_edit.text = comment.comment_text
-	color_picker.color = comment.color
-	resizable=true
-	_apply_color(comment.color)
-
-	title_edit.text_changed.connect(func(t: String): 
-		comment.comment_title = t
-		tooltip_text = t
-		)
-	comment_edit.text_changed.connect(func(): comment.comment_text = comment_edit.text)
 	color_picker.color_changed.connect(func(c: Color):
 		comment.color = c
 		_apply_color(c)
 	)
+	
+	tb.move_child(tb.get_child(1),-1)
+	reset_size.call_deferred()
 	comment.changed.connect(_sync_from_node, CONNECT_DEFERRED)
 
 ## Riallinea i controlli se la risorsa viene modificata dall'inspector (bottone edit).

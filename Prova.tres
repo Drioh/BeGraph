@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="3_gad0g"]
 [ext_resource type="Script" uid="uid://cqtl1rxtl657i" path="res://addons/BeGraph/Classes/Nodes/Actions/Patrol.gd" id="4_0y5uo"]
 [ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="4_k7ocg"]
+[ext_resource type="Script" uid="uid://fp403l6robqy" path="res://addons/BeGraph/Classes/Nodes/Actions/Destroy Node.gd" id="6_byvd5"]
 
 [sub_resource type="Resource" id="Resource_0y5uo"]
 resource_local_to_scene = true
@@ -22,6 +23,16 @@ name = &"Self"
 export_variable = true
 value = NodePath("..")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
+
+[sub_resource type="Resource" id="Resource_orwkh"]
+resource_name = "AccessPointGraphNode"
+script = ExtResource("3_gad0g")
+node_category = "access_point_node"
+output = true
+position_in_graph = Vector2(-460, 276)
+is_starting_node = true
+_graph_ref = Object(WeakRef,"script":null)
+
 
 [sub_resource type="Resource" id="Resource_gad0g"]
 resource_name = "BehaviorGraphNode"
@@ -91,7 +102,7 @@ behavior_properties = Array[Dictionary]([{
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(138, 69)
+position_in_graph = Vector2(506, 138)
 _graph_ref = Object(WeakRef,"script":null)
 
 node = NodePath("..")
@@ -189,9 +200,10 @@ behavior_properties = Array[Dictionary]([{
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(92, 345)
+position_in_graph = Vector2(-46, 138)
 _graph_ref = Object(WeakRef,"script":null)
 
+_next_ref = Array[StringName]([&"BehaviorGraphNode"])
 node = NodePath("..")
 points = [NodePath("Point1"), NodePath("Point2"), NodePath("Point3")]
 mode = 0
@@ -200,6 +212,49 @@ duration = 0.0
 loop = true
 calculate_destination_each_frame = true
 time_to_wait_upon_reaching_destination = 0.0
+
+[sub_resource type="Resource" id="Resource_6a8nf"]
+resource_name = "_GraphNode_52253"
+script = ExtResource("3_gad0g")
+node_category = "access_point_node"
+output = true
+position_in_graph = Vector2(-575, 437)
+is_starting_node = true
+_graph_ref = Object(WeakRef,"script":null)
+
+
+[sub_resource type="Resource" id="Resource_6x78j"]
+resource_name = "_GraphNode_52330"
+script = ExtResource("6_byvd5")
+instruction = "Destroy {node}"
+behavior_properties = Array[Dictionary]([{
+"blackboard_key": &"",
+"class_name": "",
+"custom_info": "",
+"hint": 0,
+"hint_string": "",
+"name": &"node",
+"type": 22,
+"usage": 4102,
+"value": NodePath("")
+}])
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(-575, 552)
+_graph_ref = Object(WeakRef,"script":null)
+
+node = NodePath("")
+
+[sub_resource type="Resource" id="Resource_qrtwh"]
+resource_name = "_GraphNode_61513"
+script = ExtResource("3_gad0g")
+node_category = "access_point_node"
+output = true
+position_in_graph = Vector2(-460, 690)
+is_starting_node = true
+_graph_ref = Object(WeakRef,"script":null)
+
 
 [sub_resource type="Resource" id="Resource_byvd5"]
 resource_name = "start_node"
@@ -218,14 +273,23 @@ resource_local_to_scene = true
 script = ExtResource("4_k7ocg")
 blackboard = Array[ExtResource("1_sguni")]([SubResource("Resource_0y5uo"), SubResource("Resource_k7ocg"), ExtResource("2_gad0g")])
 nodes = Dictionary[StringName, ExtResource("2_0y5uo")]({
+&"AccessPointGraphNode": SubResource("Resource_orwkh"),
 &"BehaviorGraphNode": SubResource("Resource_gad0g"),
 &"_GraphNode_28406": SubResource("Resource_buygw"),
+&"_GraphNode_52253": SubResource("Resource_6a8nf"),
+&"_GraphNode_52330": SubResource("Resource_6x78j"),
+&"_GraphNode_61513": SubResource("Resource_qrtwh"),
 &"start_node": SubResource("Resource_byvd5")
 })
 connections = Array[Dictionary]([{
 "from_node": &"start_node",
 "from_port": 0,
 "to_node": &"_GraphNode_28406",
+"to_port": 0
+}, {
+"from_node": &"_GraphNode_28406",
+"from_port": 0,
+"to_node": &"BehaviorGraphNode",
 "to_port": 0
 }])
 _agent_ref = Object(WeakRef,"script":null)
