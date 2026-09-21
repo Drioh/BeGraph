@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Condition"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon.svg"
+const DISPLAY_INFO : String = "Ticks its successor only if {condition} is true, returning its result; otherwise returns FAILURE without ticking anything."
 
 func set_instruction() -> String:
 	return "If {condition}"

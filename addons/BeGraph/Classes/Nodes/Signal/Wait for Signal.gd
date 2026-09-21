@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Wait For Signal"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Waits for {signal_name} to be emitted on {node}, returning RUNNING until it fires and SUCCESS afterwards.\n\nFails if {node} can't be resolved or doesn't have that signal."
 
 var _connected_object: Object = null
 var _connected_signal: StringName = &""

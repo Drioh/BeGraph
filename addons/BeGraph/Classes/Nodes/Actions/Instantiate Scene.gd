@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Instantiate Scene"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Loads the PackedScene at {scene_path}, instantiates it under {parent} and places it at {position} (read as 2D or 3D depending on the instance type).\n\nSucceeds once added; fails if the scene or parent can't be resolved."
 
 func set_instruction() -> String:
 	return "Instantiate {scene_path} under {parent}"

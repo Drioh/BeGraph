@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Distance"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon.svg"
+const DISPLAY_INFO : String = "Measures the distance between {node_a} and {node_b} and compares it to {threshold}, branching to the matching condition ('>', '=' or '<').\n\nFails if either node can't be resolved."
 
 var a : Node
 var b : Node

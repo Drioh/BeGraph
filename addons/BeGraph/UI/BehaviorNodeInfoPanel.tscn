@@ -24,7 +24,7 @@ content_margin_left = 16.0
 content_margin_top = 4.0
 content_margin_right = 16.0
 content_margin_bottom = 4.0
-bg_color = Color(0.545, 0, 0.11, 1)
+bg_color = Color(0, 0.302, 0.145, 1)
 corner_radius_top_left = 20
 corner_radius_top_right = 20
 corner_radius_bottom_right = 20
@@ -105,22 +105,22 @@ label_settings = SubResource("LabelSettings_g8rt0")
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="InstructionCaption" type="Label" parent="ScrollContainer/Content/InstructionCaptionContainer" unique_id=1255976153]
+[node name="InstructionCaption" type="Label" parent="ScrollContainer/Content/InstructionCaptionContainer" unique_id=721022457]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.498, 0.498, 0.498, 1)
-theme_override_font_sizes/font_size = 18
 text = "INSTRUCTION"
 label_settings = SubResource("LabelSettings_k7ocg")
-uppercase = true
 
 [node name="HSeparator" type="HSeparator" parent="ScrollContainer/Content/InstructionCaptionContainer" unique_id=21260687]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="InstructionLabel" type="Label" parent="ScrollContainer/Content" unique_id=1064618892]
+[node name="InstructionLabel" type="RichTextLabel" parent="ScrollContainer/Content" unique_id=1638398546]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_constants/line_separation = 4
+theme_override_font_sizes/normal_font_size = 14
 theme_override_styles/normal = SubResource("StyleBoxEmpty_byvd5")
+fit_content = true
 
 [node name="InfoCaptionContainer" type="HBoxContainer" parent="ScrollContainer/Content" unique_id=1669134225]
 unique_name_in_owner = true
@@ -136,10 +136,13 @@ label_settings = SubResource("LabelSettings_k7ocg")
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="InfoLabel" type="Label" parent="ScrollContainer/Content" unique_id=1171807099]
+[node name="InfoLabel" type="RichTextLabel" parent="ScrollContainer/Content" unique_id=1639617628]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_constants/line_separation = 4
+theme_override_font_sizes/normal_font_size = 14
 theme_override_styles/normal = SubResource("StyleBoxEmpty_byvd5")
+fit_content = true
 
 [node name="FlagsCaptionContainer" type="HBoxContainer" parent="ScrollContainer/Content" unique_id=119200440]
 unique_name_in_owner = true

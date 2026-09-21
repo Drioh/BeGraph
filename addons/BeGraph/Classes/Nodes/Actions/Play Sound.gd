@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Play Sound"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Plays {player} (AudioStreamPlayer) at the given {volume_db} and {pitch_scale}.\n\nReturns RUNNING while playing and SUCCESS once playback ends; fails if {player} cannot be resolved."
 
 var _started : bool = false
 

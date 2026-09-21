@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Emit Signal"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Emits the owning Behavior Agent's behavior_agent_signal, passing {args} as payload.\n\nAlways succeeds; fails only if the agent can't be found."
 
 var agent : BehaviorAgent 
 var first_time : bool = true

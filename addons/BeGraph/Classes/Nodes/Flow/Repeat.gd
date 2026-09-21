@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Repeat"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon.svg"
+const DISPLAY_INFO : String = "Ticks its successor repeatedly. Returns RUNNING while it's running, resets and returns FAILURE on a failure, and returns SUCCESS once the successor has succeeded {times} times in a row (0 = infinite)."
 
 var _current_count : int = 0
 

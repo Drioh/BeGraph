@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Move"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Moves {node} towards {destination} (Node, Vector2 or Vector3) at {speed} or over {duration}, depending on {mode}. \n\nCan re-evaluate {destination} every frame ({calculate_destination_each_frame}) in order to have dyanic targets and optionally waits on arrival. \n\nReturns RUNNING while moving and SUCCESS on arrival; fails if {node} or {destination} can't be resolved."
 
 enum Mode { SPEED, DURATION }
 

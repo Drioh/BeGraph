@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Chance"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon.svg"
+const DISPLAY_INFO : String = "Rolls a random number on every tick and branches to 'Success' with a {probability}% chance, otherwise to 'Failure'.\n\nAlways returns RUNNING."
 
 func set_instruction() -> String:
 	return "Chance {probability}%"

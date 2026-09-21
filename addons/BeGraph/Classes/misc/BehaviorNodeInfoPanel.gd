@@ -1,12 +1,5 @@
 @tool
-## Populates the info panel with everything about the currently selected [BehaviorNode]: its
-## instruction, an extended description read from [member BehaviorNode.info], its input/output/
-## multiple-outputs flags, its conditions (with their linked successor, if any), and one inline
-## editor per behavior property. Each property editor is an actual [BehaviorGraphNodeVariableEditor]
-## — the same control used inside the graph nodes — so editing here updates the node exactly like
-## editing on the graph, and blackboard variables can be dragged onto it the same way.[br]
-## The visual layout/style lives entirely in [code]BehaviorNodeInfoPanel.tscn[/code] (unique-named
-## nodes); this script only reads those references and writes data into them.
+## Populates the info panel with everything about the currently selected [BehaviorNode]: its instruction, an extended description read from [member BehaviorNode.info], its input/output/ multiple-outputs flags, its conditions (with their linked successor, if any), and one inline editor per behavior property. Each property editor is an actual [BehaviorGraphNodeVariableEditor] — the same control used inside the graph nodes — so editing here updates the node exactly like editing on the graph, and blackboard variables can be dragged onto it the same way.[br] The visual layout/style lives entirely in [code]BehaviorNodeInfoPanel.tscn[/code] (unique-named nodes); this script only reads those references and writes data into them.
 class_name BehaviorNodeInfoPanel
 extends PanelContainer
 
@@ -28,9 +21,9 @@ var not_connected_text: String = "(not connected)"
 @onready var scroll: ScrollContainer = %ScrollContainer
 @onready var content: VBoxContainer = %Content
 @onready var instruction_caption_container: HBoxContainer = %InstructionCaptionContainer
-@onready var instruction_label: Label = %InstructionLabel
+@onready var instruction_label: RichTextLabel = %InstructionLabel
 @onready var info_caption_container: HBoxContainer = %InfoCaptionContainer
-@onready var info_label: Label = %InfoLabel
+@onready var info_label: RichTextLabel = %InfoLabel
 @onready var flags_caption_container: HBoxContainer = %FlagsCaptionContainer
 @onready var flags_container: HBoxContainer = %FlagsContainer
 @onready var conditions_caption_container: HBoxContainer = %ConditionsCaptionContainer
@@ -54,9 +47,7 @@ var _current_node: BehaviorNode = null
 func _ready() -> void:
 	clear()
 
-## Displays [param node]'s instruction, info text, flags, conditions and behavior properties,
-## binding each property's inline editor to [param blackboard]. Pass [code]null[/code] to clear
-## (see [method clear]).
+## Displays [param node]'s instruction, info text, flags, conditions and behavior properties, binding each property's inline editor to [param blackboard]. Pass [code]null[/code] to clear (see [method clear]).
 func show_node(node: BehaviorNode, blackboard: Array[BlackboardVariable]) -> void:
 	_blackboard = blackboard
 	_disconnect_current_node()
@@ -85,6 +76,8 @@ func show_node(node: BehaviorNode, blackboard: Array[BlackboardVariable]) -> voi
 	instruction_label.visible = has_instruction
 	if has_instruction:
 		instruction_label.text = node.instruction
+		print(instruction_label.visible)
+		instruction_label.reset_size.call_deferred()
 	
 	var has_display_info : bool = const_map.has("DISPLAY_INFO")
 	info_caption_container.visible = has_display_info
@@ -134,8 +127,7 @@ func _build_flags(node: BehaviorNode) -> void:
 	output_label.set_indexed("theme_override_styles/normal:bg_color",output_color)
 	multiple_outputs_label.set_indexed("theme_override_styles/normal:bg_color",multiple_output_color)
 
-## Callback for [signal BehaviorNode.conditions_changed] on [member _current_node]: rebuilds the
-## conditions section (its size/content may have changed, e.g. after editing an enum property).
+## Callback for [signal BehaviorNode.conditions_changed] on [member _current_node]: rebuilds the conditions section (its size/content may have changed, e.g. after editing an enum property).
 func _on_conditions_changed() -> void:
 	_refresh_conditions()
 
@@ -151,8 +143,7 @@ func _refresh_conditions() -> void:
 	for condition in _current_node.conditions:
 		_add_condition_row(condition)
 
-## Appends one row for [param condition] (its raw text plus the name of the node it's linked to,
-## or a placeholder if unlinked) to [member _conditions_container].
+## Appends one row for [param condition] (its raw text plus the name of the node it's linked to, or a placeholder if unlinked) to [member _conditions_container].
 func _add_condition_row(condition: Dictionary) -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
@@ -177,8 +168,7 @@ func _clear_conditions() -> void:
 		conditions_container.remove_child(child)
 		child.queue_free()
 
-## Appends one row (property name + inline [BehaviorGraphNodeVariableEditor]) for [param property],
-## belonging to [param node], to [member _properties_container].
+## Appends one row (property name + inline [BehaviorGraphNodeVariableEditor]) for [param property], belonging to [param node], to [member _properties_container].
 func _add_property_row(node: BehaviorNode, property: Dictionary) -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)

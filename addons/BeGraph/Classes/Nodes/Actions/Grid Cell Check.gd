@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Grid Cell Check"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon.svg"
+const DISPLAY_INFO : String = "Checks whether {cell} is occupied on {map} (TileMap or GridMap, auto-detected) and branches to 'Cell occupied' or 'Cell empty'.\n\nFails if {map} cannot be resolved."
 
 var _map : Node
 var _is_3d : bool = false

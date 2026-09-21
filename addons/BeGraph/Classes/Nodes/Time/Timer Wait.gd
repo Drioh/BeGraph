@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Timer Wait"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Starts {timer} (a Timer node) as one-shot with {wait_time}s and returns RUNNING until it times out, then SUCCESS.\n\nFails if {timer} can't be resolved."
 
 var _timer : Timer
 var _fired : bool = false

@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Random Selector"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon.svg"
+const DISPLAY_INFO : String = "Behaves like Selector, but ticks its successors in a random order each time, stopping at the first SUCCESS or RUNNING.\n\nReturns FAILURE only if all successors fail."
 
 func set_instruction() -> String:
 	return "Random Selector"

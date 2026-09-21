@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Parallel"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon.svg"
+const DISPLAY_INFO : String = "Ticks every successor on the same tick. \n\nIn 'All' mode, any failure fails the node immediately and all must succeed.\n\nIn 'Threshold' mode, succeeds once at least {required_successes} have succeeded. \n\nReturns RUNNING while the outcome is undecided."
 
 enum Mode { N_OF_M, ALL }
 

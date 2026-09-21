@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Wait"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Waits {seconds} seconds, returning RUNNING until the time elapses and SUCCESS afterwards.\n\nThe timer starts on the first tick."
 
 var _start_time : int = -1
 

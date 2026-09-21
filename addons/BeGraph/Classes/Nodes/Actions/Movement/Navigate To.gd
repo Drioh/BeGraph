@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Navigate To"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Drives {node} towards {target} (Node, Vector2 or Vector3) using {nav_agent} (a NavigationAgent2D/3D) at {speed}, with optional avoidance ({avoidance_enabled}) and periodic re-targeting every {recalculation_interval}s (this allows for dynamic targets).\n\nReturns RUNNING while navigating and SUCCESS once the agent reports it has arrived; fails if {node}/{nav_agent} can't be resolved or {target} is invalid."
 
 var _node : Node
 var _agent : Node

@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Value Comparator"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon.svg"
+const DISPLAY_INFO : String = "Compares {value_1} to {value_2} and branches to the matching condition ('>', '=' or '<').\n\nHas no plain output; the next node is always chosen through its conditions."
 
 func set_instruction() -> String:
 	return "Compare {value_1} and {value_2}"

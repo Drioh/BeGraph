@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Follow Path"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Advances {path_follow} (PathFollow2D/3D) along its Path at {speed} units/second.\n\nReturns RUNNING while travelling, SUCCESS at the end of the path (or keeps looping if {loop} is enabled). Fails if {path_follow} can't be resolved."
 
 var _path_follow : Node
 var _last_tick_time : int = -1

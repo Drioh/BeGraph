@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Area Detect"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon.svg"
+const DISPLAY_INFO : String = "Checks whether {area} (an Area2D/3D) is currently overlapping any physics body, branching to 'Body detected' or 'No body detected'.\n\nFails if {area} can't be resolved."
 
 var _area : Node
 var first_time : bool = true

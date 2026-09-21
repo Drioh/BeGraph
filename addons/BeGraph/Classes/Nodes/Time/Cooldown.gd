@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Cooldown"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon.svg"
+const DISPLAY_INFO : String = "Ticks its successor normally, but returns FAILURE immediately (without ticking it) for {seconds}s after it last stopped running, whether it succeeded or failed."
 
 var _cooldown_until : int = -1
 

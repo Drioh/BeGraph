@@ -3,7 +3,8 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Destroy Node"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
-const DISPLAY_INFO : String = "Questa è una prova"
+const DISPLAY_INFO : String = "Queues {node} for deletion via queue_free().\n\nSucceeds as soon as deletion is requested andfails if {node} cannot be resolved."
+
 func set_instruction() -> String:
 	return "Destroy {node}"
 

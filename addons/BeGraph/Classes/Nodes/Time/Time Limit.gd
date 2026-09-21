@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Time Limit"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon.svg"
+const DISPLAY_INFO : String = "Ticks its successor, but forces FAILURE if it hasn't returned SUCCESS or FAILURE within {seconds}s of first being ticked.\n\nThe timer resets whenever the successor stops running."
 
 var _start_time : int = -1
 

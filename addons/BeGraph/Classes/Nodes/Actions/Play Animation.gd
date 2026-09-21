@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Animator"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Plays {animation} on {animator} (AnimationPlayer) at {speed}. \n\nReturns RUNNING while the animation plays and SUCCESS once it finishes; fails if {animator} cannot be resolved."
 
 var _started : bool = false
 

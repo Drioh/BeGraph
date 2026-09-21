@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Animation Tree Travel"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Tells the AnimationTree {anim_tree} to travel to the state machine node {state}.\n\nReturns RUNNING until the target state is reached, then SUCCESS; fails if {anim_tree} cannot be resolved."
 
 var _anim_tree : AnimationTree
 var _playback : AnimationNodeStateMachinePlayback

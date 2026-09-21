@@ -7,6 +7,7 @@ extends BehaviorGraphNodeBase
 
 func _on_node_set() -> void:
 	var ap: AccessPointNode = node
+	label_edit.text = ap.label
 	label_edit.text_changed.connect(func(t: String): ap.label = t)
 	ap.changed.connect(func():
 		if label_edit.text != ap.label: 

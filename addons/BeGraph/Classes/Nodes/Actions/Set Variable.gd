@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Set Variable"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Writes {value} into the blackboard entry named {variable_name}, overwriting it.\n\nSucceeds unless {variable_name} isn't found in the graph's blackboard, in which case it fails."
 
 func set_instruction() -> String:
 	return "Set {variable_name} = {value}"

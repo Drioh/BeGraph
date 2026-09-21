@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Line Of Sight"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon.svg"
+const DISPLAY_INFO : String = "Casts {raycast} (a RayCast2D/3D) towards {target} each tick, branching to 'Target visible' if it hits {target} (or a descendant) unobstructed, otherwise to 'Target obstructed / out of range'.\n\nFails if {raycast} or {target} can't be resolved."
 
 var _raycast : Node
 var _target : Node

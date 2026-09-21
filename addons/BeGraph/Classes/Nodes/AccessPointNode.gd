@@ -5,8 +5,9 @@ extends BehaviorNode
 const DISPLAY_NAME : String = "Access Point"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/access_point_node_icon.svg"
 const DISPLAY_SCENE : String = "res://addons/BeGraph/UI/BehaviorGraphAccessPoint.tscn"
+const DISPLAY_INFO : String = "Entry point of the graph.\n\nA Behavior Agent starts ticking from the Access Point chosen as its starting point.\n\nAutomatically ticks its single successor every frame; an access point node does not accept incoming connections."
 
-@export var label : String
+@export_storage var label : String
 
 func set_instruction() -> String:
 	return ""

@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Selector"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon.svg"
+const DISPLAY_INFO : String = "Ticks each successor in order, stopping at the first that returns SUCCESS or RUNNING and returning that status.\n\nReturns FAILURE only if all successors fail. Classic behavior-tree OR node."
 
 func set_instruction() -> String:
 	return "Selector"
