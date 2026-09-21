@@ -17,3 +17,6 @@ func _set(property: StringName, value: Variant) -> bool:
 	if behavior_agent and behavior_agent.is_overridable_blackboard_property(property):
 		return behavior_agent.set_overridable_blackboard_property(property,value,self)
 	return false
+
+func _ready() -> void:
+	behavior_agent.actor=self

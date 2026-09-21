@@ -13,7 +13,6 @@ const NODE = preload("res://addons/BeGraph/UI/BehaviorGraphNode.tscn")
 
 #endregion
 
-
 #region State
 
 ## The [BehaviorGraph] currently being edited.
@@ -79,7 +78,11 @@ func load_nodes() -> void:
 ## Recreates every visual connection stored in [member current_graph.connections].
 func load_connections() -> void:
 	for connection in current_graph.connections:
-		connect_node(connection["from_node"], connection["from_port"], connection["to_node"], connection["to_port"])
+		connect_node(
+			connection["from_node"], 
+			connection["from_port"], 
+			connection["to_node"], 
+			connection["to_port"])
 
 #endregion
 
@@ -231,9 +234,7 @@ func _complete_pending_connection(new_node: BehaviorGraphNodeBase) -> void:
 	connect_nodes(from_node, from_port, new_node.name, 0)
 #endregion
 
-
 #region Node-creation popup
-
 ## Builds and opens the node-creation popup at the current mouse position.
 func _on_popup_request(at_position: Vector2) -> void:
 	_pending_connection_from = {}
@@ -285,6 +286,7 @@ func _build_node_popup(path: String) -> PopupMenu:
 		popup.add_item(script_metadata["label"], id)
 		if not script_metadata["icon"] == null:
 			popup.set_item_icon(id, script_metadata["icon"])
+		popup.set_item_tooltip(id,script_metadata["info"])
 		popup.set_item_metadata(id, full_path)
 
 	popup.id_pressed.connect(_on_node_popup_id_pressed.bind(popup))
@@ -305,7 +307,9 @@ func _script_metadata(path: String) -> Dictionary:
 	var consts := scr.get_script_constant_map()
 	return {
 		"label": consts.get("DISPLAY_NAME", path.get_file().get_basename()),
-		"icon": load(consts["DISPLAY_ICON"]) if consts.has("DISPLAY_ICON") else null
+		"icon": load(consts["DISPLAY_ICON"]) if consts.has("DISPLAY_ICON") else null,
+		"scene": load(consts["DISPLAY_SCENE"]) if consts.has("DISPOLAY_SCENE") else null,
+		"info" : consts.get("DISPLAY_INFO","No info has been provided for this node")
 	}
 
 func _scene_for(n: BehaviorNode) -> PackedScene:

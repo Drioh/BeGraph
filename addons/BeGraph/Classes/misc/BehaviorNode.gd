@@ -17,10 +17,6 @@ const INTERNAL_USAGE := PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_READ_ONLY | PROP
 ## The line displayed in the node. use [code]{}[/code] annotation to declare variables.
 @abstract func set_instruction() -> String
 
-## Override to provide a more in-depth explanation of what this node does, shown in the info panel.
-func set_info() -> String:
-	return ""
-
 ## If set to [code]true[/code], allows this node to have a predecessor.
 @abstract func set_input()->bool
 
@@ -43,8 +39,6 @@ func set_info() -> String:
 ## Instruction displayed in node. To set this parameter, use the [method set_instruction] method
 @export_custom(PROPERTY_HINT_MULTILINE_TEXT, "", INTERNAL_USAGE)var instruction : String = ""
 
-## Extended description of what this node does, shown in the info panel. Override [method set_info].
-@export_custom(PROPERTY_HINT_MULTILINE_TEXT, "", INTERNAL_USAGE) var info : String = ""
 @export_group("Debug")
 
 ## Defines multiple successors for this node depending on the logic of the node itself. To set conditions, use the [method set_conditions] method, providing a [code]PackedStringArray[/code].[br]Conditions can have only one successor.[br]
@@ -125,7 +119,6 @@ func _init() -> void:
 	output=set_output()
 	build_conditions()
 	instruction = set_instruction()
-	info = set_info()
 	allows_multiple_outputs = set_allows_multiple_outputs()
 	set_properties()
 
@@ -373,5 +366,5 @@ func _resolve_node(value: Variant) -> Node:
 			if agent == null or agent.owner == null:
 				push_error("BehaviorNode %s: cannot resolve scene root for %s" % [resource_name, value])
 				return null
-			return agent.interface.get_node(value)
+			return agent.actor.get_node(value)
 	return null

@@ -4,23 +4,30 @@ extends BehaviorNode
 const DISPLAY_NAME : String = "Distance"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon.svg"
 
+var a : Node
+var b : Node
+var first_time: bool = true
+
 func set_instruction() -> String:
 	return "Distance {node_a} - {node_b} vs {threshold}"
 
 func tick() -> Status:
-	var a : Node = _resolve_node(get("node_a"))
-	if a == null:
-		push_error("\"%s\" couldn't resolve first node" % resource_name)
-		return Status.FAILURE
+	if first_time:
+		a = _resolve_node(get("node_a"))
+		if a == null:
+			push_error("\"%s\" couldn't resolve first node" % resource_name)
+			first_time=false
+			return Status.FAILURE
+		
+		b = _resolve_node(get("node_b"))
+		if b == null:
+			push_error("\"%s\" couldn't resolve second node" % resource_name)
+			first_time=false
+			return Status.FAILURE
+	first_time=false
 	
-	var b : Node = _resolve_node(get("node_b"))
-	if b == null:
-		push_error("\"%s\" couldn't resolve second node" % resource_name)
-		return Status.FAILURE
-
 	var distance : float = _get_position(a).distance_to(_get_position(b))
 	var threshold : float = get("threshold")
-
 	if distance > threshold:
 		tick_condition(0)
 		return Status.RUNNING

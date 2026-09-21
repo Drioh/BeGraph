@@ -13,8 +13,8 @@ func tick() -> Status:
 	var mode : int = get("mode")
 	var required_successes : int = _next_ref.size() if mode == Mode.ALL else get("required_successes")
 
-	var successes := 0
-	var failures := 0
+	var successes :int= 0
+	var failures :int= 0
 
 	for i in _next_ref.size():
 		var status : Status = tick_next(i)

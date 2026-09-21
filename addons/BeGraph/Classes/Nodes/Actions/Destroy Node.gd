@@ -3,14 +3,14 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Destroy Node"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
-
+const DISPLAY_INFO : String = "Questa è una prova"
 func set_instruction() -> String:
 	return "Destroy {node}"
 
 func tick() -> Status:
 	var target : Node = _resolve_node(get("node"))
 	if target == null:
-		push_error("\"%s\" non riesce a risolvere il nodo da eliminare" % resource_name)
+		push_error("\"%s\" cannot resolve node to destroy" % resource_name)
 		return Status.FAILURE
 	target.queue_free()
 	return Status.SUCCESS

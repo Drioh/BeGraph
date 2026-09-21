@@ -4,11 +4,15 @@ extends BehaviorNode
 const DISPLAY_NAME : String = "Emit Signal"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
 
+var agent : BehaviorAgent 
+var first_time : bool = true
 func set_instruction() -> String:
 	return "Emit agent signal with {args}"
 
 func tick() -> Status:
-	var agent : BehaviorAgent = get_agent()
+	if first_time:
+		agent= get_agent()
+	first_time=false
 	if agent == null:
 		push_error("\"%s\" non riesce a trovare il BehaviorAgent" % resource_name)
 		return Status.FAILURE

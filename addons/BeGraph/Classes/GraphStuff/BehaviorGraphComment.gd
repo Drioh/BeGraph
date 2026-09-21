@@ -28,10 +28,7 @@ func _on_node_set() -> void:
 	title_edit.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	title_edit.add_theme_font_size_override("font_size",18)
 	tb.add_child(title_edit)
-	title_edit.text_changed.connect(func(t: String): 
-		comment.comment_title = t
-		tooltip_text = t
-		)
+	title_edit.text_changed.connect(func(t: String): comment.comment_title = t)
 	comment_edit.text_changed.connect(func(): comment.comment_text = comment_edit.text)
 	
 	color_picker_button.custom_minimum_size=Vector2(35,35)
@@ -55,8 +52,10 @@ func _on_node_set() -> void:
 ## Riallinea i controlli se la risorsa viene modificata dall'inspector (bottone edit).
 func _sync_from_node() -> void:
 	var comment: BehaviorComment = node
-	if title_edit.text != comment.comment_title: title_edit.text = comment.comment_title
-	if comment_edit.text != comment.comment_text: comment_edit.text = comment.comment_text
+	if title_edit.text != comment.comment_title: 
+		title_edit.text = comment.comment_title
+	if comment_edit.text != comment.comment_text: 
+		comment_edit.text = comment.comment_text
 	if color_picker.color != comment.color:
 		color_picker.color = comment.color
 		_apply_color(comment.color)

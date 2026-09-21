@@ -4,9 +4,9 @@
 [ext_resource type="Script" uid="uid://ca0cevcqjpnsq" path="res://addons/BeGraph/Classes/misc/BehaviorNode.gd" id="2_0y5uo"]
 [ext_resource type="Resource" uid="uid://b00pat2p0pkar" path="res://Variabile di test.tres" id="2_gad0g"]
 [ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="3_gad0g"]
-[ext_resource type="Script" uid="uid://cqtl1rxtl657i" path="res://addons/BeGraph/Classes/Nodes/Actions/Patrol.gd" id="4_0y5uo"]
 [ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="4_k7ocg"]
-[ext_resource type="Script" uid="uid://fp403l6robqy" path="res://addons/BeGraph/Classes/Nodes/Actions/Destroy Node.gd" id="6_byvd5"]
+[ext_resource type="Script" uid="uid://cqtl1rxtl657i" path="res://addons/BeGraph/Classes/Nodes/Actions/Movement/Patrol.gd" id="5_k7ocg"]
+[ext_resource type="Script" uid="uid://b46b2ur82txgg" path="res://addons/BeGraph/Classes/Nodes/Actions/Movement/Move.gd" id="6_k7ocg"]
 
 [sub_resource type="Resource" id="Resource_0y5uo"]
 resource_local_to_scene = true
@@ -24,97 +24,9 @@ export_variable = true
 value = NodePath("..")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
-[sub_resource type="Resource" id="Resource_orwkh"]
-resource_name = "AccessPointGraphNode"
-script = ExtResource("3_gad0g")
-node_category = "access_point_node"
-output = true
-position_in_graph = Vector2(-460, 276)
-is_starting_node = true
-_graph_ref = Object(WeakRef,"script":null)
-
-
-[sub_resource type="Resource" id="Resource_gad0g"]
-resource_name = "BehaviorGraphNode"
-script = ExtResource("4_0y5uo")
-instruction = "Patrol {node} between {points}(mode: {mode})"
-behavior_properties = Array[Dictionary]([{
-"blackboard_key": &"Self",
-"class_name": "",
-"custom_info": "",
-"hint": 34,
-"hint_string": "Node2D,Node3D",
-"name": &"node",
-"type": 22,
-"usage": 4198406,
-"value": NodePath("..")
-}, {
-"blackboard_key": &"Positions",
-"class_name": "",
-"custom_info": "",
-"hint": 0,
-"hint_string": "",
-"name": &"points",
-"type": 28,
-"usage": 4102,
-"value": [NodePath("Point1"), NodePath("Point2"), NodePath("Point3")]
-}, {
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 2,
-"hint_string": "Speed,Duration",
-"name": &"mode",
-"type": 2,
-"usage": 4102,
-"value": 0
-}, {
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 0,
-"hint_string": "",
-"name": &"speed",
-"type": 3,
-"usage": 4102,
-"value": 100.0
-}, {
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 0,
-"hint_string": "",
-"name": &"duration",
-"type": 3,
-"usage": 4102,
-"value": 5.0
-}, {
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 0,
-"hint_string": "",
-"name": &"loop",
-"type": 1,
-"usage": 4102,
-"value": true
-}])
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(506, 138)
-_graph_ref = Object(WeakRef,"script":null)
-
-node = NodePath("..")
-points = [NodePath("Point1"), NodePath("Point2"), NodePath("Point3")]
-mode = 0
-speed = 100.0
-duration = 0.0
-loop = true
-
 [sub_resource type="Resource" id="Resource_buygw"]
 resource_name = "_GraphNode_28406"
-script = ExtResource("4_0y5uo")
+script = ExtResource("5_k7ocg")
 instruction = "Patrol {node} between {points}(mode: {mode})"
 behavior_properties = Array[Dictionary]([{
 "blackboard_key": &"Self",
@@ -213,20 +125,22 @@ loop = true
 calculate_destination_each_frame = true
 time_to_wait_upon_reaching_destination = 0.0
 
-[sub_resource type="Resource" id="Resource_6a8nf"]
-resource_name = "_GraphNode_52253"
+[sub_resource type="Resource" id="Resource_byvd5"]
+resource_name = "start_node"
 script = ExtResource("3_gad0g")
+label = "Dai"
 node_category = "access_point_node"
 output = true
-position_in_graph = Vector2(-575, 437)
+position_in_graph = Vector2(-598, 207)
 is_starting_node = true
 _graph_ref = Object(WeakRef,"script":null)
 
+_next_ref = Array[StringName]([&"BehaviorGraphNode"])
 
-[sub_resource type="Resource" id="Resource_6x78j"]
-resource_name = "_GraphNode_52330"
-script = ExtResource("6_byvd5")
-instruction = "Destroy {node}"
+[sub_resource type="Resource" id="Resource_orwkh"]
+resource_name = "BehaviorGraphNode"
+script = ExtResource("6_k7ocg")
+instruction = "Move {node} to {destination} ({mode})"
 behavior_properties = Array[Dictionary]([{
 "blackboard_key": &"",
 "class_name": "",
@@ -237,57 +151,92 @@ behavior_properties = Array[Dictionary]([{
 "type": 22,
 "usage": 4102,
 "value": NodePath("")
+}, {
+"blackboard_key": &"",
+"class_name": "",
+"custom_info": "",
+"hint": 0,
+"hint_string": "",
+"name": &"destination",
+"type": 0,
+"usage": 135174,
+"value": null
+}, {
+"blackboard_key": &"",
+"class_name": "",
+"custom_info": "",
+"hint": 2,
+"hint_string": "Speed,Duration",
+"name": &"mode",
+"type": 2,
+"usage": 4102,
+"value": 0
+}, {
+"blackboard_key": &"",
+"class_name": "",
+"custom_info": "",
+"hint": 0,
+"hint_string": "",
+"name": &"speed",
+"type": 3,
+"usage": 4102,
+"value": 100.0
+}, {
+"blackboard_key": &"",
+"class_name": "",
+"custom_info": "",
+"hint": 0,
+"hint_string": "",
+"name": &"duration",
+"type": 3,
+"usage": 4102,
+"value": 1.0
+}, {
+"blackboard_key": &"",
+"class_name": "",
+"custom_info": "",
+"hint": 0,
+"hint_string": "",
+"name": &"calculate_destination_each_frame",
+"type": 1,
+"usage": 4102,
+"value": false
+}, {
+"blackboard_key": &"",
+"class_name": "",
+"custom_info": "",
+"hint": 0,
+"hint_string": "",
+"name": &"time_to_wait_upon_reaching_destination",
+"type": 3,
+"usage": 4102,
+"value": 0.0
 }])
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(-575, 552)
+position_in_graph = Vector2(-69, 322)
 _graph_ref = Object(WeakRef,"script":null)
 
 node = NodePath("")
-
-[sub_resource type="Resource" id="Resource_qrtwh"]
-resource_name = "_GraphNode_61513"
-script = ExtResource("3_gad0g")
-node_category = "access_point_node"
-output = true
-position_in_graph = Vector2(-460, 690)
-is_starting_node = true
-_graph_ref = Object(WeakRef,"script":null)
-
-
-[sub_resource type="Resource" id="Resource_byvd5"]
-resource_name = "start_node"
-script = ExtResource("3_gad0g")
-label = "Dai"
-node_category = "access_point_node"
-output = true
-position_in_graph = Vector2(-414, 161)
-is_starting_node = true
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"_GraphNode_28406"])
+destination = null
+mode = 0
+speed = 100.0
+duration = 1.0
+calculate_destination_each_frame = false
+time_to_wait_upon_reaching_destination = 0.0
 
 [resource]
 resource_local_to_scene = true
 script = ExtResource("4_k7ocg")
 blackboard = Array[ExtResource("1_sguni")]([SubResource("Resource_0y5uo"), SubResource("Resource_k7ocg"), ExtResource("2_gad0g")])
 nodes = Dictionary[StringName, ExtResource("2_0y5uo")]({
-&"AccessPointGraphNode": SubResource("Resource_orwkh"),
-&"BehaviorGraphNode": SubResource("Resource_gad0g"),
+&"BehaviorGraphNode": SubResource("Resource_orwkh"),
 &"_GraphNode_28406": SubResource("Resource_buygw"),
-&"_GraphNode_52253": SubResource("Resource_6a8nf"),
-&"_GraphNode_52330": SubResource("Resource_6x78j"),
-&"_GraphNode_61513": SubResource("Resource_qrtwh"),
 &"start_node": SubResource("Resource_byvd5")
 })
 connections = Array[Dictionary]([{
 "from_node": &"start_node",
-"from_port": 0,
-"to_node": &"_GraphNode_28406",
-"to_port": 0
-}, {
-"from_node": &"_GraphNode_28406",
 "from_port": 0,
 "to_node": &"BehaviorGraphNode",
 "to_port": 0

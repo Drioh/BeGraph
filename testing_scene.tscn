@@ -23,6 +23,7 @@ fill_to = Vector2(0.5555556, 0.47435898)
 [node name="Node2D" type="Node2D" unique_id=1496466534]
 
 [node name="Sprite2D" parent="." unique_id=811252767 instance=ExtResource("1_00g8v")]
+position = Vector2(118, 119)
 overridable_blackboard_properties/Positions = [NodePath("../Point1"), NodePath("../Point2"), NodePath("../Point3")]
 
 [node name="Point1" type="Node2D" parent="." unique_id=1626982480]

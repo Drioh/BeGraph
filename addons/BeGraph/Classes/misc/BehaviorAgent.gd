@@ -12,7 +12,9 @@ const OBP : String = "overridable_blackboard_properties"
 
 signal behavior_signal(args: Array)
 
-@export var bb_props: Dictionary[StringName,Variant]
+@export var actor : Node = self
+
+var bb_props: Dictionary[StringName,Variant]
 
 ## If [code]false[/code], disables both [method Node._process] and [method Node._physics_process] ticking for this agent.
 @export var enabled: bool = true:
@@ -48,7 +50,6 @@ var _starting_point_idx: int = 0
 ## The [BehaviorNode] (the chosen access point's entry into the graph) that gets ticked by [method _process] / [method _physics_process] / [method tick].
 var starting_node: BehaviorNode = null
 
-var interface : Node = self
 
 ## Enables/disables [method Node._process] and [method Node._physics_process] based on [member enabled] and [member graph_process_mode].
 func _update_process_flags() -> void:
@@ -170,7 +171,7 @@ func is_overridable_blackboard_property(property:StringName)->bool:
 	return property.begins_with(OBP)
 
 func set_overridable_blackboard_property(property:StringName,value:Variant,interface : Node)->bool:
-	self.interface = interface
+	actor = interface
 	if property.begins_with(OBP):
 		return _set(property,value)
 	push_error("%s is not the name for an overridable blackboard property"%property)

@@ -80,20 +80,25 @@ func show_node(node: BehaviorNode, blackboard: Array[BlackboardVariable]) -> voi
 	
 	category_label.text = node.node_category
 	
-	instruction_caption_container.visible = node.instruction !=""
-	instruction_label.visible = node.instruction !=""
-	instruction_label.text = node.instruction
+	var has_instruction : bool = node.instruction !=""
+	instruction_caption_container.visible = has_instruction
+	instruction_label.visible = has_instruction
+	if has_instruction:
+		instruction_label.text = node.instruction
 	
-	info_caption_container.visible = node.info != ""
-	info_label.visible = node.info != ""
-	info_label.text = node.info
+	var has_display_info : bool = const_map.has("DISPLAY_INFO")
+	info_caption_container.visible = has_display_info
+	info_label.visible = has_display_info
+	if has_display_info:
+		info_label.text = const_map["DISPLAY_INFO"]
 
 
 	_build_flags(node)
 	
 	_clear_properties()
-	properties_caption_container.visible = !node.behavior_properties.is_empty()
-	properties_container.visible = !node.behavior_properties.is_empty()
+	var has_properties : bool = !node.behavior_properties.is_empty()
+	properties_caption_container.visible = has_properties
+	properties_container.visible = has_properties
 	for property in node.behavior_properties:
 		_add_property_row(node, property)
 
@@ -179,17 +184,20 @@ func _add_property_row(node: BehaviorNode, property: Dictionary) -> void:
 	row.add_theme_constant_override("separation", 8)
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	properties_container.add_child(row)
+	
 
 	var name_label := Label.new()
 	name_label.text = String(property["name"])
 	name_label.custom_minimum_size = Vector2(110, 0)
 	name_label.clip_text = true
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_label.size_flags_stretch_ratio=1
 	row.add_child(name_label)
 
 	var editor: BehaviorGraphNodeVariableEditor = BEHAVIOR_GRAPH_NODE_VARIABLE.instantiate()
-	editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(editor)
+	editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	editor.size_flags_stretch_ratio=2
 
 	if not editor.setup_variable_editor(node, property, _blackboard):
 		push_warning("No available editor for \"%s\"" % property["name"])

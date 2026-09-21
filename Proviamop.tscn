@@ -23,12 +23,9 @@ behavior_agent = NodePath("BehaviorAgent")
 overridable_blackboard_properties/Positions = [NodePath(""), NodePath(""), NodePath("")]
 overridable_blackboard_properties/Self = NodePath(".")
 
-[node name="BehaviorAgent" type="Node" parent="." unique_id=954077962]
+[node name="BehaviorAgent" type="Node" parent="." unique_id=954077962 node_paths=PackedStringArray("actor")]
 script = ExtResource("1_1yirt")
-bb_props = Dictionary[StringName, Variant]({
-&"Positions": [NodePath(""), NodePath(""), NodePath("")],
-&"Self": NodePath(".")
-})
+actor = NodePath("..")
 behavior_graph = ExtResource("3_bcbru")
 starting_point = 0
 overridable_blackboard_properties/Positions = [NodePath(""), NodePath(""), NodePath("")]
