@@ -7,20 +7,19 @@ const DISPLAY_INFO : String = "Casts {raycast} (a RayCast2D/3D) towards {target}
 
 var _raycast : Node
 var _target : Node
-var first_time : bool = true
 
 func set_instruction() -> String:
 	return "Line of sight from {raycast} to {target}"
 
 func tick() -> Status:
-	if first_time:
+	if dirty:
 		_raycast = _resolve_node(get("raycast"))
 		_target = _resolve_node(get("target"))
 		if _raycast == null or _target == null:
 			push_error("\"%s\" couldn't resolve raycast or target" % resource_name)
 			return Status.FAILURE
 		_raycast.enabled = true
-		first_time = false
+		dirty = false
 
 	_raycast.target_position = _raycast.to_local(_target.global_position)
 	_raycast.force_raycast_update()

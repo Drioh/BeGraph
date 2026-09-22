@@ -7,19 +7,18 @@ const DISPLAY_INFO : String = "Checks whether {cell} is occupied on {map} (TileM
 
 var _map : Node
 var _is_3d : bool = false
-var first_time : bool = true
 
 func set_instruction() -> String:
 	return "Check cell {cell} on {map}"
 
 func tick() -> Status:
-	if first_time:
+	if dirty:
 		_map = _resolve_node(get("map"))
 		if _map == null:
 			push_error("\"%s\" couldn't resolve map node" % resource_name)
 			return Status.FAILURE
 		_is_3d = _map is GridMap
-		first_time = false
+		dirty = false
 
 	var cell : Vector3i = get("cell")
 	var occupied : bool

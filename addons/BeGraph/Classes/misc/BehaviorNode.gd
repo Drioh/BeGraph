@@ -103,6 +103,8 @@ signal blackboard_key_set(property:StringName,blackboard_key:StringName)
 ## Emitted whenever [member conditions] is rebuilt (e.g. after an enum-based property changes its number of entries).
 signal conditions_changed
 
+var dirty : bool = true
+
 @export_group("Properties")
 
 ## Initializes the node by calling every overridable [code]set_*[/code] method, in order: [br]

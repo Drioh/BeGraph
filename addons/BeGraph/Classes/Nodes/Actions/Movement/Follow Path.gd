@@ -7,19 +7,18 @@ const DISPLAY_INFO : String = "Advances {path_follow} (PathFollow2D/3D) along it
 
 var _path_follow : Node
 var _last_tick_time : int = -1
-var first_time : bool = true
 
 func set_instruction() -> String:
 	return "Move {path_follow} along its path at speed {speed}"
 
 func tick() -> Status:
-	if first_time:
+	if dirty:
 		_path_follow = _resolve_node(get("path_follow"))
 		if _path_follow == null:
 			push_error("\"%s\" couldn't resolve PathFollow node" % resource_name)
 			return Status.FAILURE
 		_last_tick_time = Time.get_ticks_msec()
-		first_time = false
+		dirty = false
 
 	var now : int = Time.get_ticks_msec()
 	var delta : float = (now - _last_tick_time) / 1000.0
@@ -32,7 +31,7 @@ func tick() -> Status:
 			_path_follow.progress_ratio = fmod(_path_follow.progress_ratio, 1.0)
 			return Status.RUNNING
 		_path_follow.progress_ratio = 1.0
-		first_time = true
+		dirty = true
 		return Status.SUCCESS
 
 	return Status.RUNNING

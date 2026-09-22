@@ -18,13 +18,12 @@ var _duration : float
 var _destination : Variant
 var wait_time : float
 
-var first_time : bool = true
 
 func set_instruction() -> String:
 	return "Move {node} to {destination} ({mode})"
 
 func tick() -> Status:
-	if first_time:
+	if dirty:
 		_node = _resolve_node(get("node"))
 		_duration = get("duration")
 		_destination = _resolve_node(get("destination"))
@@ -36,7 +35,7 @@ func tick() -> Status:
 		if _node == null:
 			push_error("\"%s\" couldn't resolve destination to move towards" % resource_name)
 			return Status.FAILURE
-	first_time=false
+	dirty=false
 	
 	var now : int = Time.get_ticks_msec()
 	

@@ -7,13 +7,12 @@ const DISPLAY_INFO : String = "Starts {timer} (a Timer node) as one-shot with {w
 
 var _timer : Timer
 var _fired : bool = false
-var first_time : bool = true
 
 func set_instruction() -> String:
 	return "Wait for {timer} ({wait_time}s)"
 
 func tick() -> Status:
-	if first_time:
+	if dirty:
 		_timer = _resolve_node(get("timer")) as Timer
 		if _timer == null:
 			push_error("\"%s\" couldn't resolve Timer node" % resource_name)
@@ -26,10 +25,10 @@ func tick() -> Status:
 		_timer.wait_time = max(get("wait_time"), 0.001)
 		_timer.one_shot = true
 		_timer.start()
-		first_time = false
+		dirty = false
 
 	if _fired:
-		first_time = true
+		dirty = true
 		return Status.SUCCESS
 
 	return Status.RUNNING

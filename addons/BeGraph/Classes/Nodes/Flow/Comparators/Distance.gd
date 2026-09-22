@@ -7,25 +7,24 @@ const DISPLAY_INFO : String = "Measures the distance between {node_a} and {node_
 
 var a : Node
 var b : Node
-var first_time: bool = true
 
 func set_instruction() -> String:
 	return "Distance {node_a} - {node_b} vs {threshold}"
 
 func tick() -> Status:
-	if first_time:
+	if dirty:
 		a = _resolve_node(get("node_a"))
 		if a == null:
 			push_error("\"%s\" couldn't resolve first node" % resource_name)
-			first_time=false
+			dirty=false
 			return Status.FAILURE
 		
 		b = _resolve_node(get("node_b"))
 		if b == null:
 			push_error("\"%s\" couldn't resolve second node" % resource_name)
-			first_time=false
+			dirty=false
 			return Status.FAILURE
-	first_time=false
+	dirty=false
 	
 	var distance : float = _get_position(a).distance_to(_get_position(b))
 	var threshold : float = get("threshold")

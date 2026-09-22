@@ -124,14 +124,17 @@ func _on_delete_nodes_request(nodes: Array[StringName]) -> void:
 		if nod.node.is_starting_node and current_graph.get_nodes_by_category("access_point_node").size() == 1:
 			push_error("node %s cannot ben deleted. There must be at least one access point" % nod)
 			return
+		print("aldo")
 		for c in get_connection_list_from_node(n):
-			disconnect_node(c["from_node"], c["from_port"], c["to_node"], c["to_port"])
+			print(c["from_node"].validate_node_name())
+			disconnect_node(c["from_node"].validate_node_name(), c["from_port"], c["to_node"].validate_node_name(), c["to_port"])
 			current_graph.remove_connection({
-				"from_node": c["from_node"],
+				"from_node": StringName(c["from_node"].validate_node_name()),
 				"from_port": c["from_port"],
-				"to_node": c["to_node"],
+				"to_node": StringName(c["to_node"].validate_node_name()),
 				"to_port": c["to_port"]
 			})
+		print("franco")
 		if EditorInterface.get_inspector().get_edited_object() == nod.node:
 			EditorInterface.inspect_object(current_graph)
 		current_graph.remove_node(nod.node)

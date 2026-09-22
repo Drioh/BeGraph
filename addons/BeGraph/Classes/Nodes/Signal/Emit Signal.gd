@@ -6,14 +6,13 @@ const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
 const DISPLAY_INFO : String = "Emits the owning Behavior Agent's behavior_agent_signal, passing {args} as payload.\n\nAlways succeeds; fails only if the agent can't be found."
 
 var agent : BehaviorAgent 
-var first_time : bool = true
 func set_instruction() -> String:
 	return "Emit agent signal with {args}"
 
 func tick() -> Status:
-	if first_time:
+	if dirty:
 		agent= get_agent()
-	first_time=false
+	dirty=false
 	if agent == null:
 		push_error("\"%s\" non riesce a trovare il BehaviorAgent" % resource_name)
 		return Status.FAILURE

@@ -39,7 +39,7 @@ position = Vector2(736, 147)
 texture = SubResource("GradientTexture2D_sfsix")
 
 [node name="Point3" type="Node2D" parent="." unique_id=2122544764]
-position = Vector2(957, 226)
+position = Vector2(460, 171)
 
 [node name="Sprite2D" type="Sprite2D" parent="Point3" unique_id=987098895]
 texture = SubResource("GradientTexture2D_jn3wn")

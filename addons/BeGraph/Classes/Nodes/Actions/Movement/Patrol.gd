@@ -20,13 +20,11 @@ var _points_nodepaths
 var duration : float
 var wait_time : float
 
-var first_time : bool = true
-
 func set_instruction() -> String:
 	return "Patrol {node} between {points}(mode: {mode})"
 
 func tick() -> Status:
-	if first_time:
+	if dirty:
 		_points_nodepaths= get("points")
 		_node = _resolve_node(get("node"))
 		duration = get("duration")
@@ -40,7 +38,7 @@ func tick() -> Status:
 		if _points.is_empty():
 			return Status.FAILURE
 		calculate_current_destination()
-	first_time=false
+	dirty=false
 	
 	var now : int = Time.get_ticks_msec()
 	

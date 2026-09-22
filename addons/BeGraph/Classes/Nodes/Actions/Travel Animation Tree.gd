@@ -7,25 +7,24 @@ const DISPLAY_INFO : String = "Tells the AnimationTree {anim_tree} to travel to 
 
 var _anim_tree : AnimationTree
 var _playback : AnimationNodeStateMachinePlayback
-var first_time : bool = true
 
 func set_instruction() -> String:
 	return "Travel {anim_tree} to state {state}"
 
 func tick() -> Status:
-	if first_time:
+	if dirty:
 		_anim_tree = _resolve_node(get("anim_tree")) as AnimationTree
 		if _anim_tree == null:
 			push_error("\"%s\" couldn't resolve AnimationTree" % resource_name)
 			return Status.FAILURE
 		_playback = _anim_tree.get("parameters/playback")
 		_playback.travel(get("state"))
-		first_time = false
+		dirty = false
 
 	if _playback.get_current_node() != get("state"):
 		return Status.RUNNING
 
-	first_time = true
+	dirty = true
 	return Status.SUCCESS
 
 func set_node_category()->String: return "action_node"
