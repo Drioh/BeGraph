@@ -1,5 +1,5 @@
 @tool
-## Main [EditorPlugin] script for the BeGraph addon: registers the bottom dock used to edit [BehaviorGraph] resources, keeps a set of [ProjectSettings] (node category colors, blackboard-binding colors, node script path) in sync, and wires up the dock's save/save-as/close buttons.
+## Main [EditorPlugin] script for the BeGraph addon: registers the bottom dock used to edit [BehaviorGraph] resources, keeps a set of [ProjectSettings] (node category colors, blackboard-binding colors, node script path) in sync, wires up the dock's save/save-as/close buttons, and registers the live graph debugger ([BehaviorGraphDebuggerPlugin] + the [BehaviorGraphDebugBridge] autoload).
 extends EditorPlugin
 
 ## The dock container added to the editor via [method EditorPlugin.add_dock].
@@ -14,6 +14,10 @@ var _dock_added : bool = false
 var _pending_graph : BehaviorGraph = null
 
 var _confirm_dialog : ConfirmationDialog
+
+## The editor-side half of the live graph debugger, added to the Debugger bottom panel while this plugin is active.
+var _debugger_plugin : BehaviorGraphDebuggerPlugin
+
 ## Default background/border colors for the built-in node categories, applied to [ProjectSettings] by [method _sync_settings]. Each entry maps a category id to a [code][background_color, border_color][/code] pair.
 const BASE_CATEGORIES: Dictionary = {
 	"action_node": [Color(0.161, 0.161, 0.161, 1.0), Color(0.824, 0.784, 0.745, 1.0)],
@@ -41,7 +45,12 @@ const CUSTOM_CATEGORIES_KEY :String= "BeGraph/colors/node_colors/custom_categori
 ## Common prefix for every per-category color [ProjectSettings] key (both base and custom categories).
 const COLORS_PREFIX :String= "BeGraph/colors/node_colors/"
 
-# Instantiates the dock scene, configures it as a bottom, horizontally- or floating-dockable panel, listens for resource deletions in the filesystem dock (to unload a graph being edited if its file gets removed), and syncs the addon's [ProjectSettings].
+## Autoload name under which [constant DEBUG_BRIDGE_SCRIPT_PATH] is registered while this plugin is active.
+const DEBUG_BRIDGE_AUTOLOAD_NAME :String= "BeGraphDebugBridge"
+## Script driving the runtime side of the live graph debugger; auto-registered as an autoload so agents get streamed to the editor with no manual setup.
+const DEBUG_BRIDGE_SCRIPT_PATH :String= "res://addons/BeGraph/Debug/BehaviorGraphDebugBridge.gd"
+
+# Instantiates the dock scene, configures it as a bottom, horizontally- or floating-dockable panel, listens for resource deletions in the filesystem dock (to unload a graph being edited if its file gets removed), syncs the addon's [ProjectSettings], and registers the live graph debugger.
 func _enter_tree():
 	begraph_dock = preload("res://addons/BeGraph/UI/BeGraphDock.tscn").instantiate()
 	dock = EditorDock.new()
@@ -62,9 +71,13 @@ func _enter_tree():
 	fs_dock.resource_removed.connect(_on_resource_removed)
 	fs_dock.files_moved.connect(_on_files_moved)
 	_sync_settings()
+
+	_debugger_plugin = BehaviorGraphDebuggerPlugin.new()
+	add_debugger_plugin(_debugger_plugin)
+	add_autoload_singleton(DEBUG_BRIDGE_AUTOLOAD_NAME, DEBUG_BRIDGE_SCRIPT_PATH)
 	
 
-# Removes every [ProjectSettings] entry written by this addon, removes the dock, and disconnects the filesystem-dock signal.
+# Removes every [ProjectSettings] entry written by this addon, removes the dock, unregisters the live graph debugger, and disconnects the filesystem-dock signal.
 func _exit_tree():
 	_sync_settings(true)
 	_remove_dock()
@@ -73,6 +86,10 @@ func _exit_tree():
 	fs_dock.files_moved.disconnect(_on_files_moved)
 	_confirm_dialog.queue_free()
 	dock.queue_free()
+
+	remove_autoload_singleton(DEBUG_BRIDGE_AUTOLOAD_NAME)
+	remove_debugger_plugin(_debugger_plugin)
+	_debugger_plugin = null
 
 # Called when the plugin is enabled; currently a no-op.
 func _enable_plugin() -> void:

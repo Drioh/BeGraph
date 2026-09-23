@@ -25,6 +25,52 @@ export_variable = true
 value = NodePath("..")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
+[sub_resource type="Resource" id="Resource_orwkh"]
+resource_name = "BehaviorGraphNode"
+script = ExtResource("7_byvd5")
+instruction = "Instantiate {scene_path} under {parent}"
+behavior_properties = Array[Dictionary]([{
+"blackboard_key": &"",
+"class_name": "",
+"custom_info": "",
+"hint": 0,
+"hint_string": "",
+"name": &"scene_path",
+"type": 4,
+"usage": 4102,
+"value": ""
+}, {
+"blackboard_key": &"",
+"class_name": "",
+"custom_info": "",
+"hint": 0,
+"hint_string": "",
+"name": &"parent",
+"type": 22,
+"usage": 4102,
+"value": NodePath("")
+}, {
+"blackboard_key": &"",
+"class_name": "",
+"custom_info": "",
+"hint": 0,
+"hint_string": "",
+"name": &"position",
+"type": 9,
+"usage": 4102,
+"value": Vector3(0, 0, 0)
+}])
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(140, 80)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"_GraphNode_34072", &"_GraphNode_35997", &"_GraphNode_37161", &"_GraphNode_38427", &"_GraphNode_39239"])
+scene_path = ""
+parent = NodePath("")
+position = Vector3(0, 0, 0)
+
 [sub_resource type="Resource" id="Resource_buygw"]
 resource_name = "_GraphNode_28406"
 script = ExtResource("5_k7ocg")
@@ -126,64 +172,6 @@ loop = true
 calculate_destination_each_frame = true
 time_to_wait_upon_reaching_destination = 0.0
 
-[sub_resource type="Resource" id="Resource_byvd5"]
-resource_name = "start_node"
-script = ExtResource("3_gad0g")
-label = "Dai"
-node_category = "access_point_node"
-output = true
-position_in_graph = Vector2(-920, 161)
-is_starting_node = true
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"_GraphNode_28406"])
-
-[sub_resource type="Resource" id="Resource_orwkh"]
-resource_name = "BehaviorGraphNode"
-script = ExtResource("7_byvd5")
-instruction = "Instantiate {scene_path} under {parent}"
-behavior_properties = Array[Dictionary]([{
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 0,
-"hint_string": "",
-"name": &"scene_path",
-"type": 4,
-"usage": 4102,
-"value": ""
-}, {
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 0,
-"hint_string": "",
-"name": &"parent",
-"type": 22,
-"usage": 4102,
-"value": NodePath("")
-}, {
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 0,
-"hint_string": "",
-"name": &"position",
-"type": 9,
-"usage": 4102,
-"value": Vector3(0, 0, 0)
-}])
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(140, 80)
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"_GraphNode_34072", &"_GraphNode_35997", &"_GraphNode_37161", &"_GraphNode_38427", &"_GraphNode_39239"])
-scene_path = ""
-parent = NodePath("")
-position = Vector3(0, 0, 0)
-
 [sub_resource type="Resource" id="Resource_6a8nf"]
 resource_name = "_GraphNode_39239"
 script = ExtResource("7_buygw")
@@ -207,6 +195,18 @@ _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"_GraphNode_39392", &"_GraphNode_40518", &"_GraphNode_41665"])
 node = NodePath("")
+
+[sub_resource type="Resource" id="Resource_byvd5"]
+resource_name = "start_node"
+script = ExtResource("3_gad0g")
+label = "Dai"
+node_category = "access_point_node"
+output = true
+position_in_graph = Vector2(-920, 161)
+is_starting_node = true
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"_GraphNode_28406"])
 
 [resource]
 resource_local_to_scene = true

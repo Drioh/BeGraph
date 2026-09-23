@@ -9,6 +9,8 @@ enum ProcessThread { IDLE, PHYSICS, MANUAL }
 enum Status { SUCCESS, FAILURE, RUNNING }
 
 const OBP : String = "overridable_blackboard_properties"
+## Group every running [BehaviorAgent] adds itself to (outside the editor), used by debugging/visualization tools - e.g. the live graph debugger - to discover agents without needing a direct scene reference.
+const DEBUG_GROUP : StringName = &"begraph_agents"
 
 signal behavior_signal(args: Array)
 
@@ -97,7 +99,7 @@ func _set(property: StringName, value: Variant) -> bool:
 		return true
 	return false
 
-## At runtime (not in the editor), validates that both [member behavior_graph] and [member starting_node] are set; disables this node entirely ([constant Node.PROCESS_MODE_DISABLED]) and logs an error otherwise.
+## At runtime (not in the editor), validates that both [member behavior_graph] and [member starting_node] are set; disables this node entirely ([constant Node.PROCESS_MODE_DISABLED]) and logs an error otherwise. Also registers this agent in [constant DEBUG_GROUP] so runtime tools (e.g. the live graph debugger) can find it.
 func _ready() -> void:
 	if not Engine.is_editor_hint():
 		if behavior_graph == null:
@@ -130,23 +132,25 @@ func _ready() -> void:
 			if v!=null:
 				override_blackboard_property(p,v)
 
+		add_to_group(DEBUG_GROUP)
+
 ## Ticks [member starting_node] every idle frame when [member graph_process_mode] is [constant ProcessThread.IDLE] (outside the editor).
 func _process(_delta: float) -> void:
 	if not Engine.is_editor_hint() && enabled:
 		if starting_node != null:
-			starting_node.tick()
+			starting_node.do_tick()
 
 ## Ticks [member starting_node] every physics frame when [member graph_process_mode] is [constant ProcessThread.PHYSICS] (outside the editor).
 func _physics_process(_delta: float) -> void:
 	if not Engine.is_editor_hint() && enabled:
 		if starting_node != null:
-			starting_node.tick()
+			starting_node.do_tick()
 
 
 ## Manually ticks [member starting_node], provided [member enabled] is [code]true[/code]. Intended to be called by user code when [member graph_process_mode] is [constant ProcessThread.MANUAL].
 func tick() -> void:
 	if enabled and starting_node != null:
-		starting_node.tick()
+		starting_node.do_tick()
 
 ## Resolves [member starting_node] from the access point at [param index] inside [member behavior_graph]'s [code]"access_point_node"[/code] category, or sets it to [code]null[/code] if [member behavior_graph] is unset, has no access points, or [param index] is out of range.
 func _select_starting_node(index: int) -> void:
@@ -196,3 +200,7 @@ func get_overridable_property_list()->Array[Dictionary]:
 				"usage": base_usage
 			})
 	return ret
+
+## Returns this agent's live, runtime-duplicated [BehaviorGraph] (the one actually being ticked via [method do_tick] each frame), for read-only inspection by external tools such as the live graph debugger. Returns [code]null[/code] before [method _ready] has run (e.g. in the editor, or before the game has started).
+func get_debug_graph() -> BehaviorGraph:
+	return _behavior_graph

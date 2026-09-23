@@ -2,6 +2,30 @@
 
 [ext_resource type="PackedScene" uid="uid://cl45e2arjx5nt" path="res://Proviamop.tscn" id="1_00g8v"]
 
+[sub_resource type="Gradient" id="Gradient_k6s54"]
+interpolation_mode = 1
+offsets = PackedFloat32Array(0.008810572, 1)
+colors = PackedColorArray(0, 0, 0, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_7tmfp"]
+gradient = SubResource("Gradient_k6s54")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(0.5, 0)
+metadata/_snap_enabled = true
+
+[sub_resource type="Gradient" id="Gradient_j6xku"]
+interpolation_mode = 1
+offsets = PackedFloat32Array(0.008810572, 1)
+colors = PackedColorArray(1, 0, 0, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_map4d"]
+gradient = SubResource("Gradient_j6xku")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(0.5, 0)
+metadata/_snap_enabled = true
+
 [sub_resource type="Gradient" id="Gradient_7coi5"]
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_cy14o"]
@@ -24,7 +48,13 @@ fill_to = Vector2(0.5555556, 0.47435898)
 
 [node name="Sprite2D" parent="." unique_id=811252767 instance=ExtResource("1_00g8v")]
 position = Vector2(118, 119)
+texture = SubResource("GradientTexture2D_7tmfp")
 overridable_blackboard_properties/Positions = [NodePath("../Point1"), NodePath("../Point2"), NodePath("../Point3")]
+
+[node name="Sprite2D2" parent="." unique_id=420164419 instance=ExtResource("1_00g8v")]
+position = Vector2(149, 312)
+texture = SubResource("GradientTexture2D_map4d")
+overridable_blackboard_properties/Positions = [NodePath("../Point4"), NodePath("../Point5"), NodePath("../Point6")]
 
 [node name="Point1" type="Node2D" parent="." unique_id=1626982480]
 position = Vector2(699, 330)

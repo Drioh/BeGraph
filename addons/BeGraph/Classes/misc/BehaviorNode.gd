@@ -11,7 +11,8 @@ enum Status{SUCCESS,FAILURE,RUNNING}
 ## Property usage flags shared by every internal/read-only field of this resource (storage + read-only + editor visible, but not user-editable).
 const INTERNAL_USAGE := PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_READ_ONLY | PROPERTY_USAGE_EDITOR
 
-## Describes what the node does. Logic to determine which node is next in execution is written here.
+## Describes what the node does. Logic to determine which node is next in execution is written here.[br]
+## Never call this directly from outside the node: successors are ticked through [method tick_next]/[method tick_condition] (or, for the graph's starting node, by [BehaviorAgent]), which route through [method do_tick] instead so its execution can be tracked (e.g. by the live graph debugger).
 @abstract func tick() -> Status
 
 ## The line displayed in the node. use [code]{}[/code] annotation to declare variables.
@@ -103,8 +104,15 @@ signal blackboard_key_set(property:StringName,blackboard_key:StringName)
 ## Emitted whenever [member conditions] is rebuilt (e.g. after an enum-based property changes its number of entries).
 signal conditions_changed
 
-var dirty : bool = true
+## Emitted right after this node runs (see [method do_tick]), carrying the resulting [enum Status]. Meant for debugging/visualization tools (e.g. the live graph debugger); nothing in the plugin's own execution logic depends on it.
+signal ticked(status:Status)
 
+## The [enum Status] returned by this node's last [method do_tick] call, or [code]-1[/code] if it has never been ticked.
+var last_status : int = -1
+## [method Time.get_ticks_msec] timestamp of this node's last [method do_tick] call, or [code]-1[/code] if it has never been ticked.
+var last_tick_time : int = -1
+
+var dirty : bool = true
 @export_group("Properties")
 
 ## Initializes the node by calling every overridable [code]set_*[/code] method, in order: [br]
@@ -310,6 +318,15 @@ func is_blackboard_reference_enabled(key:StringName)->bool:
 			return property["blackboard_key"] != &""
 	return false
 
+## Public entry point used to actually run this node: calls the concrete [method tick] implementation, then records [member last_status]/[member last_tick_time] and emits [signal ticked].[br]
+## [method tick_next] and [method tick_condition] call this (instead of [method tick] directly) to reach a successor, and [BehaviorAgent] calls this on the graph's starting node - so every tick anywhere in the graph passes through here exactly once. This is what lets external tools (like the live graph debugger) track each node's status without any individual [BehaviorNode] subclass having to report it itself.
+func do_tick() -> Status:
+	var status : Status = tick()
+	last_status = status
+	last_tick_time = Time.get_ticks_msec()
+	ticked.emit(status)
+	return status
+
 ## Adds [param n] as a successor of this node. If [member output] is [code]true[/code] (no [member conditions] set), [param n] is appended to [member _next_ref] (unless already present); [param from_port] is unused in this case. Otherwise, [param n] becomes the successor of the condition at index [param from_port], replacing any previous one.
 func add_next(n : BehaviorNode, from_port : int) -> void:
 	if output:
@@ -336,23 +353,23 @@ func remove_next(n : BehaviorNode, from_port : int) -> void:
 			conditions[from_port]["next"] = null
 		return
 
-## Ticks the successor stored at [param index] inside [member _next_ref] and returns its [enum Status].
+## Ticks the successor stored at [param index] inside [member _next_ref] and returns its [enum Status]. Routes through [method do_tick] (rather than calling [method tick] directly) so the successor's status/tick-time gets recorded.
 func tick_next(index:int = 0) -> Status:
 	if index < _next_ref.size():
 		var target = _next_ref[index]
 		if target: 
-			return (_graph_ref.get_ref() as BehaviorGraph).nodes[target].tick()
+			return (_graph_ref.get_ref() as BehaviorGraph).nodes[target].do_tick()
 		push_error("BehaviorNode %s: successor at index %s was freed" % [self, index])
 		return Status.FAILURE
 	push_error("BehaviorNode %s has less than %s successors" % [self, index+1])
 	return Status.FAILURE
 
-## Ticks the successor bound to the condition at [param index] inside [member conditions] and returns its [enum Status].
+## Ticks the successor bound to the condition at [param index] inside [member conditions] and returns its [enum Status]. Routes through [method do_tick] (rather than calling [method tick] directly) so the successor's status/tick-time gets recorded.
 func tick_condition(index:int = 0) -> Status:
 	if index < conditions.size():
 		var target : StringName = conditions[index]["next"]
 		if target: 
-			return (_graph_ref.get_ref() as BehaviorGraph).nodes[target].tick()
+			return (_graph_ref.get_ref() as BehaviorGraph).nodes[target].do_tick()
 		push_error("BehaviorNode %s: condition %s has no valid successor" % [self, index])
 		return Status.FAILURE
 	push_error("BehaviorNode %s has less than %s conditions" % [self, index+1])
