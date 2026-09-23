@@ -3,8 +3,8 @@ extends GraphEdit
 ## Read-only, runtime/editor-safe visualization of a [BehaviorGraph]'s execution state, colored by [enum BehaviorNode.Status] (green = SUCCESS, red = FAILURE, amber = RUNNING, gray = idle/never ticked), fading back to idle a short while after a node stops being ticked.[br]
 ## Works in two modes:[br]
 ## - [b]Same-process[/b] ([method set_graph]): points directly at a live [BehaviorGraph] (e.g. [method BehaviorAgent.get_debug_graph]) and polls it every frame. Used by an in-game debug overlay.[br]
-## - [b]Data-driven[/b] ([method build_from_data]/[method apply_status_delta]): built from plain dictionaries with no live resource at all. Used by [BehaviorGraphDebuggerPlugin], since the editor and a running game are different processes and can only exchange serializable data through [EngineDebugger].[br]
-## Deliberately does NOT reuse the editor's [BehaviorGraphNode]/[BehaviorGraphEdit] visuals: those depend on [EditorInterface]/[EditorInspector], which only exist inside the editor process and would error out in an exported or otherwise running game. Structural edits (new nodes, (dis)connections, deletion) are simply never wired up, so the view stays read-only by omission; panning, zooming and dragging node positions around still work, harmlessly.
+## - [b]Data-driven[/b] ([method build_from_data]/[method apply_status_delta]/[method apply_properties_delta]): built from plain dictionaries with no live resource at all. Used by [BehaviorGraphDebuggerPlugin], since the editor and a running game are different processes and can only exchange serializable data through [EngineDebugger].[br]
+## Its [GraphNode]s are instances of [BehaviorGraphDebugNode] (a dedicated scene, customizable directly in the editor) rather than plain code-built [GraphNode]s: those depend only on this view's own logic, so the view stays read-only by omission, while still being able to show each node's instruction and (togglable) live behavior property values. Structural edits (new nodes, (dis)connections, deletion) are simply never wired up. Panning, zooming and dragging node positions around still work, harmlessly.
 class_name BehaviorGraphDebugView
 
 ## Color shown for each [enum BehaviorNode.Status] value while a node has been recently ticked (see [constant FADE_DURATION]).
@@ -18,10 +18,11 @@ const DEFAULT_IDLE_COLOR : Color = Color(0.5, 0.5, 0.5)
 ## Seconds it takes a node's status color to fade back to its idle category color after its last tick.
 const FADE_DURATION : float = 1.2
 
-## node name (StringName) -> the [GraphNode] visualizing it.
+## Scene instantiated for each node's visual representation; see [BehaviorGraphDebugNode].
+const DEBUG_NODE_SCENE : PackedScene = preload("res://addons/BeGraph/Debug/BehaviorGraphDebugNode.tscn")
+
+## node name (StringName) -> the [BehaviorGraphDebugNode] visualizing it.
 var _debug_nodes : Dictionary = {}
-## node name (StringName) -> the [Label] showing its live status text.
-var _status_labels : Dictionary = {}
 ## node name (StringName) -> its category (String), cached at build time (needed for the idle color, since data-driven mode has no live resource to ask).
 var _node_category : Dictionary = {}
 ## node category (String) -> {"bg": Color, "border": Color}, cached from [ProjectSettings].
@@ -38,7 +39,7 @@ func _ready() -> void:
 	# of those changes on its own, so leaving them unconnected is what keeps this view read-only.
 	right_disconnects = false
 
-## Same-process mode: loads a live [param graph], polling its nodes' [member BehaviorNode.last_status]/[member BehaviorNode.last_tick_time] every frame. Pass [code]null[/code] to clear.
+## Same-process mode: loads a live [param graph], polling its nodes' [member BehaviorNode.last_status]/[member BehaviorNode.last_tick_time]/behavior properties every frame. Pass [code]null[/code] to clear.
 func set_graph(graph: BehaviorGraph) -> void:
 	_clear()
 	if graph == null:
@@ -67,12 +68,22 @@ func apply_status_delta(deltas: Array) -> void:
 	for entry in deltas:
 		_node_state[StringName(entry[0])] = {"status": entry[1], "since": now}
 
+## Data-driven mode: applies a behavior-properties delta - an Array of [code][node_name:String, properties:Array][/code] pairs (see [method BehaviorGraphDebugBridge._serialize_properties]), one entry per node whose property values changed since the previous update (either because it ticked, or because a blackboard entry it reads from did). Refreshes only the matching [BehaviorGraphDebugNode]'s displayed values.
+func apply_properties_delta(deltas: Array) -> void:
+	for entry in deltas:
+		var gn : BehaviorGraphDebugNode = _debug_nodes.get(StringName(entry[0]))
+		if gn:
+			gn.update_property_values(entry[1])
+
 func _process(_delta: float) -> void:
 	if _live_nodes.size() > 0:
 		for key : StringName in _live_nodes.keys():
 			var n : BehaviorNode = _live_nodes[key]
 			if n.last_tick_time != -1:
 				_node_state[key] = {"status": n.last_status, "since": n.last_tick_time}
+			var gn : BehaviorGraphDebugNode = _debug_nodes.get(key)
+			if gn and not n.behavior_properties.is_empty():
+				gn.update_property_values(_serialize_properties(n))
 	for key : StringName in _debug_nodes.keys():
 		_update_status_visual(key)
 
@@ -86,12 +97,11 @@ func _clear() -> void:
 			remove_child(child)
 			child.queue_free()
 	_debug_nodes.clear()
-	_status_labels.clear()
 	_node_category.clear()
 	_node_state.clear()
 	_live_nodes.clear()
 
-## Converts a live [param node] into the plain dictionary shape [method _add_debug_node_from_info] expects: [code]{"name","category","display_name","input","output","position","conditions"}[/code], all plain String/bool/Vector2/Array - i.e. exactly what [BehaviorGraphDebugBridge] also sends over the wire, so both modes build identical-looking nodes.
+## Converts a live [param node] into the plain dictionary shape [method _add_debug_node_from_info] expects: [code]{"name","category","display_name","input","output","position","conditions","instruction","behavior_properties"}[/code], all plain/serializable values - i.e. exactly what [BehaviorGraphDebugBridge] also sends over the wire, so both modes build identical-looking nodes.
 func _info_from_node(node: BehaviorNode) -> Dictionary:
 	var const_map : Dictionary = node.get_script().get_script_constant_map() if node.get_script() else {}
 	var conditions : Array = []
@@ -105,41 +115,32 @@ func _info_from_node(node: BehaviorNode) -> Dictionary:
 		"output": node.output,
 		"position": node.position_in_graph,
 		"conditions": conditions,
+		"instruction": node.instruction,
+		"behavior_properties": _serialize_properties(node),
 	}
 
-## Instantiates a plain, code-built [GraphNode] for [param info]: no inline property editors (those would require [EditorInspector]), just a title, category color, a status label and one slot per output/condition - enough to see the graph's shape and follow its live state.
+## Reads [param node]'s current behavior property values (resolving blackboard-bound ones through [method BehaviorNode.get], exactly like the node itself does) into the [code]{"name","value","blackboard_key"}[/code] shape used both here and by [method BehaviorGraphDebugBridge._serialize_properties]. Stringifies [Object] values, since those can't be safely displayed/serialized as-is.
+func _serialize_properties(node: BehaviorNode) -> Array:
+	var ret : Array = []
+	for prop in node.behavior_properties:
+		var value : Variant = node.get(prop["name"])
+		ret.append({
+			"name": String(prop["name"]),
+			"value": str(value) if value is Object else value,
+			"blackboard_key": String(prop["blackboard_key"]),
+		})
+	return ret
+
+## Instantiates [constant DEBUG_NODE_SCENE] for [param info] and configures it via [method BehaviorGraphDebugNode.setup] - enough to see the graph's shape, its nodes' instructions/properties, and follow its live state.
 func _add_debug_node_from_info(info: Dictionary) -> void:
 	var key : StringName = StringName(info["name"])
 
-	var gn := GraphNode.new()
+	var gn : BehaviorGraphDebugNode = DEBUG_NODE_SCENE.instantiate()
 	gn.name = String(key)
-	gn.title = String(key)
-	gn.position_offset = info.get("position", Vector2.ZERO)
-	gn.resizable = false
-
-	var subtitle := Label.new()
-	subtitle.text = info.get("display_name", info.get("category", ""))
-	subtitle.add_theme_font_size_override("font_size", 12)
-	subtitle.modulate.a = 0.7
-	gn.add_child(subtitle)
-
-	var status_label := Label.new()
-	status_label.text = "idle"
-	gn.add_child(status_label)
-	_status_labels[key] = status_label
-
-	gn.set_slot_enabled_left(0, info.get("input", false))
-	var conditions : Array = info.get("conditions", [])
-	gn.set_slot_enabled_right(0, info.get("output", false) and conditions.is_empty())
-
-	for cond_text in conditions:
-		var cond_label := Label.new()
-		cond_label.text = String(cond_text)
-		cond_label.clip_text = true
-		gn.add_child(cond_label)
-		gn.set_slot_enabled_right(gn.get_child_count() - 1, true)
-
 	add_child(gn)
+	gn.setup(info)
+	gn.position_offset = info.get("position", Vector2.ZERO)
+
 	_node_category[key] = info.get("category", "")
 	_apply_category_color(gn, _node_category[key])
 	_debug_nodes[key] = gn
@@ -167,18 +168,16 @@ func _apply_category_color(gn: GraphNode, category: String) -> void:
 
 ## Recolors [param node_name]'s [GraphNode]/status label from [member _node_state], fading from the matching [constant STATUS_COLORS] entry back to the node's idle category color over [constant FADE_DURATION] seconds. Since GraphEdit draws each connection line as a gradient between its two endpoints' port colors, recoloring a node's slots is what makes the connections themselves appear to change color with the graph's state.
 func _update_status_visual(node_name: StringName) -> void:
-	var gn : GraphNode = _debug_nodes.get(node_name)
+	var gn : BehaviorGraphDebugNode = _debug_nodes.get(node_name)
 	if gn == null:
 		return
 	var idle_color : Color = _category_colors.get(_node_category.get(node_name, ""), {}).get("border", DEFAULT_IDLE_COLOR)
-	var label : Label = _status_labels.get(node_name)
 	var state = _node_state.get(node_name)
 
 	if state == null:
 		_set_slot_colors(gn, idle_color)
-		if label:
-			label.text = "idle"
-			label.modulate.a = 0.4
+		gn.update_status_text("idle")
+		gn.status_label.modulate.a = 0.4
 		return
 
 	var age : float = (Time.get_ticks_msec() - state["since"]) / 1000.0
@@ -186,9 +185,8 @@ func _update_status_visual(node_name: StringName) -> void:
 	var status_color : Color = STATUS_COLORS.get(state["status"], idle_color)
 
 	_set_slot_colors(gn, idle_color.lerp(status_color, freshness))
-	if label:
-		label.text = _status_text(state["status"])
-		label.modulate.a = 0.4 + 0.6 * freshness
+	gn.update_status_text(_status_text(state["status"]))
+	gn.status_label.modulate.a = 0.4 + 0.6 * freshness
 
 func _status_text(status: int) -> String:
 	match status:

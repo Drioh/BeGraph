@@ -7,12 +7,14 @@ extends EditorDebuggerPlugin
 const MESSAGE_PREFIX : String = "begraph"
 const MSG_GRAPH : String = "begraph:graph"
 const MSG_STATUS : String = "begraph:status"
+const MSG_PROPERTIES : String = "begraph:properties"
+const MSG_BLACKBOARD : String = "begraph:blackboard"
 const MSG_REMOVED : String = "begraph:removed"
 
 ## Scene instantiated once per session by [method _setup_session]; see [BehaviorGraphDebuggerSessionTab].
 const SESSION_TAB_SCENE : PackedScene = preload("res://addons/BeGraph/Debug/BehaviorGraphDebuggerSessionTab.tscn")
 
-## session_id -> [code]{"tab": BehaviorGraphDebuggerSessionTab, "agents": Array[String], "graphs": Dictionary, "current_agent": String}[/code]; see [method _setup_session].
+## session_id -> [code]{"tab": BehaviorGraphDebuggerSessionTab, "agents": Array[String], "graphs": Dictionary, "blackboard": Dictionary, "current_agent": String}[/code]; see [method _setup_session].
 var _sessions : Dictionary = {}
 
 ## Returning [code]true[/code] here is what makes the debugger route every [code]"begraph:*"[/code] message to [method _capture].
@@ -25,10 +27,16 @@ func _capture(message: String, data: Array, session_id: int) -> bool:
 	var s : Dictionary = _sessions[session_id]
 
 	if message == MSG_GRAPH:
-		_on_graph_message(s, data[0], data[1], data[2])
+		_on_graph_message(s, data[0], data[1], data[2], data[3])
 		return true
 	if message == MSG_STATUS:
 		_on_status_message(s, data[0], data[1])
+		return true
+	if message == MSG_PROPERTIES:
+		_on_properties_message(s, data[0], data[1])
+		return true
+	if message == MSG_BLACKBOARD:
+		_on_blackboard_message(s, data[0], data[1])
 		return true
 	if message == MSG_REMOVED:
 		_on_removed_message(s, data[0])
@@ -44,6 +52,7 @@ func _setup_session(session_id: int) -> void:
 		"tab": tab,
 		"agents": [], # ordered agent-path Strings, mirrors tab.agent_option's items
 		"graphs": {}, # agent path -> [nodes_data, connections_data], so switching agents doesn't need a re-send
+		"blackboard": {}, # agent path -> {variable name (String): [type:int, value]}
 		"current_agent": "",
 	}
 
@@ -58,16 +67,24 @@ func _on_session_stopped(session_id: int) -> void:
 	var s : Dictionary = _sessions[session_id]
 	s["agents"].clear()
 	s["graphs"].clear()
+	s["blackboard"].clear()
 	s["current_agent"] = ""
 	s["tab"].agent_option.clear()
 	s["tab"].debug_view.build_from_data([], [])
+	s["tab"].set_blackboard({})
 	s["tab"].agent_label.text = "Waiting for a Behavior Agent to report in..."
 	s["tab"].running_label.text = ""
 
 #region Message handling
 
-func _on_graph_message(s: Dictionary, agent_path: String, nodes_data: Array, connections_data: Array) -> void:
+func _on_graph_message(s: Dictionary, agent_path: String, nodes_data: Array, connections_data: Array, blackboard_data: Array) -> void:
 	s["graphs"][agent_path] = [nodes_data, connections_data]
+
+	var blackboard : Dictionary = {}
+	for entry in blackboard_data:
+		blackboard[entry["name"]] = [entry["type"], entry["value"]]
+	s["blackboard"][agent_path] = blackboard
+
 	if not s["agents"].has(agent_path):
 		s["agents"].append(agent_path)
 		s["tab"].agent_option.add_item(agent_path)
@@ -75,6 +92,7 @@ func _on_graph_message(s: Dictionary, agent_path: String, nodes_data: Array, con
 			_select_agent(s, agent_path)
 	elif s["current_agent"] == agent_path:
 		s["tab"].debug_view.build_from_data(nodes_data, connections_data)
+		s["tab"].set_blackboard(blackboard)
 
 func _on_status_message(s: Dictionary, agent_path: String, deltas: Array) -> void:
 	if s["current_agent"] != agent_path:
@@ -89,6 +107,22 @@ func _on_status_message(s: Dictionary, agent_path: String, deltas: Array) -> voi
 		s["tab"].agent_label.text = "Agent: %s" % [agent_path]
 		s["tab"].running_label.text = "Running: %s" % [(running)]
 
+## Forwards a behavior-properties delta (see [method BehaviorGraphDebugBridge._send_properties_delta]) to the currently selected agent's [BehaviorGraphDebugView]; ignored if it belongs to an agent that isn't currently displayed.
+func _on_properties_message(s: Dictionary, agent_path: String, deltas: Array) -> void:
+	if s["current_agent"] != agent_path:
+		return
+	s["tab"].debug_view.apply_properties_delta(deltas)
+
+## Merges a blackboard delta (see [method BehaviorGraphDebugBridge._send_blackboard_delta]) into [param agent_path]'s cached snapshot, and forwards it to the blackboard panel if that agent is currently displayed.
+func _on_blackboard_message(s: Dictionary, agent_path: String, deltas: Array) -> void:
+	var blackboard : Dictionary = s["blackboard"].get(agent_path, {})
+	for entry in deltas:
+		blackboard[entry[0]] = [entry[1], entry[2]]
+	s["blackboard"][agent_path] = blackboard
+
+	if s["current_agent"] == agent_path:
+		s["tab"].apply_blackboard_delta(deltas)
+
 func _on_removed_message(s: Dictionary, agent_path: String) -> void:
 	var index : int = s["agents"].find(agent_path)
 	if index == -1:
@@ -96,9 +130,11 @@ func _on_removed_message(s: Dictionary, agent_path: String) -> void:
 	s["agents"].remove_at(index)
 	s["tab"].agent_option.remove_item(index)
 	s["graphs"].erase(agent_path)
+	s["blackboard"].erase(agent_path)
 	if s["current_agent"] == agent_path:
 		s["current_agent"] = ""
 		s["tab"].debug_view.build_from_data([], [])
+		s["tab"].set_blackboard({})
 		s["tab"].agent_label.text = "Agent removed."
 		s["tab"].running_label.text = ""
 
@@ -120,5 +156,6 @@ func _select_agent(s: Dictionary, agent_path: String) -> void:
 		var g : Array = s["graphs"][agent_path]
 		s["tab"].debug_view.build_from_data(g[0], g[1])
 		s["tab"].agent_label.text = "Agent: %s" % agent_path
+	s["tab"].set_blackboard(s["blackboard"].get(agent_path, {}))
 
 #endregion
