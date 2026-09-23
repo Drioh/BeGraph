@@ -20,13 +20,20 @@ const LINKED_ICON: Texture2D = preload("res://addons/BeGraph/Icons/link_icon.svg
 ## Live status text ("idle"/"SUCCESS"/"FAILURE"/"RUNNING"), refreshed by [BehaviorGraphDebugView].
 @onready var status_label: Label = %StatusLabel
 ## Shows/hides [member properties_container]. Hidden entirely when the node has no behavior properties.
-@onready var properties_toggle: Button = %PropertiesToggle
-
-## Holds one row per behavior property (link icon, name, value). Re-appended as this node's last child once every condition row has been added, so it never shifts their slot indices; hidden until [member properties_toggle] is pressed.
-@onready var properties_container: VBoxContainer = %PropertiesContainer
+@onready var properties_toggle: Button
+@onready var properties_tree: Tree = %PropertiesTree
 
 func _ready() -> void:
-	properties_toggle.toggled.connect(func(pressed: bool): properties_container.visible = pressed)
+	properties_toggle = Button.new()
+	properties_toggle.toggle_mode=true
+	properties_toggle.flat=true
+	properties_toggle.icon=load("res://addons/BeGraph/Icons/info_icon.svg")
+	get_titlebar_hbox().add_child(properties_toggle)
+	properties_toggle.toggled.connect(func(pressed: bool): 
+		properties_tree.visible = pressed
+		reset_size.call_deferred()
+		)
+	
 
 ## Configures every part of this node from [param info] (the same dictionary shape built by [method BehaviorGraphDebugView._info_from_node] / sent by [method BehaviorGraphDebugBridge._send_graph_structure]): title, subtitle, instruction, input/output/condition slots, and the (initially hidden) properties list.
 func setup(info: Dictionary) -> void:
@@ -44,56 +51,48 @@ func setup(info: Dictionary) -> void:
 
 	# Conditions must be added directly after row 1 (status_row) - pull properties_container
 	# out first so it doesn't shift their slot indices, then re-append it last.
-	remove_child(properties_container)
+	remove_child(properties_tree)
 	for cond_text in conditions:
 		var cond_label := Label.new()
 		cond_label.text = String(cond_text)
 		cond_label.clip_text = true
 		add_child(cond_label)
 		set_slot_enabled_right(get_child_count() - 1, true)
-	add_child(properties_container)
+	add_child(properties_tree)
 
 	var properties: Array = info.get("behavior_properties", [])
 	properties_toggle.visible = not properties.is_empty()
 	_build_properties(properties)
-
+	
 ## Rebuilds [member properties_container] from scratch using [param properties] (an Array of [code]{"name","value","blackboard_key"}[/code] dictionaries).
 func _build_properties(properties: Array) -> void:
-	for child in properties_container.get_children():
-		properties_container.remove_child(child)
-		child.queue_free()
+	properties_tree.clear()
+	properties_tree.column_titles_visible = true
+	properties_tree.set_column_title(0, "Key")
+	properties_tree.set_column_title(1, "Value")
+	properties_tree.set_column_expand(0, true)
+	properties_tree.set_column_expand(1, true)
+	properties_tree.set_column_expand_ratio(0,1)
+	properties_tree.set_column_expand_ratio(1,3)
+	properties_tree.set_column_custom_minimum_width(0, 28)
+	properties_tree.create_item()
+	properties_tree.hide()
 	for property in properties:
 		_add_property_row(property)
-
+	
 ## Appends one row for [param property] to [member properties_container]: a link icon (visible only when the property is bound to a blackboard entry), its name, and its current value.
 func _add_property_row(property: Dictionary) -> void:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 6)
-	properties_container.add_child(row)
-
 	var linked: bool = String(property.get("blackboard_key", "")) != ""
-
-	var link_icon := TextureRect.new()
-	link_icon.custom_minimum_size = Vector2(16, 16)
-	link_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	link_icon.texture = LINKED_ICON
-	link_icon.modulate.a = 1.0 if linked else 0.0
-	link_icon.tooltip_text = ("Linked to blackboard entry \"%s\"" % property["blackboard_key"]) if linked else "Fixed value"
-	row.add_child(link_icon)
-
-	var name_label := Label.new()
-	name_label.text = String(property["name"])
-	name_label.custom_minimum_size = Vector2(90, 0)
-	name_label.clip_text = true
-	row.add_child(name_label)
-
-	var value_label := Label.new()
-	value_label.text = str(property.get("value"))
-	value_label.clip_text = true
-	value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	if linked and ProjectSettings.has_setting("BeGraph/colors/allowed_variable_color_border"):
-		value_label.add_theme_color_override("font_color", ProjectSettings.get_setting("BeGraph/colors/allowed_variable_color_border"))
-	row.add_child(value_label)
+	var item : TreeItem = properties_tree.create_item(properties_tree.get_root())
+	item.set_text(0,property["name"])
+	item.set_icon(0, EditorInterface.get_editor_theme().get_icon(type_string(property["type"]), "EditorIcons"))
+	
+	if !linked:
+		item.set_text(1,str(property.get("value")))
+	else:
+		item.set_text(1,property["blackboard_key"])
+		item.set_icon(1,load("res://addons/BeGraph/Icons/link_icon.svg"))
+	reset_size.call_deferred()
 
 ## Sets [member status_label]'s text (color is handled separately by [BehaviorGraphDebugView], via this node's slot colors).
 func update_status_text(text: String) -> void:
@@ -101,7 +100,15 @@ func update_status_text(text: String) -> void:
 
 ## Refreshes only the displayed values (not the link icon/name) of an already-built properties list, in the same order [method setup] built them in. Used whenever fresher values come in (a node ticking, or a blackboard entry it reads from changing) without rebuilding the whole row set.
 func update_property_values(properties: Array) -> void:
-	var rows := properties_container.get_children()
-	for i in min(rows.size(), properties.size()):
-		var value_label: Label = rows[i].get_child(2)
-		value_label.text = str(properties[i].get("value"))
+	var item = properties_tree.get_root()
+	for i in min(properties_tree.get_child_count(), properties.size()):
+		if item == null:
+			continue
+		if String(properties[i].get("blackboard_key", "")) != "":
+			item.set_text(1,properties[i]["blackboard_key"])
+			item.set_icon(1,load("res://addons/BeGraph/Icons/link_icon.svg"))
+		else:
+			item.set_text(1,str(properties[i].get("value")))
+		item = item.get_next()
+
+			

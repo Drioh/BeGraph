@@ -200,7 +200,6 @@ text = "RUNNING"
 
 [node name="BlackboardPanel" type="PanelContainer" parent="ContentSplit" unique_id=902733442]
 unique_name_in_owner = true
-visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 

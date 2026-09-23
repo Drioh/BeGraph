@@ -76,7 +76,6 @@ func show_node(node: BehaviorNode, blackboard: Array[BlackboardVariable]) -> voi
 	instruction_label.visible = has_instruction
 	if has_instruction:
 		instruction_label.text = node.instruction
-		print(instruction_label.visible)
 		instruction_label.reset_size.call_deferred()
 	
 	var has_display_info : bool = const_map.has("DISPLAY_INFO")

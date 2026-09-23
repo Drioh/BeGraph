@@ -1,21 +1,22 @@
 [gd_scene format=3 uid="uid://dq1h6f4tvxr8w"]
 
-[ext_resource type="Script" uid="uid://c8k2mtx5vqe7h" path="res://addons/BeGraph/Debug/BehaviorGraphDebugNode.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://bhj5y2gk835kc" path="res://addons/BeGraph/Debug/BehaviorGraphDebugNode.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://cyeufk6walgcc" path="res://addons/BeGraph/Icons/graph_slot_icon.svg" id="2_slot"]
-[ext_resource type="Texture2D" uid="uid://clw4llfqosy5e" path="res://addons/BeGraph/Icons/info_icon.svg" id="3_toggle"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+resource_local_to_scene = true
 content_margin_left = 12.0
 content_margin_top = 8.0
 content_margin_right = 16.0
 content_margin_bottom = 8.0
-bg_color = Color(0.161, 0.161, 0.161, 1)
+bg_color = Color(0.16078432, 0.16078432, 0.16078432, 1)
 corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel_sel"]
+resource_local_to_scene = true
 content_margin_left = 12.0
 content_margin_top = 8.0
 content_margin_right = 16.0
@@ -32,10 +33,12 @@ corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_titlebar"]
+resource_local_to_scene = true
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_titlebar_sel"]
+resource_local_to_scene = true
 
-[node name="BehaviorGraphDebugNode" type="GraphNode"]
+[node name="BehaviorGraphDebugNode" type="GraphNode" unique_id=1255070481]
 offset_right = 320.0
 offset_bottom = 90.0
 mouse_filter = 1
@@ -45,67 +48,75 @@ theme_override_styles/panel_selected = SubResource("StyleBoxFlat_panel_sel")
 theme_override_styles/titlebar = SubResource("StyleBoxEmpty_titlebar")
 theme_override_styles/titlebar_selected = SubResource("StyleBoxEmpty_titlebar_sel")
 title = "BehaviorGraphDebugNode"
-resizable = false
 slot/0/left_enabled = false
 slot/0/left_type = 0
 slot/0/left_color = Color(1, 1, 1, 1)
+slot/0/left_icon = null
 slot/0/right_enabled = false
 slot/0/right_type = 0
 slot/0/right_color = Color(1, 1, 1, 1)
+slot/0/right_icon = null
 slot/0/draw_stylebox = true
 slot/1/left_enabled = false
 slot/1/left_type = 0
 slot/1/left_color = Color(1, 1, 1, 1)
+slot/1/left_icon = null
 slot/1/right_enabled = false
 slot/1/right_type = 0
 slot/1/right_color = Color(1, 1, 1, 1)
+slot/1/right_icon = null
 slot/1/draw_stylebox = true
+slot/2/left_enabled = false
+slot/2/left_type = 0
+slot/2/left_color = Color(1, 1, 1, 1)
+slot/2/left_icon = null
+slot/2/right_enabled = false
+slot/2/right_type = 0
+slot/2/right_color = Color(1, 1, 1, 1)
+slot/2/right_icon = null
+slot/2/draw_stylebox = true
 script = ExtResource("1_script")
 
-[node name="MainRow" type="VBoxContainer" parent="."]
+[node name="MainRow" type="VBoxContainer" parent="." unique_id=139344174]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="Subtitle" type="Label" parent="MainRow"]
+[node name="Subtitle" type="Label" parent="MainRow" unique_id=554445351]
 unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0.7)
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
-modulate = Color(1, 1, 1, 0.7)
 
-[node name="InstructionLabel" type="Label" parent="MainRow"]
+[node name="InstructionLabel" type="Label" parent="MainRow" unique_id=722739716]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 15
 autowrap_mode = 2
-clip_text = false
 
-[node name="StatusRow" type="HBoxContainer" parent="."]
+[node name="StatusRow" type="HBoxContainer" parent="." unique_id=653668128]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_vertical = 0
 theme_override_constants/separation = 8
 
-[node name="StatusLabel" type="Label" parent="StatusRow"]
+[node name="StatusLabel" type="Label" parent="StatusRow" unique_id=985255333]
 unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0.4)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "idle"
-modulate = Color(1, 1, 1, 0.4)
 
-[node name="PropertiesToggle" type="Button" parent="StatusRow"]
+[node name="PropertiesTree" type="Tree" parent="." unique_id=1825194023]
 unique_name_in_owner = true
-visible = false
-custom_minimum_size = Vector2(26, 26)
+custom_minimum_size = Vector2(0, 200)
+custom_maximum_size = Vector2(-1, 200)
 layout_mode = 2
-tooltip_text = "Show/Hide behavior properties"
-toggle_mode = true
-icon = ExtResource("3_toggle")
-flat = true
-icon_alignment = 1
-
-[node name="PropertiesContainer" type="VBoxContainer" parent="."]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-theme_override_constants/separation = 3
+size_flags_vertical = 3
+mouse_force_pass_scroll_events = false
+columns = 2
+column_titles_visible = true
+allow_search = false
+hide_root = true
+select_mode = 1

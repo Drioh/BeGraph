@@ -155,6 +155,7 @@ func _serialize_properties(node: BehaviorNode) -> Array:
 	for prop in node.behavior_properties:
 		ret.append({
 			"name": String(prop["name"]),
+			"type": typeof(node.get(prop["name"])),
 			"value": _safe_value(node.get(prop["name"])),
 			"blackboard_key": String(prop["blackboard_key"]),
 		})

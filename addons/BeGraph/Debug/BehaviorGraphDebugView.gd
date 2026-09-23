@@ -9,9 +9,9 @@ class_name BehaviorGraphDebugView
 
 ## Color shown for each [enum BehaviorNode.Status] value while a node has been recently ticked (see [constant FADE_DURATION]).
 const STATUS_COLORS : Dictionary = {
-	BehaviorNode.Status.SUCCESS: Color(0.239, 0.702, 0.349),
-	BehaviorNode.Status.FAILURE: Color(0.831, 0.235, 0.271),
-	BehaviorNode.Status.RUNNING: Color(0.976, 0.741, 0.129),
+	BehaviorNode.Status.SUCCESS: Color(0.376, 0.875, 0.439, 1.0),
+	BehaviorNode.Status.FAILURE: Color(1.0, 0.0, 0.235, 1.0),
+	BehaviorNode.Status.RUNNING: Color(1.0, 0.875, 0.439, 1.0),
 }
 ## Fallback color used for a node category with no matching [ProjectSettings] entry.
 const DEFAULT_IDLE_COLOR : Color = Color(0.5, 0.5, 0.5)

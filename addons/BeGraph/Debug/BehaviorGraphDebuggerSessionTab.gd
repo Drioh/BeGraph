@@ -21,7 +21,10 @@ extends VBoxContainer
 var _blackboard_rows : Dictionary = {}
 
 func _ready() -> void:
-	blackboard_toggle.toggled.connect(func(pressed: bool): blackboard_panel.visible = pressed)
+	blackboard_toggle.toggled.connect(func(pressed: bool): 
+		blackboard_panel.visible = pressed
+		blackboard_toggle.text = "Hide Blackboard" if pressed else "Show Blackboard"
+		)
 	blackboard_panel.visible = blackboard_toggle.button_pressed
 	_setup_blackboard_tree()
 
