@@ -12,9 +12,9 @@ const DISPLAY_INFO : String = "Entry point of the graph.\n\nA Behavior Agent sta
 func set_instruction() -> String:
 	return ""
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	if _next_ref.size()>0:
-		tick_next()
+		tick_next(delta)
 	return Status.RUNNING
 
 func set_node_category()->String:return "access_point_node"

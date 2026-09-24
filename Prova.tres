@@ -26,6 +26,52 @@ export_variable = true
 value = NodePath("..")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
+[sub_resource type="Resource" id="Resource_orwkh"]
+resource_name = "BehaviorGraphNode"
+script = ExtResource("6_byvd5")
+instruction = "Set {node}'s {mode} to {color}"
+behavior_properties = Array[Dictionary]([{
+"blackboard_key": &"Self",
+"class_name": "",
+"custom_info": "",
+"hint": 34,
+"hint_string": "CanvasItem",
+"name": &"node",
+"type": 22,
+"usage": 4198406,
+"value": NodePath("..")
+}, {
+"blackboard_key": &"",
+"class_name": "",
+"custom_info": "",
+"hint": 2,
+"hint_string": "Modulate,SelfModulate",
+"name": &"mode",
+"type": 2,
+"usage": 4102,
+"value": 0
+}, {
+"blackboard_key": &"",
+"class_name": "",
+"custom_info": "",
+"hint": 0,
+"hint_string": "",
+"name": &"color",
+"type": 20,
+"usage": 4102,
+"value": Color(1, 0, 1, 1)
+}])
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(240, 140)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"_GraphNode_51134"])
+node = NodePath("..")
+mode = 0
+color = Color(1, 0, 1, 1)
+
 [sub_resource type="Resource" id="Resource_buygw"]
 resource_name = "_GraphNode_28406"
 script = ExtResource("5_k7ocg")
@@ -227,52 +273,6 @@ is_starting_node = true
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"_GraphNode_28406"])
-
-[sub_resource type="Resource" id="Resource_orwkh"]
-resource_name = "BehaviorGraphNode"
-script = ExtResource("6_byvd5")
-instruction = "Set {node}'s {mode} to {color}"
-behavior_properties = Array[Dictionary]([{
-"blackboard_key": &"Self",
-"class_name": "",
-"custom_info": "",
-"hint": 34,
-"hint_string": "CanvasItem",
-"name": &"node",
-"type": 22,
-"usage": 4198406,
-"value": NodePath("")
-}, {
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 2,
-"hint_string": "Modulate,SelfModulate",
-"name": &"mode",
-"type": 2,
-"usage": 4102,
-"value": 0
-}, {
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 0,
-"hint_string": "",
-"name": &"color",
-"type": 20,
-"usage": 4102,
-"value": Color(1, 0, 1, 1)
-}])
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(240, 140)
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"_GraphNode_51134"])
-node = NodePath("..")
-mode = 0
-color = Color(1, 0, 1, 1)
 
 [resource]
 resource_local_to_scene = true

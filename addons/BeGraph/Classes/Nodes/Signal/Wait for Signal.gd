@@ -12,7 +12,7 @@ var _signal_fired: bool = false
 func set_instruction() -> String:
 	return "Wait for signal {signal_name} on node {node}"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	var target: Object = _resolve_node(get("node"))
 	if target == null:
 		push_error("\"%s\" non riesce a risolvere il nodo target" % resource_name)
@@ -34,7 +34,7 @@ func tick() -> Status:
 
 	if _signal_fired:
 		_disconnect_signal()
-		tick_next()
+		tick_next(delta)
 		return Status.SUCCESS
 
 	return Status.RUNNING

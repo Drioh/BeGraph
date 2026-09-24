@@ -13,7 +13,7 @@ const INTERNAL_USAGE := PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_READ_ONLY | PROP
 
 ## Describes what the node does. Logic to determine which node is next in execution is written here.[br]
 ## Never call this directly from outside the node: successors are ticked through [method tick_next]/[method tick_condition] (or, for the graph's starting node, by [BehaviorAgent]), which route through [method do_tick] instead so its execution can be tracked (e.g. by the live graph debugger).
-@abstract func tick() -> Status
+@abstract func tick(delta) -> Status
 
 ## The line displayed in the node. use [code]{}[/code] annotation to declare variables.
 @abstract func set_instruction() -> String
@@ -320,8 +320,8 @@ func is_blackboard_reference_enabled(key:StringName)->bool:
 
 ## Public entry point used to actually run this node: calls the concrete [method tick] implementation, then records [member last_status]/[member last_tick_time] and emits [signal ticked].[br]
 ## [method tick_next] and [method tick_condition] call this (instead of [method tick] directly) to reach a successor, and [BehaviorAgent] calls this on the graph's starting node - so every tick anywhere in the graph passes through here exactly once. This is what lets external tools (like the live graph debugger) track each node's status without any individual [BehaviorNode] subclass having to report it itself.
-func do_tick() -> Status:
-	var status : Status = tick()
+func do_tick(delta:float) -> Status:
+	var status : Status = tick(delta)
 	last_status = status
 	last_tick_time = Time.get_ticks_msec()
 	ticked.emit(status)
@@ -357,21 +357,21 @@ func remove_next(n : BehaviorNode, from_port : int) -> void:
 		return
 
 ## Ticks the successor stored at [param index] inside [member _next_ref] and returns its [enum Status]. Routes through [method do_tick] (rather than calling [method tick] directly) so the successor's status/tick-time gets recorded.
-func tick_next(index:int = 0) -> Status:
+func tick_next(delta:float,index:int = 0) -> Status:
 	if index < _next_ref.size():
 		var target = _next_ref[index] if _next_ref[index] else &""
 		if target != &"": 
-			return (_graph_ref.get_ref() as BehaviorGraph).nodes[target].do_tick()
+			return (_graph_ref.get_ref() as BehaviorGraph).nodes[target].do_tick(delta)
 		push_error("BehaviorNode %s: successor at index %s was freed" % [self, index])
 		return Status.FAILURE
 	return Status.SUCCESS # Node has no successors, if it wants to tick a successor, but it has none, then it means it accomplished its purpose
 
 ## Ticks the successor bound to the condition at [param index] inside [member conditions] and returns its [enum Status]. Routes through [method do_tick] (rather than calling [method tick] directly) so the successor's status/tick-time gets recorded.
-func tick_condition(index:int = 0) -> Status:
+func tick_condition(delta:float,index:int = 0) -> Status:
 	if index < conditions.size():
 		var target : StringName = conditions[index]["next"] if conditions[index]["next"] else &""
 		if target != &"": 
-			return (_graph_ref.get_ref() as BehaviorGraph).nodes[target].do_tick()
+			return (_graph_ref.get_ref() as BehaviorGraph).nodes[target].do_tick(delta)
 		return Status.FAILURE
 	push_error("BehaviorNode %s has less than %s conditions" % [self, index+1])
 	return Status.FAILURE

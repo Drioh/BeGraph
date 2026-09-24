@@ -5,21 +5,18 @@ const DISPLAY_NAME : String = "Wait"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
 const DISPLAY_INFO : String = "Waits {seconds} seconds, returning RUNNING until the time elapses and SUCCESS afterwards.\n\nThe timer starts on the first tick."
 
-var _start_time : int = -1
+var _elapsed : float = 0.0
 
 func set_instruction() -> String:
 	return "Wait {seconds}s"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	var seconds : float = get("seconds")
 
-	if _start_time == -1:
-		_start_time = Time.get_ticks_msec()
-
-	var elapsed : float = (Time.get_ticks_msec() - _start_time) / 1000.0
-	if elapsed >= seconds:
-		_start_time = -1
-		tick_next()
+	_elapsed += delta
+	if _elapsed >= seconds:
+		_elapsed = 0.0
+		tick_next(delta)
 		return Status.SUCCESS
 
 	return Status.RUNNING

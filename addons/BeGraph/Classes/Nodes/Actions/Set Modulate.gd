@@ -10,7 +10,7 @@ enum Mode { MODULATE, SELF_MODULATE }
 func set_instruction() -> String:
 	return "Set {node}'s {mode} to {color}"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	var target : Node = _resolve_node(get("node"))
 	if target == null:
 		push_error("\"%s\" couldn't resolve node to modulate" % resource_name)
@@ -23,7 +23,7 @@ func tick() -> Status:
 		return Status.FAILURE
 
 	target.set(property_name, get("color"))
-	tick_next()
+	tick_next(delta)
 	return Status.SUCCESS
 
 func set_node_category()->String: return "action_node"

@@ -14,13 +14,12 @@ var _target_node : Node = null
 var _is_3d : bool = false
 
 var _target_rotation : float = 0.0
-var _start_time : int = -1
-var _last_tick_time : int = -1
+var _elapsed : float = 0.0
 
 func set_instruction() -> String:
 	return "Rotate {node} ({mode}, axis {axis_3d}) to {target_angle}° / facing {target_node} — {speed_mode}: {angular_speed}°/s or {duration}s ({direction})"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	if dirty:
 		_node = _resolve_node(get("node"))
 		if _node == null:
@@ -34,40 +33,29 @@ func tick() -> Status:
 				push_error("\"%s\" couldn't resolve target node to face" % resource_name)
 				return Status.FAILURE
 
-		_start_time = -1
-		_last_tick_time = Time.get_ticks_msec()
+		_elapsed = 0.0
 		_target_rotation = _calculate_target_rotation()
 		dirty = false
 
 	if get("mode") == Mode.CONTINUOUS_SPIN:
-		return _tick_continuous_spin()
-	return _tick_towards_target()
+		return _tick_continuous_spin(delta)
+	return _tick_towards_target(delta)
 
-func _tick_continuous_spin() -> Status:
-	var now : int = Time.get_ticks_msec()
-	var delta : float = (now - _last_tick_time) / 1000.0
-	_last_tick_time = now
-
+func _tick_continuous_spin(delta: float) -> Status:
 	_rotate_by(deg_to_rad(get("angular_speed")) * _direction_sign() * delta)
 
 	if get("speed_mode") == SpeedMode.DURATION:
-		if _start_time == -1:
-			_start_time = now
-		var elapsed : float = (now - _start_time) / 1000.0
-		if elapsed >= get("duration") and not get("loop"):
-			_start_time = -1
+		_elapsed += delta
+		if _elapsed >= get("duration") and not get("loop"):
+			_elapsed = 0.0
 			dirty = true
-			return tick_next()
+			tick_next(delta)
+			return Status.SUCCESS
 
 	return Status.RUNNING
 
-func _tick_towards_target() -> Status:
-	var now : int = Time.get_ticks_msec()
-	var delta : float = (now - _last_tick_time) / 1000.0
-	_last_tick_time = now
-
-	if _start_time == -1:
-		_start_time = now
+func _tick_towards_target(delta: float) -> Status:
+	_elapsed += delta
 
 	if get("recalculate_target_each_frame") and get("mode") == Mode.TOWARDS_NODE:
 		_target_rotation = _calculate_target_rotation()
@@ -77,29 +65,28 @@ func _tick_towards_target() -> Status:
 
 	if abs(remaining) <= 0.0005:
 		_set_rotation(_target_rotation)
-		return _finish()
+		return _finish(delta)
 
 	var step : float
 	if get("speed_mode") == SpeedMode.SPEED:
 		var max_step : float = deg_to_rad(get("angular_speed")) * delta
 		step = clamp(remaining, -max_step, max_step)
 	else:
-		var elapsed : float = (now - _start_time) / 1000.0
-		var remaining_time : float = get("duration") - elapsed
+		var remaining_time : float = get("duration") - _elapsed
 		if remaining_time <= 0.0:
 			_set_rotation(_target_rotation)
-			return _finish()
+			return _finish(delta)
 		step = (remaining / remaining_time) * delta
 
 	_set_rotation(current + step)
 	return Status.RUNNING
 
-func _finish() -> Status:
-	_start_time = -1
+func _finish(delta:float) -> Status:
+	_elapsed = 0.0
 	dirty = true
 	if get("loop"):
 		return Status.RUNNING
-	tick_next()
+	tick_next(delta)
 	return Status.SUCCESS
 
 func _calculate_target_rotation() -> float:

@@ -8,7 +8,7 @@ const DISPLAY_INFO : String = "Writes {value} into the blackboard entry named {v
 func set_instruction() -> String:
 	return "Set {variable_name} = {value}"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	var graph : BehaviorGraph = _graph_ref.get_ref()
 	if graph == null:
 		return Status.FAILURE
@@ -19,7 +19,7 @@ func tick() -> Status:
 		return Status.FAILURE
 
 	variable.value = get("value")
-	tick_next()
+	tick_next(delta)
 	return Status.SUCCESS
 
 func set_node_category()->String: return "action_node"

@@ -8,11 +8,11 @@ const DISPLAY_INFO : String = "Rolls a random number on every tick and branches 
 func set_instruction() -> String:
 	return "Chance {probability}%"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	if randf() * 100.0 <= get("probability"):
-		tick_condition(0)
+		tick_condition(delta,0)
 	else:
-		tick_condition(1)
+		tick_condition(delta,1)
 	return Status.RUNNING
 
 func set_node_category()->String:return "control_flow_node"

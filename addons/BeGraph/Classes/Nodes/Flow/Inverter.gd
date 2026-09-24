@@ -8,15 +8,15 @@ const DISPLAY_INFO : String = "Ticks its successor and inverts the outcome: SUCC
 func set_instruction() -> String:
 	return "Inverter"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	if _next_ref.size() == 0:
 		return Status.FAILURE
-	var status : Status = tick_next()
+	var status : Status = tick_next(delta)
 	match status:
 		Status.SUCCESS:
 			return Status.FAILURE
 		Status.FAILURE:
-			tick_next()
+			tick_next(delta)
 			return Status.SUCCESS
 		_:
 			return status

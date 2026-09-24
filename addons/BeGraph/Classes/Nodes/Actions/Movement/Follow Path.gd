@@ -6,23 +6,17 @@ const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
 const DISPLAY_INFO : String = "Advances {path_follow} (PathFollow2D/3D) along its Path at {speed} units/second.\n\nReturns RUNNING while travelling, SUCCESS at the end of the path (or keeps looping if {loop} is enabled). Fails if {path_follow} can't be resolved."
 
 var _path_follow : Node
-var _last_tick_time : int = -1
 
 func set_instruction() -> String:
 	return "Move {path_follow} along its path at speed {speed}"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	if dirty:
 		_path_follow = _resolve_node(get("path_follow"))
 		if _path_follow == null:
 			push_error("\"%s\" couldn't resolve PathFollow node" % resource_name)
 			return Status.FAILURE
-		_last_tick_time = Time.get_ticks_msec()
 		dirty = false
-
-	var now : int = Time.get_ticks_msec()
-	var delta : float = (now - _last_tick_time) / 1000.0
-	_last_tick_time = now
 
 	_path_follow.progress += get("speed") * delta
 
@@ -32,7 +26,7 @@ func tick() -> Status:
 			return Status.RUNNING
 		_path_follow.progress_ratio = 1.0
 		dirty = true
-		tick_next()
+		tick_next(delta)
 		return Status.SUCCESS
 
 	return Status.RUNNING

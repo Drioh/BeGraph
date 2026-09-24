@@ -11,13 +11,12 @@ var _target_node : Node = null
 var _target_point : Vector3 = Vector3.ZERO
 var _is_dynamic_target : bool = false
 var _safe_velocity : Vector3 = Vector3.ZERO
-var _last_tick_time : int = -1
 var _time_since_recalc : float = 0.0
 
 func set_instruction() -> String:
 	return "Navigate {node} (agent {nav_agent}) to {target} at speed {speed} (avoidance: {avoidance_enabled})"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	if dirty:
 		_node = _resolve_node(get("node"))
 		_agent = _resolve_node(get("nav_agent"))
@@ -35,18 +34,13 @@ func tick() -> Status:
 
 		_update_agent_target()
 		_safe_velocity = Vector3.ZERO
-		_last_tick_time = Time.get_ticks_msec()
 		_time_since_recalc = 0.0
 	dirty = false
 
 	if _agent.is_navigation_finished():
 		dirty = true
-		tick_next()
+		tick_next(delta)
 		return Status.SUCCESS
-
-	var now : int = Time.get_ticks_msec()
-	var delta : float = (now - _last_tick_time) / 1000.0
-	_last_tick_time = now
 
 	if _is_dynamic_target:
 		_time_since_recalc += delta

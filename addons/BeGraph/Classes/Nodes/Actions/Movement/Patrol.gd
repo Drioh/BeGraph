@@ -9,10 +9,9 @@ enum Mode { SPEED, DURATION }
 
 var _index : int = 0
 var current_destination
-var _start_time : int = -1
-var _last_tick_time : int = -1
+var _elapsed : float = 0.0
 var _waiting : bool = false
-var _wait_start_time : int = -1
+var _wait_elapsed : float = 0.0
 
 var _node : Node
 var _points : Array = []
@@ -23,7 +22,7 @@ var wait_time : float
 func set_instruction() -> String:
 	return "Patrol {node} between {points}(mode: {mode})"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	if dirty:
 		_points_nodepaths= get("points")
 		_node = _resolve_node(get("node"))
@@ -40,38 +39,32 @@ func tick() -> Status:
 		calculate_current_destination()
 	dirty=false
 	
-	var now : int = Time.get_ticks_msec()
-	
 	if _waiting:
-		if (now - _wait_start_time) / 1000.0 < wait_time:
+		_wait_elapsed += delta
+		if _wait_elapsed < wait_time:
 			return Status.RUNNING
 		_waiting = false
-		_wait_start_time = -1
-		return _advance_to_next_point()
+		_wait_elapsed = 0.0
+		return _advance_to_next_point(delta)
 	
-	if _start_time == -1:
-		_start_time = now
-		_last_tick_time = now
-	
-	var delta : float = (now - _last_tick_time) / 1000.0
-	_last_tick_time = now
+	_elapsed += delta
 	
 	if(get("calculate_destination_each_frame")):
 		calculate_current_destination()
 
-	var reached : bool = _move_towards_destination(delta, now)
+	var reached : bool = _move_towards_destination(delta)
 
 	if not reached:
 		return Status.RUNNING
 
-	_start_time = -1
+	_elapsed = 0.0
 	
 	if wait_time > 0.0:
 		_waiting = true
-		_wait_start_time = now
+		_wait_elapsed = 0.0
 		return Status.RUNNING
 	
-	return _advance_to_next_point()
+	return _advance_to_next_point(delta)
 
 func set_node_category()->String: return "action_node"
 func set_input()->bool: return true
@@ -88,19 +81,19 @@ func set_properties()-> void:
 	_add_behavior_property("calculate_destination_each_frame", false)
 	_add_behavior_property("time_to_wait_upon_reaching_destination", float(0))
 
-func _advance_to_next_point() -> Status:
+func _advance_to_next_point(delta) -> Status:
 	_index += 1
 	
 	if _index >= _points.size():
 		if !get("loop"):
 			_index = _points.size() - 1
-			tick_next()
+			tick_next(delta)
 			return Status.SUCCESS
 		_index = 0
 	calculate_current_destination()
 	return Status.RUNNING
 
-func _move_towards_destination(delta: float, now: int) -> bool:
+func _move_towards_destination(delta: float) -> bool:
 	var distance_remaining : float = _node.global_position.distance_to(current_destination)
 	
 	if distance_remaining <= 0.001:
@@ -112,8 +105,7 @@ func _move_towards_destination(delta: float, now: int) -> bool:
 	if get("mode") == Mode.SPEED:
 		move_amount = get("speed") * delta
 	else:
-		var elapsed : float = (now - _start_time) / 1000.0
-		var remaining_time : float = duration - elapsed
+		var remaining_time : float = duration - _elapsed
 		if remaining_time <= 0.0:
 			_node.global_position = current_destination
 			return true

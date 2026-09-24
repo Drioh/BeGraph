@@ -8,13 +8,13 @@ const DISPLAY_INFO : String = "Queues {node} for deletion via queue_free().\n\nS
 func set_instruction() -> String:
 	return "Destroy {node}"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	var target : Node = _resolve_node(get("node"))
 	if target == null:
 		push_error("\"%s\" cannot resolve node to destroy" % resource_name)
 		return Status.FAILURE
 	target.queue_free()
-	tick_next()
+	tick_next(delta)
 	return Status.SUCCESS
 
 func set_node_category()->String: return "action_node"

@@ -8,10 +8,10 @@ const DISPLAY_INFO : String = "Ticks its successor only if {condition} is true, 
 func set_instruction() -> String:
 	return "If {condition}"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	var condition : bool = get("condition")
 	if condition and _next_ref.size() > 0:
-		tick_next()
+		tick_next(delta)
 		return Status.SUCCESS
 	return Status.FAILURE
 

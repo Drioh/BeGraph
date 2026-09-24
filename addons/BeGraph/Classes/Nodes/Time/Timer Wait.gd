@@ -11,27 +11,36 @@ var _fired : bool = false
 func set_instruction() -> String:
 	return "Wait for {timer} ({wait_time}s)"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	if dirty:
 		_timer = _resolve_node(get("timer")) as Timer
 		if _timer == null:
 			push_error("\"%s\" couldn't resolve Timer node" % resource_name)
 			return Status.FAILURE
-
+ 
+		var agent : BehaviorAgent = get_agent() as BehaviorAgent
+		if agent == null:
+			push_error("\"%s\" couldn't resolve owning BehaviorAgent" % resource_name)
+			return Status.FAILURE
+ 
+		_timer.process_callback = Timer.TIMER_PROCESS_PHYSICS \
+			if agent.graph_process_mode == BehaviorAgent.ProcessThread.PHYSICS \
+			else Timer.TIMER_PROCESS_IDLE
+ 
 		if not _timer.timeout.is_connected(_on_timeout):
 			_timer.timeout.connect(_on_timeout, CONNECT_ONE_SHOT)
-
+ 
 		_fired = false
 		_timer.wait_time = max(get("wait_time"), 0.001)
 		_timer.one_shot = true
 		_timer.start()
 		dirty = false
-
+ 
 	if _fired:
 		dirty = true
-		tick_next()
+		tick_next(delta)
 		return Status.SUCCESS
-
+ 
 	return Status.RUNNING
 
 func _on_timeout() -> void:

@@ -5,23 +5,24 @@ const DISPLAY_NAME : String = "Cooldown"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon.svg"
 const DISPLAY_INFO : String = "Ticks its successor normally, but returns FAILURE immediately (without ticking it) for {seconds}s after it last stopped running, whether it succeeded or failed."
 
-var _cooldown_until : int = -1
+var _cooldown_remaining : float = -1.0
 
 func set_instruction() -> String:
 	return "Cooldown {seconds}s"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	if _next_ref.size() == 0:
 		return Status.FAILURE
 
-	if _cooldown_until != -1:
-		if Time.get_ticks_msec() < _cooldown_until:
+	if _cooldown_remaining != -1.0:
+		_cooldown_remaining -= delta
+		if _cooldown_remaining > 0.0:
 			return Status.FAILURE
-		_cooldown_until = -1
+		_cooldown_remaining = -1.0
 
-	var status : Status = tick_next()
+	var status : Status = tick_next(delta)
 	if status != Status.RUNNING:
-		_cooldown_until = Time.get_ticks_msec() + int(get("seconds") * 1000)
+		_cooldown_remaining = get("seconds")
 	return status
 
 func set_node_category()->String: return "control_flow_node"

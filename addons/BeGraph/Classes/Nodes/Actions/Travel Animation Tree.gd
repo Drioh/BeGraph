@@ -11,7 +11,7 @@ var _playback : AnimationNodeStateMachinePlayback
 func set_instruction() -> String:
 	return "Travel {anim_tree} to state {state}"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	if dirty:
 		_anim_tree = _resolve_node(get("anim_tree")) as AnimationTree
 		if _anim_tree == null:
@@ -25,7 +25,7 @@ func tick() -> Status:
 		return Status.RUNNING
 
 	dirty = true
-	tick_next()
+	tick_next(delta)
 	return Status.SUCCESS
 
 func set_node_category()->String: return "action_node"

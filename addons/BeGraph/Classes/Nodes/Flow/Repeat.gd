@@ -10,12 +10,12 @@ var _current_count : int = 0
 func set_instruction() -> String:
 	return "Repeat {times} times"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	if _next_ref.size() == 0:
 		return Status.FAILURE
 
 	var times : int = get("times")
-	var status : Status = tick_next()
+	var status : Status = tick_next(delta)
 
 	if status == Status.RUNNING:
 		return Status.RUNNING
@@ -27,7 +27,7 @@ func tick() -> Status:
 	_current_count += 1
 	if times > 0 and _current_count >= times:
 		_current_count = 0
-		tick_next()
+		tick_next(delta)
 		return Status.SUCCESS
 
 	return Status.RUNNING

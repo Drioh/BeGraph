@@ -9,7 +9,7 @@ var agent : BehaviorAgent
 func set_instruction() -> String:
 	return "Emit agent signal with {args}"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	if dirty:
 		agent= get_agent()
 	dirty=false
@@ -18,7 +18,7 @@ func tick() -> Status:
 		return Status.FAILURE
 
 	agent.behavior_agent_signal.emit(get("args"))
-	tick_next()
+	tick_next(delta)
 	return Status.SUCCESS
 
 func set_node_category()->String: return "action_node"

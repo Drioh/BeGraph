@@ -11,7 +11,7 @@ var _is_3d : bool = false
 func set_instruction() -> String:
 	return "Check cell {cell} on {map}"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	if dirty:
 		_map = _resolve_node(get("map"))
 		if _map == null:
@@ -29,9 +29,9 @@ func tick() -> Status:
 		occupied = _map.get_cell_source_id(Vector2i(cell.x, cell.y)) != -1
 
 	if occupied:
-		tick_condition(0)
+		tick_condition(delta,0)
 	else:
-		tick_condition(1)
+		tick_condition(delta,1)
 	return Status.RUNNING
 
 func set_node_category()->String: return "control_flow_node"

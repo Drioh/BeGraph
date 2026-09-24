@@ -10,7 +10,7 @@ enum Mode { N_OF_M, ALL }
 func set_instruction() -> String:
 	return "Parallel: {mode} mode"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	var mode : int = get("mode")
 	var required_successes : int = _next_ref.size() if mode == Mode.ALL else get("required_successes")
 
@@ -18,7 +18,7 @@ func tick() -> Status:
 	var failures :int= 0
 
 	for i in _next_ref.size():
-		var status : Status = tick_next(i)
+		var status : Status = tick_next(delta,i)
 		match status:
 			Status.SUCCESS:
 				successes += 1

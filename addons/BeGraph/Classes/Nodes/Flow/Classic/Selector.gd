@@ -8,9 +8,9 @@ const DISPLAY_INFO : String = "Ticks each successor in order, stopping at the fi
 func set_instruction() -> String:
 	return "Selector"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	for i in _next_ref.size():
-		var status : Status = tick_next(i)
+		var status : Status = tick_next(delta,i)
 		if status == Status.SUCCESS or status == Status.RUNNING:
 			return status
 	return Status.FAILURE

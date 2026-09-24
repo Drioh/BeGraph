@@ -13,7 +13,7 @@ const DISPLAY_INFO : String = "Visual-only annotation node. Shows a title and a 
 
 func set_instruction() -> String:return "{comment}"
 
-func tick() -> Status: return Status.FAILURE
+func tick(delta:float) -> Status: return Status.FAILURE
 
 func set_node_category()->String:return "comment_node"
 

@@ -11,7 +11,7 @@ var b : Node
 func set_instruction() -> String:
 	return "Distance {node_a} - {node_b} vs {threshold}"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	if dirty:
 		a = _resolve_node(get("node_a"))
 		if a == null:
@@ -29,13 +29,13 @@ func tick() -> Status:
 	var distance : float = _get_position(a).distance_to(_get_position(b))
 	var threshold : float = get("threshold")
 	if distance > threshold:
-		tick_condition(0)
+		tick_condition(delta,0)
 		return Status.RUNNING
 	if distance == threshold:
-		tick_condition(1)
+		tick_condition(delta,1)
 		return Status.RUNNING
 	if distance < threshold:
-		tick_condition(2)
+		tick_condition(delta,2)
 		return Status.RUNNING
 	push_error("Something went wrong with resource %s"%resource_name)
 	return Status.FAILURE

@@ -5,10 +5,10 @@ const DISPLAY_NAME : String = "Print string message"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
 const DISPLAY_INFO : String = "Prints the string in {value} to the console with print() and always succeeds.\n\nSame as 'Print message', but {value} is typed as String."
 
-func tick(delta:float=0.016)->Status:
+func tick(delta:float)->Status:
 	var _value = get("value")
 	print(_value)
-	tick_next()
+	tick_next(delta)
 	return Status.SUCCESS
 
 func set_instruction() -> String:

@@ -116,7 +116,7 @@ func prune_invalid_connections_from(graph_node: BehaviorGraphNodeBase) -> void:
 		if c["from_port"] > max_valid_port:
 			disconnect_nodes(c["from_node"], c["from_port"], c["to_node"], c["to_port"])
 
-## Deletes the given nodes, refusing to delete a graph's last remaining starting point; also removes their connections and hands the inspector back to [member current_graph] if needed.[br] 
+## Deletes the given nodes, refusing to delete a graph's last remaining starting point; also removes their connections - both outgoing and incoming (properly updating the surviving neighbor's [BehaviorNode] via [method BehaviorNode.remove_next], so a condition/[member BehaviorNode._next_ref] entry pointing at a deleted node never lingers) - and hands the inspector back to [member current_graph] if needed.[br]
 func _on_delete_nodes_request(nodes: Array[StringName]) -> void:
 	for n in nodes:
 		var nod = get_node(NodePath(n)) as BehaviorGraphNodeBase
@@ -124,9 +124,10 @@ func _on_delete_nodes_request(nodes: Array[StringName]) -> void:
 		if nod.node.is_starting_node and current_graph.get_nodes_by_category("access_point_node").size() == 1:
 			push_error("node %s cannot ben deleted. There must be at least one access point" % nod)
 			return
-		print("aldo")
+
+		# Outgoing connections: nod.node itself is being discarded, so there's no need to
+		# call remove_next() on it - only the visual/graph-level bookkeeping matters here.
 		for c in get_connection_list_from_node(n):
-			print(c["from_node"].validate_node_name())
 			disconnect_node(c["from_node"].validate_node_name(), c["from_port"], c["to_node"].validate_node_name(), c["to_port"])
 			current_graph.remove_connection({
 				"from_node": StringName(c["from_node"].validate_node_name()),
@@ -134,7 +135,28 @@ func _on_delete_nodes_request(nodes: Array[StringName]) -> void:
 				"to_node": StringName(c["to_node"].validate_node_name()),
 				"to_port": c["to_port"]
 			})
-		print("franco")
+
+		# Incoming connections: the source node survives, so its BehaviorNode must be told
+		# (via remove_next) that this successor no longer exists, and its port color refreshed.
+		for c in get_connection_list():
+			var to_name: StringName = StringName(c["to_node"].validate_node_name())
+			if to_name != n:
+				continue
+			var from_name: StringName = StringName(c["from_node"].validate_node_name())
+			if not has_node(NodePath(from_name)):
+				continue
+			var f_node: BehaviorGraphNodeBase = get_node(NodePath(from_name))
+
+			f_node.node.remove_next(nod.node, c["from_port"])
+			disconnect_node(from_name, c["from_port"], to_name, c["to_port"])
+			current_graph.remove_connection({
+				"from_node": from_name,
+				"from_port": c["from_port"],
+				"to_node": to_name,
+				"to_port": c["to_port"]
+			})
+			f_node.refresh_port_colors()
+
 		if EditorInterface.get_inspector().get_edited_object() == nod.node:
 			EditorInterface.inspect_object(current_graph)
 		current_graph.remove_node(nod.node)

@@ -10,7 +10,7 @@ var _started : bool = false
 func set_instruction() -> String:
 	return "Play sound on {player} (vol {volume_db} db, pitch {pitch_scale})"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	var player : Node = _resolve_node(get("player"))
 	if player == null:
 		push_error("\"%s\" couldn't resolve AudioStreamPlayer" % resource_name)
@@ -27,7 +27,7 @@ func tick() -> Status:
 		return Status.RUNNING
 
 	_started = false
-	tick_next()
+	tick_next(delta)
 	return Status.SUCCESS
 
 func set_node_category()->String: return "action_node"

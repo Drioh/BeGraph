@@ -8,7 +8,7 @@ const DISPLAY_INFO : String = "Loads the PackedScene at {scene_path}, instantiat
 func set_instruction() -> String:
 	return "Instantiate {scene_path} under {parent}"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	var scene : PackedScene = load(get("scene_path")) as PackedScene
 	if scene == null:
 		push_error("\"%s\" non riesce a caricare la scena \"%s\"" % [resource_name, get("scene_path")])
@@ -28,7 +28,7 @@ func tick() -> Status:
 	elif instance is Node3D:
 		instance.global_position = pos
 
-	tick_next()
+	tick_next(delta)
 	return Status.SUCCESS
 
 func set_node_category()->String: return "action_node"

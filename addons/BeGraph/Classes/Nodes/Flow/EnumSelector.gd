@@ -9,11 +9,11 @@ const DISPLAY_INFO : String = "Branches to one of several conditions based on {v
 func set_instruction() -> String:
 	return "Enum Selector: {value}"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	var value : int = get("value")
 	if value < 0 or value >= conditions.size():
 		return Status.FAILURE
-	return tick_condition(value)
+	return tick_condition(delta,value)
 
 func set_node_category()->String: return "control_flow_node"
 func set_input()->bool: return true

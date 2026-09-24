@@ -8,18 +8,18 @@ const DISPLAY_INFO : String = "Compares {value_1} to {value_2} and branches to t
 func set_instruction() -> String:
 	return "Compare {value_1} and {value_2}"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	var value_1 = get("value_1")
 	var value_2 = get("value_2")
 	
 	if value_1>value_2:
-		tick_condition(0)
+		tick_condition(delta,0)
 		return Status.RUNNING
 	if value_1==value_2:
-		tick_condition(1)
+		tick_condition(delta,1)
 		return Status.RUNNING
 	if value_1<value_2:
-		tick_condition(2)
+		tick_condition(delta,2)
 		return Status.RUNNING
 	return Status.FAILURE
 

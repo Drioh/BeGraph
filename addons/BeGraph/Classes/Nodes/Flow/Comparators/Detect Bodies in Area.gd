@@ -10,7 +10,7 @@ var _area : Node
 func set_instruction() -> String:
 	return "Check bodies overlapping {area}"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	if dirty:
 		_area = _resolve_node(get("area"))
 		if _area == null:
@@ -20,9 +20,9 @@ func tick() -> Status:
 
 	var bodies : Array = _area.get_overlapping_bodies()
 	if bodies.size() > 0:
-		tick_condition(0)
+		tick_condition(delta,0)
 	else:
-		tick_condition(1)
+		tick_condition(delta,1)
 	return Status.RUNNING
 
 func set_node_category()->String: return "control_flow_node"

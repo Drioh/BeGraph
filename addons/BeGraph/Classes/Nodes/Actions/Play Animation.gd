@@ -10,7 +10,7 @@ var _started : bool = false
 func set_instruction() -> String:
 	return "Play {animation} on {animator} at speed {speed}"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	var animator : AnimationPlayer = _resolve_node(get("animator")) as AnimationPlayer
 	if animator == null:
 		push_error("\"%s\" couldn't resolve AnimationPlayer" % resource_name)
@@ -25,7 +25,7 @@ func tick() -> Status:
 		return Status.RUNNING
 
 	_started = false
-	tick_next()
+	tick_next(delta)
 	return Status.SUCCESS
 
 func set_node_category()->String: return "action_node"

@@ -11,7 +11,7 @@ var _target : Node
 func set_instruction() -> String:
 	return "Line of sight from {raycast} to {target}"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	if dirty:
 		_raycast = _resolve_node(get("raycast"))
 		_target = _resolve_node(get("target"))
@@ -25,14 +25,14 @@ func tick() -> Status:
 	_raycast.force_raycast_update()
 
 	if not _raycast.is_colliding():
-		tick_condition(1) # fuori portata / nessun ostacolo intercettato
+		tick_condition(delta,1) # out of reack / no obstacle detected
 		return Status.RUNNING
 
 	var collider : Object = _raycast.get_collider()
 	if collider == _target or (collider is Node and _target.is_ancestor_of(collider)):
-		tick_condition(0)
+		tick_condition(delta,0)
 	else:
-		tick_condition(1)
+		tick_condition(delta,1)
 	return Status.RUNNING
 
 func set_node_category()->String: return "control_flow_node"

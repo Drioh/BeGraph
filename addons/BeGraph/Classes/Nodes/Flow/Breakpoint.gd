@@ -8,14 +8,14 @@ const DISPLAY_INFO : String = "Debug utility node: whenever {enabled} is true an
 func set_instruction() -> String:
 	return "Breakpoint (enabled: {enabled}, if: {condition})"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	if _next_ref.size() == 0:
 		return Status.FAILURE
 
 	if get("enabled") and get("condition"):
 		breakpoint
 
-	return tick_next()
+	return tick_next(delta)
 
 func set_node_category()->String: return "control_flow_node"
 

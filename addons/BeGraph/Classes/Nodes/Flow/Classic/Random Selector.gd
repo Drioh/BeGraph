@@ -8,12 +8,12 @@ const DISPLAY_INFO : String = "Behaves like Selector, but ticks its successors i
 func set_instruction() -> String:
 	return "Random Selector"
 
-func tick() -> Status:
+func tick(delta:float) -> Status:
 	var shuffled : Array[BehaviorNode] = _next_ref.duplicate()
 	shuffled.shuffle()
 
 	for i in shuffled.size():
-		var status : Status = tick_next(i)
+		var status : Status = tick_next(delta,i)
 		if status == Status.SUCCESS or status == Status.RUNNING:
 			return status
 	return Status.FAILURE
