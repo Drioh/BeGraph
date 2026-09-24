@@ -34,6 +34,7 @@ func tick() -> Status:
 
 	if _signal_fired:
 		_disconnect_signal()
+		tick_next()
 		return Status.SUCCESS
 
 	return Status.RUNNING

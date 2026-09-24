@@ -5,7 +5,7 @@
 [sub_resource type="Gradient" id="Gradient_k6s54"]
 interpolation_mode = 1
 offsets = PackedFloat32Array(0.008810572, 1)
-colors = PackedColorArray(0, 0, 0, 1, 1, 1, 1, 0)
+colors = PackedColorArray(0.7919991, 0.79199916, 0.7919991, 1, 1, 1, 1, 0)
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_7tmfp"]
 gradient = SubResource("Gradient_k6s54")
@@ -30,18 +30,24 @@ metadata/_snap_enabled = true
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_cy14o"]
 gradient = SubResource("Gradient_7coi5")
+width = 16
+height = 16
 fill_from = Vector2(0.4957265, 0.55128205)
 
 [sub_resource type="Gradient" id="Gradient_fhslk"]
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_sfsix"]
 gradient = SubResource("Gradient_fhslk")
+width = 16
+height = 16
 fill_to = Vector2(0.66239315, 0.7777778)
 
 [sub_resource type="Gradient" id="Gradient_6787c"]
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_jn3wn"]
 gradient = SubResource("Gradient_6787c")
+width = 16
+height = 16
 fill_to = Vector2(0.5555556, 0.47435898)
 
 [node name="Node2D" type="Node2D" unique_id=1496466534]

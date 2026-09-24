@@ -20,6 +20,7 @@ var not_connected_text: String = "(not connected)"
 @onready var empty_label: Label = %EmptyLabel
 @onready var scroll: ScrollContainer = %ScrollContainer
 @onready var content: VBoxContainer = %Content
+@onready var next_label: RichTextLabel = %NextLabel
 @onready var instruction_caption_container: HBoxContainer = %InstructionCaptionContainer
 @onready var instruction_label: RichTextLabel = %InstructionLabel
 @onready var info_caption_container: HBoxContainer = %InfoCaptionContainer
@@ -77,6 +78,12 @@ func show_node(node: BehaviorNode, blackboard: Array[BlackboardVariable]) -> voi
 	if has_instruction:
 		instruction_label.text = node.instruction
 		instruction_label.reset_size.call_deferred()
+	
+	if not node._next_ref.is_empty():
+		var nexts: String = ", ".join(node._next_ref)
+		next_label.text = "Next(s): %s"%nexts
+	else:
+		next_label.text = "This node has no successors"
 	
 	var has_display_info : bool = const_map.has("DISPLAY_INFO")
 	info_caption_container.visible = has_display_info

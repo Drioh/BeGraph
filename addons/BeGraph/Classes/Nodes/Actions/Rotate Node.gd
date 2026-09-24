@@ -57,7 +57,7 @@ func _tick_continuous_spin() -> Status:
 		if elapsed >= get("duration") and not get("loop"):
 			_start_time = -1
 			dirty = true
-			return Status.SUCCESS
+			return tick_next()
 
 	return Status.RUNNING
 
@@ -99,6 +99,7 @@ func _finish() -> Status:
 	dirty = true
 	if get("loop"):
 		return Status.RUNNING
+	tick_next()
 	return Status.SUCCESS
 
 func _calculate_target_rotation() -> float:

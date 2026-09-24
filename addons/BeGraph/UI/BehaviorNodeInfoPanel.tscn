@@ -122,6 +122,14 @@ theme_override_font_sizes/normal_font_size = 14
 theme_override_styles/normal = SubResource("StyleBoxEmpty_byvd5")
 fit_content = true
 
+[node name="NextLabel" type="RichTextLabel" parent="ScrollContainer/Content" unique_id=238002496]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/line_separation = 4
+theme_override_font_sizes/normal_font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxEmpty_byvd5")
+fit_content = true
+
 [node name="InfoCaptionContainer" type="HBoxContainer" parent="ScrollContainer/Content" unique_id=1669134225]
 unique_name_in_owner = true
 layout_mode = 2

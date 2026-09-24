@@ -19,6 +19,7 @@ func tick() -> Status:
 		return Status.FAILURE
 
 	variable.value = get("value")
+	tick_next()
 	return Status.SUCCESS
 
 func set_node_category()->String: return "action_node"

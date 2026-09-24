@@ -11,7 +11,8 @@ func set_instruction() -> String:
 func tick() -> Status:
 	var condition : bool = get("condition")
 	if condition and _next_ref.size() > 0:
-		return tick_next()
+		tick_next()
+		return Status.SUCCESS
 	return Status.FAILURE
 
 func set_node_category()->String: return "control_flow_node"

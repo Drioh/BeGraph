@@ -16,6 +16,7 @@ func tick() -> Status:
 		Status.SUCCESS:
 			return Status.FAILURE
 		Status.FAILURE:
+			tick_next()
 			return Status.SUCCESS
 		_:
 			return status

@@ -29,6 +29,7 @@ func tick() -> Status:
 
 	if _fired:
 		dirty = true
+		tick_next()
 		return Status.SUCCESS
 
 	return Status.RUNNING

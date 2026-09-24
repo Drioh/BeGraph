@@ -44,6 +44,7 @@ func tick() -> Status:
 			return Status.RUNNING
 		_waiting = false
 		_wait_start_time = -1
+		tick_next()
 		return Status.SUCCESS
 	
 	if _start_time == -1:
@@ -69,6 +70,7 @@ func tick() -> Status:
 		_wait_start_time = now
 		return Status.RUNNING
 	
+	tick_next()
 	return Status.SUCCESS
 
 func set_node_category()->String: return "action_node"

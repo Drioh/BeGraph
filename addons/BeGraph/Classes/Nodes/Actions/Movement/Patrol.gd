@@ -94,6 +94,7 @@ func _advance_to_next_point() -> Status:
 	if _index >= _points.size():
 		if !get("loop"):
 			_index = _points.size() - 1
+			tick_next()
 			return Status.SUCCESS
 		_index = 0
 	calculate_current_destination()

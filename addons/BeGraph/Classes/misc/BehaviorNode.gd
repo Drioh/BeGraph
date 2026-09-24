@@ -331,6 +331,9 @@ func do_tick() -> Status:
 func add_next(n : BehaviorNode, from_port : int) -> void:
 	if output:
 		if not _next_ref.has(n.resource_name):
+			if allows_multiple_outputs:
+				_next_ref[0] = n.resource_name
+				return
 			_next_ref.append(n.resource_name)
 		return
 	else:
@@ -356,21 +359,19 @@ func remove_next(n : BehaviorNode, from_port : int) -> void:
 ## Ticks the successor stored at [param index] inside [member _next_ref] and returns its [enum Status]. Routes through [method do_tick] (rather than calling [method tick] directly) so the successor's status/tick-time gets recorded.
 func tick_next(index:int = 0) -> Status:
 	if index < _next_ref.size():
-		var target = _next_ref[index]
-		if target: 
+		var target = _next_ref[index] if _next_ref[index] else &""
+		if target != &"": 
 			return (_graph_ref.get_ref() as BehaviorGraph).nodes[target].do_tick()
 		push_error("BehaviorNode %s: successor at index %s was freed" % [self, index])
 		return Status.FAILURE
-	push_error("BehaviorNode %s has less than %s successors" % [self, index+1])
-	return Status.FAILURE
+	return Status.SUCCESS # Node has no successors, if it wants to tick a successor, but it has none, then it means it accomplished its purpose
 
 ## Ticks the successor bound to the condition at [param index] inside [member conditions] and returns its [enum Status]. Routes through [method do_tick] (rather than calling [method tick] directly) so the successor's status/tick-time gets recorded.
 func tick_condition(index:int = 0) -> Status:
 	if index < conditions.size():
-		var target : StringName = conditions[index]["next"]
-		if target: 
+		var target : StringName = conditions[index]["next"] if conditions[index]["next"] else &""
+		if target != &"": 
 			return (_graph_ref.get_ref() as BehaviorGraph).nodes[target].do_tick()
-		push_error("BehaviorNode %s: condition %s has no valid successor" % [self, index])
 		return Status.FAILURE
 	push_error("BehaviorNode %s has less than %s conditions" % [self, index+1])
 	return Status.FAILURE

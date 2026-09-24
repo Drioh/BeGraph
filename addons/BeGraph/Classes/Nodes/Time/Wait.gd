@@ -19,6 +19,7 @@ func tick() -> Status:
 	var elapsed : float = (Time.get_ticks_msec() - _start_time) / 1000.0
 	if elapsed >= seconds:
 		_start_time = -1
+		tick_next()
 		return Status.SUCCESS
 
 	return Status.RUNNING

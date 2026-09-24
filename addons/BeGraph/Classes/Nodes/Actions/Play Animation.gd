@@ -25,6 +25,7 @@ func tick() -> Status:
 		return Status.RUNNING
 
 	_started = false
+	tick_next()
 	return Status.SUCCESS
 
 func set_node_category()->String: return "action_node"

@@ -8,6 +8,7 @@ const DISPLAY_INFO : String = "Prints the string in {value} to the console with 
 func tick(delta:float=0.016)->Status:
 	var _value = get("value")
 	print(_value)
+	tick_next()
 	return Status.SUCCESS
 
 func set_instruction() -> String:

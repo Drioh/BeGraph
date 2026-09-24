@@ -41,6 +41,7 @@ func tick() -> Status:
 
 	if _agent.is_navigation_finished():
 		dirty = true
+		tick_next()
 		return Status.SUCCESS
 
 	var now : int = Time.get_ticks_msec()

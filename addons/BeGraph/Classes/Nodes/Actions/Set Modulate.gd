@@ -23,6 +23,7 @@ func tick() -> Status:
 		return Status.FAILURE
 
 	target.set(property_name, get("color"))
+	tick_next()
 	return Status.SUCCESS
 
 func set_node_category()->String: return "action_node"

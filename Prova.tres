@@ -6,8 +6,9 @@
 [ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="3_gad0g"]
 [ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="4_k7ocg"]
 [ext_resource type="Script" uid="uid://cqtl1rxtl657i" path="res://addons/BeGraph/Classes/Nodes/Actions/Movement/Patrol.gd" id="5_k7ocg"]
-[ext_resource type="Script" uid="uid://fp403l6robqy" path="res://addons/BeGraph/Classes/Nodes/Actions/Destroy Node.gd" id="7_buygw"]
-[ext_resource type="Script" uid="uid://b86oqsd2ke2vy" path="res://addons/BeGraph/Classes/Nodes/Actions/Instantiate Scene.gd" id="7_byvd5"]
+[ext_resource type="Script" uid="uid://2b2d8s434gjs" path="res://addons/BeGraph/Classes/Nodes/Actions/Set Modulate.gd" id="6_byvd5"]
+[ext_resource type="Script" uid="uid://c82q06qm6p887" path="res://addons/BeGraph/Classes/Nodes/Actions/Print/Print String.gd" id="7_buygw"]
+[ext_resource type="Script" uid="uid://pjibqyy3ifwn" path="res://addons/BeGraph/Classes/Nodes/Flow/ValueComparator.gd" id="8_buygw"]
 
 [sub_resource type="Resource" id="Resource_0y5uo"]
 resource_local_to_scene = true
@@ -24,52 +25,6 @@ name = &"Self"
 export_variable = true
 value = NodePath("..")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
-
-[sub_resource type="Resource" id="Resource_orwkh"]
-resource_name = "BehaviorGraphNode"
-script = ExtResource("7_byvd5")
-instruction = "Instantiate {scene_path} under {parent}"
-behavior_properties = Array[Dictionary]([{
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 0,
-"hint_string": "",
-"name": &"scene_path",
-"type": 4,
-"usage": 4102,
-"value": ""
-}, {
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 0,
-"hint_string": "",
-"name": &"parent",
-"type": 22,
-"usage": 4102,
-"value": NodePath("")
-}, {
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 0,
-"hint_string": "",
-"name": &"position",
-"type": 9,
-"usage": 4102,
-"value": Vector3(0, 0, 0)
-}])
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(140, 80)
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"_GraphNode_34072", &"_GraphNode_35997", &"_GraphNode_37161", &"_GraphNode_38427", &"_GraphNode_39239"])
-scene_path = ""
-parent = NodePath("")
-position = Vector3(0, 0, 0)
 
 [sub_resource type="Resource" id="Resource_buygw"]
 resource_name = "_GraphNode_28406"
@@ -114,7 +69,7 @@ behavior_properties = Array[Dictionary]([{
 "name": &"speed",
 "type": 3,
 "usage": 4102,
-"value": 100.0
+"value": 150.0
 }, {
 "blackboard_key": &"",
 "class_name": "",
@@ -134,7 +89,7 @@ behavior_properties = Array[Dictionary]([{
 "name": &"loop",
 "type": 1,
 "usage": 4102,
-"value": true
+"value": false
 }, {
 "blackboard_key": &"",
 "class_name": "",
@@ -166,35 +121,100 @@ _next_ref = Array[StringName]([&"BehaviorGraphNode"])
 node = NodePath("..")
 points = [NodePath("Point1"), NodePath("Point2"), NodePath("Point3")]
 mode = 0
-speed = 100.0
+speed = 150.0
 duration = 0.0
-loop = true
+loop = false
 calculate_destination_each_frame = true
 time_to_wait_upon_reaching_destination = 0.0
 
-[sub_resource type="Resource" id="Resource_6a8nf"]
-resource_name = "_GraphNode_39239"
+[sub_resource type="Resource" id="Resource_qrtwh"]
+resource_name = "_GraphNode_50170"
 script = ExtResource("7_buygw")
-instruction = "Destroy {node}"
+instruction = "Prints {value}"
 behavior_properties = Array[Dictionary]([{
 "blackboard_key": &"",
 "class_name": "",
 "custom_info": "",
 "hint": 0,
 "hint_string": "",
-"name": &"node",
-"type": 22,
-"usage": 4102,
-"value": NodePath("")
+"name": &"value",
+"type": 0,
+"usage": 135174,
+"value": "Sono fortunato!"
 }])
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(720, 80)
+position_in_graph = Vector2(1460, 100)
 _graph_ref = Object(WeakRef,"script":null)
 
-_next_ref = Array[StringName]([&"_GraphNode_39392", &"_GraphNode_40518", &"_GraphNode_41665"])
-node = NodePath("")
+value = "Sono fortunato!"
+
+[sub_resource type="Resource" id="Resource_6a8nf"]
+resource_name = "_GraphNode_51134"
+script = ExtResource("8_buygw")
+instruction = "Compare {value_1} and {value_2}"
+conditions = Array[Dictionary]([{
+"next": "_GraphNode_50170",
+"text": "{value_1} > {value_2}"
+}, {
+"next": "_GraphNode_51406",
+"text": "{value_1} = {value_2}"
+}, {
+"next": null,
+"text": "{value_1} < {value_2}"
+}])
+behavior_properties = Array[Dictionary]([{
+"blackboard_key": &"",
+"class_name": "",
+"custom_info": "",
+"hint": 0,
+"hint_string": "",
+"name": &"value_1",
+"type": 2,
+"usage": 4102,
+"value": 5
+}, {
+"blackboard_key": &"",
+"class_name": "",
+"custom_info": "",
+"hint": 0,
+"hint_string": "",
+"name": &"value_2",
+"type": 2,
+"usage": 4102,
+"value": 1
+}])
+node_category = "control_flow_node"
+input = true
+position_in_graph = Vector2(880, 140)
+_graph_ref = Object(WeakRef,"script":null)
+
+value_1 = 5
+value_2 = 1
+
+[sub_resource type="Resource" id="Resource_6x78j"]
+resource_name = "_GraphNode_51406"
+script = ExtResource("7_buygw")
+instruction = "Prints {value}"
+behavior_properties = Array[Dictionary]([{
+"blackboard_key": &"",
+"class_name": "",
+"custom_info": "",
+"hint": 0,
+"hint_string": "",
+"name": &"value",
+"type": 0,
+"usage": 135174,
+"value": "Circa dai"
+}])
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(1500, 280)
+_graph_ref = Object(WeakRef,"script":null)
+
+value = "Circa dai"
 
 [sub_resource type="Resource" id="Resource_byvd5"]
 resource_name = "start_node"
@@ -208,6 +228,52 @@ _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"_GraphNode_28406"])
 
+[sub_resource type="Resource" id="Resource_orwkh"]
+resource_name = "BehaviorGraphNode"
+script = ExtResource("6_byvd5")
+instruction = "Set {node}'s {mode} to {color}"
+behavior_properties = Array[Dictionary]([{
+"blackboard_key": &"Self",
+"class_name": "",
+"custom_info": "",
+"hint": 34,
+"hint_string": "CanvasItem",
+"name": &"node",
+"type": 22,
+"usage": 4198406,
+"value": NodePath("")
+}, {
+"blackboard_key": &"",
+"class_name": "",
+"custom_info": "",
+"hint": 2,
+"hint_string": "Modulate,SelfModulate",
+"name": &"mode",
+"type": 2,
+"usage": 4102,
+"value": 0
+}, {
+"blackboard_key": &"",
+"class_name": "",
+"custom_info": "",
+"hint": 0,
+"hint_string": "",
+"name": &"color",
+"type": 20,
+"usage": 4102,
+"value": Color(1, 0, 1, 1)
+}])
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(240, 140)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"_GraphNode_51134"])
+node = NodePath("..")
+mode = 0
+color = Color(1, 0, 1, 1)
+
 [resource]
 resource_local_to_scene = true
 script = ExtResource("4_k7ocg")
@@ -215,13 +281,35 @@ blackboard = Array[ExtResource("1_sguni")]([SubResource("Resource_0y5uo"), SubRe
 nodes = Dictionary[StringName, ExtResource("2_0y5uo")]({
 &"BehaviorGraphNode": SubResource("Resource_orwkh"),
 &"_GraphNode_28406": SubResource("Resource_buygw"),
-&"_GraphNode_39239": SubResource("Resource_6a8nf"),
+&"_GraphNode_50170": SubResource("Resource_qrtwh"),
+&"_GraphNode_51134": SubResource("Resource_6a8nf"),
+&"_GraphNode_51406": SubResource("Resource_6x78j"),
 &"start_node": SubResource("Resource_byvd5")
 })
 connections = Array[Dictionary]([{
 "from_node": &"start_node",
 "from_port": 0,
 "to_node": &"_GraphNode_28406",
+"to_port": 0
+}, {
+"from_node": &"_GraphNode_51134",
+"from_port": 0,
+"to_node": &"_GraphNode_50170",
+"to_port": 0
+}, {
+"from_node": &"_GraphNode_51134",
+"from_port": 1,
+"to_node": &"_GraphNode_51406",
+"to_port": 0
+}, {
+"from_node": &"_GraphNode_28406",
+"from_port": 0,
+"to_node": &"BehaviorGraphNode",
+"to_port": 0
+}, {
+"from_node": &"BehaviorGraphNode",
+"from_port": 0,
+"to_node": &"_GraphNode_51134",
 "to_port": 0
 }])
 _agent_ref = Object(WeakRef,"script":null)

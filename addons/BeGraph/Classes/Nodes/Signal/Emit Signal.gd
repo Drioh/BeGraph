@@ -18,6 +18,7 @@ func tick() -> Status:
 		return Status.FAILURE
 
 	agent.behavior_agent_signal.emit(get("args"))
+	tick_next()
 	return Status.SUCCESS
 
 func set_node_category()->String: return "action_node"

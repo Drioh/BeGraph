@@ -28,6 +28,7 @@ func tick() -> Status:
 	elif instance is Node3D:
 		instance.global_position = pos
 
+	tick_next()
 	return Status.SUCCESS
 
 func set_node_category()->String: return "action_node"

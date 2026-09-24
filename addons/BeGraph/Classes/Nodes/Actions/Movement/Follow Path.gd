@@ -32,6 +32,7 @@ func tick() -> Status:
 			return Status.RUNNING
 		_path_follow.progress_ratio = 1.0
 		dirty = true
+		tick_next()
 		return Status.SUCCESS
 
 	return Status.RUNNING
