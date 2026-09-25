@@ -97,8 +97,7 @@ unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "Show/Hide the blackboard panel"
 toggle_mode = true
-button_pressed = true
-text = "Blackboard"
+text = "Show Blackboard"
 
 [node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1379906403]
 layout_mode = 2
@@ -200,6 +199,7 @@ text = "RUNNING"
 
 [node name="BlackboardPanel" type="PanelContainer" parent="ContentSplit" unique_id=902733442]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 
