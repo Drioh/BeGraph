@@ -1,6 +1,5 @@
 @tool
-## Visual [GraphNode] per un [CommentNode]: box colorato a spigoli vivi con TITOLO ([LineEdit]) e COMMENTO ([TextEdit]), più un [ColorPickerButton] in titlebar legato a [member CommentNode.color]. Nessuno slot: i commenti non si connettono a nulla.
-class_name BehaviorGraphComment
+## Visual [GraphNode] for a [BehaviorComment]: sharp-edged colored box with a TITLE ([LineEdit]) and a COMMENT ([TextEdit]), plus a [ColorPickerButton] in the titlebar bound to [member BehaviorComment.color]. No slots: comments don't connect to anything.
 extends BehaviorGraphNodeBase
 
 const COMMENT_COLOR : Color = Color(0.75, 0.536, 0.211, 0.529)
@@ -49,7 +48,7 @@ func _on_node_set() -> void:
 	reset_size.call_deferred()
 	comment.changed.connect(_sync_from_node, CONNECT_DEFERRED)
 
-## Riallinea i controlli se la risorsa viene modificata dall'inspector (bottone edit).
+## Realigns the controls if the resource is modified from the inspector (edit button).
 func _sync_from_node() -> void:
 	var comment: BehaviorComment = node
 	if title_edit.text != comment.comment_title: 

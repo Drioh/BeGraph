@@ -15,7 +15,7 @@ func set_instruction() -> String:
 func tick(delta:float) -> Status:
 	var target: Object = _resolve_node(get("node"))
 	if target == null:
-		push_error("\"%s\" non riesce a risolvere il nodo target" % resource_name)
+		push_error("\"%s\" couldn't resolve target node" % resource_name)
 		return Status.FAILURE
 
 	var signal_name : StringName = get("signal_name")
@@ -25,7 +25,7 @@ func tick(delta:float) -> Status:
 	if _connected_object != target or _connected_signal != signal_name:
 		_disconnect_signal()
 		if not target.has_signal(signal_name):
-			push_error("\"%s\" non ha il segnale \"%s\"" % [target, signal_name])
+			push_error("\"%s\" doesn't have signal \"%s\"" % [target, signal_name])
 			return Status.FAILURE
 		_connected_object = target
 		_connected_signal = signal_name

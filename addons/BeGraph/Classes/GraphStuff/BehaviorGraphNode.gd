@@ -1,5 +1,5 @@
 @tool
-## Visual [GraphNode] per un [BehaviorNode] generico: renderizza istruzione e condizioni come testo misto a editor inline, sostituendo i token [code]{placeholder}[/code].
+## Visual [GraphNode] for a generic [BehaviorNode]: renders instruction and conditions as text mixed with inline editors, replacing [code]{placeholder}[/code] tokens.
 class_name BehaviorGraphNode
 extends BehaviorGraphNodeBase
 

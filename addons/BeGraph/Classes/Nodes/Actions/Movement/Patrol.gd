@@ -3,7 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Patrol"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
-const DISPLAY_INFO : String = "Moves {node} back and forth between {points} (Arrays of Nodes or Vector2s/Vecgor3s), one at a time, at {speed} or over {duration} depending on {mode}. \n\nOptionally pauses {time_to_wait_upon_reaching_destination}s at each stop and loops via {loop}. \n\nReturns RUNNING while moving, SUCCESS at the end of a non-looping patrol, FAILURE if {node} or the points can't be resolved."
+const DISPLAY_INFO : String = "Moves {node} back and forth between {points} (Arrays of Nodes or Vector2s/Vector3s), one at a time, at {speed} or over {duration} depending on {mode}. \n\nOptionally pauses {time_to_wait_upon_reaching_destination}s at each stop and loops via {loop}. \n\nReturns RUNNING while moving, SUCCESS at the end of a non-looping patrol, FAILURE if {node} or the points can't be resolved."
 
 enum Mode { SPEED, DURATION }
 

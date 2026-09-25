@@ -1,16 +1,15 @@
 @tool
-## Base class per ogni [GraphNode] visuale usato da [BehaviorGraphEdit]: [BehaviorGraphNode] (rendering generico), [CommentGraphNode] e [AccessPointGraphNode] (scene dedicate) estendono tutti questa classe.[br]
-## Contiene le parti comuni a ogni tipo di nodo: riferimento al [BehaviorNode], sync titolo/posizione, bottoni edit/delete in titlebar, applicazione colori di categoria.
+## Base class for every visual [GraphNode] used by [BehaviorGraphEdit]: [BehaviorGraphNode] (generic rendering), [BehaviorGraphComment] and [BehaviorGraphAccessPoint] (dedicated scenes) all extend this class.[br]
+## Contains the parts common to every node type: reference to the [BehaviorNode], title/position sync, edit/delete buttons in the titlebar, category color application.
 class_name BehaviorGraphNodeBase
 extends GraphNode
 
-## Il [BehaviorGraphEdit] proprietario.
+## The owning [BehaviorGraphEdit].o.
 @export var graph_edit: BehaviorGraphEdit
 
-## Il [BehaviorNode] rappresentato da questo nodo visuale.
+## ## The [BehaviorNode] represented by this visual node.
 var node: BehaviorNode
-
-## Assegna [param n], configura slot/titolo/posizione e i bottoni edit/delete in titlebar, poi chiama [method _on_node_set] affinché le sottoclassi costruiscano il proprio corpo/comportamento specifico.
+## Assigns [param n], configures slot/title/position and the edit/delete buttons in the titlebar, then calls [method _on_node_set] so subclasses can build their own specific body/behavior.
 func set_node(n: BehaviorNode) -> void:
 	node = n
 
@@ -35,12 +34,11 @@ func set_node(n: BehaviorNode) -> void:
 	
 	_on_node_set()
 
-## Override per costruire il corpo di questo nodo / collegare i suoi controlli specifici, una volta che [member node] è disponibile.
+## Override to build this node's body / wire up its specific controls, once [member node] is available.
 func _on_node_set() -> void:
 	pass
 
-## Applica i colori sfondo/bordo/titlebar salvati in [ProjectSettings] sotto [param category] (es. [code]"BeGraph/colors/node_colors/action_node"[/code]) a pannello, titlebar e ogni slot.
-func set_node_color(category: String) -> void:
+## Applies the background/border/titlebar colors saved in [ProjectSettings] under [param category] ... to the panel, titlebar and every slot.func set_node_color(category: String) -> void:
 	var background_color: Color = ProjectSettings.get_setting("%s/background_color" % category)
 	var selection_color: Color = ProjectSettings.get_setting("%s/border_color" % category)
 	set_indexed("theme_override_styles/panel:bg_color", background_color)

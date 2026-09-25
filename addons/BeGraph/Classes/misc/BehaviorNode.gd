@@ -331,7 +331,7 @@ func do_tick(delta:float) -> Status:
 func add_next(n : BehaviorNode, from_port : int) -> void:
 	if output:
 		if not _next_ref.has(n.resource_name):
-			if allows_multiple_outputs:
+			if not allows_multiple_outputs:
 				_next_ref[0] = n.resource_name
 				return
 			_next_ref.append(n.resource_name)
@@ -376,7 +376,7 @@ func tick_condition(delta:float,index:int = 0) -> Status:
 	push_error("BehaviorNode %s has less than %s conditions" % [self, index+1])
 	return Status.FAILURE
 
-## Accepts either an absolute [NodePath] (resolved from the tree root) or a direct reference to a [Node] (useful if [param node] is connected fo a blackboard variable containing the node).
+## Accepts either an absolute or relative [NodePath] (resolved through the owning [BehaviorAgent]'s [member BehaviorAgent.actor]) or a direct reference to a [Node] (useful if [param value] is connected to a blackboard variable containing the node).
 func _resolve_node(value: Variant) -> Node:
 	if not Engine.is_editor_hint():
 		if value is Node2D or value is Node3D:

@@ -1,9 +1,9 @@
 @tool
 extends GraphEdit
-## Read-only, runtime/editor-safe visualization of a [BehaviorGraph]'s execution state, colored by [enum BehaviorNode.Status] (green = SUCCESS, red = FAILURE, amber = RUNNING, gray = idle/never ticked), fading back to idle a short while after a node stops being ticked.[br]
+## Read-only, runtime/editor-safe visualization of a [BehaviorGraph]'s execution state, colored by [enum BehaviorNode.Status] (green = SUCCESS, red = FAILURE, amber = RUNNING, gray = idle/never ticked), fading back to idle a short while after a node stops being ticked.[br][br]
 ## Works in two modes:[br]
 ## - [b]Same-process[/b] ([method set_graph]): points directly at a live [BehaviorGraph] (e.g. [method BehaviorAgent.get_debug_graph]) and polls it every frame. Used by an in-game debug overlay.[br]
-## - [b]Data-driven[/b] ([method build_from_data]/[method apply_status_delta]/[method apply_properties_delta]): built from plain dictionaries with no live resource at all. Used by [BehaviorGraphDebuggerPlugin], since the editor and a running game are different processes and can only exchange serializable data through [EngineDebugger].[br]
+## - [b]Data-driven[/b] ([method build_from_data]/[method apply_status_delta]/[method apply_properties_delta]): built from plain dictionaries with no live resource at all. Used by [BehaviorGraphDebuggerPlugin], since the editor and a running game are different processes and can only exchange serializable data through [EngineDebugger].[br][br]
 ## Its [GraphNode]s are instances of [BehaviorGraphDebugNode] (a dedicated scene, customizable directly in the editor) rather than plain code-built [GraphNode]s: those depend only on this view's own logic, so the view stays read-only by omission, while still being able to show each node's instruction and (togglable) live behavior property values. Structural edits (new nodes, (dis)connections, deletion) are simply never wired up. Panning, zooming and dragging node positions around still work, harmlessly.
 class_name BehaviorGraphDebugView
 

@@ -1,5 +1,5 @@
 @tool
-## Visual [GraphNode] per un [AccessPointNode]: angoli sinistri arrotondati, destri dritti, un solo slot d'uscita a destra, e un campo "label:" ([LineEdit]) legato a [member AccessPointNode.label].
+## Visual [GraphNode] for an [AccessPointNode]: rounded left corners, square right corners, a single output slot on the right, and a "label:" field ([LineEdit]) bound to [member AccessPointNode.label].
 class_name BehaviorGraphAccessPoint
 extends BehaviorGraphNodeBase
 

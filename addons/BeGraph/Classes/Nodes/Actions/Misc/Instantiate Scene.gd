@@ -11,12 +11,12 @@ func set_instruction() -> String:
 func tick(delta:float) -> Status:
 	var scene : PackedScene = load(get("scene_path")) as PackedScene
 	if scene == null:
-		push_error("\"%s\" non riesce a caricare la scena \"%s\"" % [resource_name, get("scene_path")])
+		push_error("\"%s\" couldn't load scene \"%s\"" % [resource_name, get("scene_path")])
 		return Status.FAILURE
 
 	var parent : Node = _resolve_node(get("parent"))
 	if parent == null:
-		push_error("\"%s\" non riesce a risolvere il nodo padre" % resource_name)
+		push_error("\"%s\" couldn't resolve parent node" % resource_name)
 		return Status.FAILURE
 
 	var instance : Node = scene.instantiate()

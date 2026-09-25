@@ -19,7 +19,7 @@ func _get_property_list() -> Array[Dictionary]:
 
 	return [{
 		"name": "value",
-		"type": TYPE_NIL, # forzato a NIL: mantiene il picker "convert to..." per gli altri tipi
+		"type": TYPE_NIL, # forced to NIL: keeps the "convert to..." picker available for the other types
 		"hint": PROPERTY_HINT_NONE,
 		"hint_string": "",
 		"usage": base_usage | PROPERTY_USAGE_NIL_IS_VARIANT,

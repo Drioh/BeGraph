@@ -14,7 +14,7 @@ func tick(delta:float) -> Status:
 		agent= get_agent()
 	dirty=false
 	if agent == null:
-		push_error("\"%s\" non riesce a trovare il BehaviorAgent" % resource_name)
+		push_error("\"%s\" couldn't find the BehaviorAgent" % resource_name)
 		return Status.FAILURE
 
 	agent.behavior_agent_signal.emit(get("args"))

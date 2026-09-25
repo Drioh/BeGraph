@@ -15,7 +15,7 @@ func tick(delta:float) -> Status:
 
 	var variable : BlackboardVariable = graph.get_blackboard_property(get("variable_name"))
 	if variable == null:
-		push_error("\"%s\" couldn't findv variable \"%s\" in blackboard" % [resource_name, get("variable_name")])
+		push_error("\"%s\" couldn't find variable \"%s\" in blackboard" % [resource_name, get("variable_name")])
 		return Status.FAILURE
 
 	variable.value = get("value")
