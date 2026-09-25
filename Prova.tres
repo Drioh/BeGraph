@@ -5,10 +5,11 @@
 [ext_resource type="Resource" uid="uid://b00pat2p0pkar" path="res://Variabile di test.tres" id="2_gad0g"]
 [ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="3_gad0g"]
 [ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="4_k7ocg"]
+[ext_resource type="Script" uid="uid://2b2d8s434gjs" path="res://addons/BeGraph/Classes/Nodes/Actions/Misc/Set Modulate.gd" id="4_orwkh"]
 [ext_resource type="Script" uid="uid://cqtl1rxtl657i" path="res://addons/BeGraph/Classes/Nodes/Actions/Movement/Patrol.gd" id="5_k7ocg"]
-[ext_resource type="Script" uid="uid://2b2d8s434gjs" path="res://addons/BeGraph/Classes/Nodes/Actions/Set Modulate.gd" id="6_byvd5"]
+[ext_resource type="Script" uid="uid://pjibqyy3ifwn" path="res://addons/BeGraph/Classes/Nodes/Flow/Misc/ValueComparator.gd" id="7_6a8nf"]
 [ext_resource type="Script" uid="uid://c82q06qm6p887" path="res://addons/BeGraph/Classes/Nodes/Actions/Print/Print String.gd" id="7_buygw"]
-[ext_resource type="Script" uid="uid://pjibqyy3ifwn" path="res://addons/BeGraph/Classes/Nodes/Flow/ValueComparator.gd" id="8_buygw"]
+[ext_resource type="Script" uid="uid://b0sc0g6pmwp4q" path="res://addons/BeGraph/Classes/Nodes/Actions/Time/Wait.gd" id="9_6x78j"]
 
 [sub_resource type="Resource" id="Resource_0y5uo"]
 resource_local_to_scene = true
@@ -28,7 +29,7 @@ metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_orwkh"]
 resource_name = "BehaviorGraphNode"
-script = ExtResource("6_byvd5")
+script = ExtResource("4_orwkh")
 instruction = "Set {node}'s {mode} to {color}"
 behavior_properties = Array[Dictionary]([{
 "blackboard_key": &"Self",
@@ -173,6 +174,51 @@ loop = false
 calculate_destination_each_frame = true
 time_to_wait_upon_reaching_destination = 0.0
 
+[sub_resource type="Resource" id="Resource_6yh0e"]
+resource_name = "_GraphNode_43911"
+script = ExtResource("9_6x78j")
+instruction = "Wait {seconds}s"
+behavior_properties = Array[Dictionary]([{
+"blackboard_key": &"",
+"class_name": "",
+"custom_info": "",
+"hint": 0,
+"hint_string": "",
+"name": &"seconds",
+"type": 3,
+"usage": 4102,
+"value": 1.0
+}, {
+"blackboard_key": &"",
+"class_name": "",
+"custom_info": "",
+"hint": 0,
+"hint_string": "",
+"name": &"random_minimum",
+"type": 3,
+"usage": 4102,
+"value": 0.0
+}, {
+"blackboard_key": &"",
+"class_name": "",
+"custom_info": "",
+"hint": 0,
+"hint_string": "",
+"name": &"random_maximum",
+"type": 3,
+"usage": 4102,
+"value": 0.0
+}])
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(1476.0801, 389.00616)
+_graph_ref = Object(WeakRef,"script":null)
+
+seconds = 1.0
+random_minimum = 0.0
+random_maximum = 0.0
+
 [sub_resource type="Resource" id="Resource_qrtwh"]
 resource_name = "_GraphNode_50170"
 script = ExtResource("7_buygw")
@@ -198,7 +244,7 @@ value = "Sono fortunato!"
 
 [sub_resource type="Resource" id="Resource_6a8nf"]
 resource_name = "_GraphNode_51134"
-script = ExtResource("8_buygw")
+script = ExtResource("7_6a8nf")
 instruction = "Compare {value_1} and {value_2}"
 conditions = Array[Dictionary]([{
 "next": "_GraphNode_50170",
@@ -281,6 +327,7 @@ blackboard = Array[ExtResource("1_sguni")]([SubResource("Resource_0y5uo"), SubRe
 nodes = Dictionary[StringName, ExtResource("2_0y5uo")]({
 &"BehaviorGraphNode": SubResource("Resource_orwkh"),
 &"_GraphNode_28406": SubResource("Resource_buygw"),
+&"_GraphNode_43911": SubResource("Resource_6yh0e"),
 &"_GraphNode_50170": SubResource("Resource_qrtwh"),
 &"_GraphNode_51134": SubResource("Resource_6a8nf"),
 &"_GraphNode_51406": SubResource("Resource_6x78j"),

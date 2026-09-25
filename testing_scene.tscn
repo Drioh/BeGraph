@@ -50,6 +50,25 @@ width = 16
 height = 16
 fill_to = Vector2(0.5555556, 0.47435898)
 
+[sub_resource type="AnimationNodeBlendSpace2D" id="AnimationNodeBlendSpace2D_k6s54"]
+
+[sub_resource type="AnimationNodeTransition" id="AnimationNodeTransition_7tmfp"]
+
+[sub_resource type="AnimationNodeBlendTree" id="AnimationNodeBlendTree_j6xku"]
+graph_offset = Vector2(-470.30682, 12.694305)
+nodes/output/position = Vector2(320, 120)
+nodes/CIao/node = SubResource("AnimationNodeTransition_7tmfp")
+nodes/CIao/position = Vector2(60, 120)
+node_connections = [&"output", 0, &"CIao"]
+
+[sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_cy14o"]
+states/BlendSpace2D/node = SubResource("AnimationNodeBlendSpace2D_k6s54")
+states/BlendSpace2D/position = Vector2(511, 135)
+states/BlendTree/node = SubResource("AnimationNodeBlendTree_j6xku")
+states/BlendTree/position = Vector2(447, 230)
+states/Start/position = Vector2(80, 135)
+graph_offset = Vector2(-48, -324)
+
 [node name="Node2D" type="Node2D" unique_id=1496466534]
 
 [node name="Sprite2D" parent="." unique_id=811252767 instance=ExtResource("1_00g8v")]
@@ -88,3 +107,14 @@ position = Vector2(513, 518)
 
 [node name="Point6" type="Node2D" parent="." unique_id=1687460878]
 position = Vector2(425, 106)
+
+[node name="AnimationTree" type="AnimationTree" parent="." unique_id=2095281861]
+root_node = NodePath(".")
+tree_root = SubResource("AnimationNodeStateMachine_cy14o")
+anim_player = NodePath("AnimationPlayer")
+parameters/BlendSpace2D/blend_position = Vector2(0, 0)
+parameters/BlendTree/CIao/current_state = ""
+parameters/BlendTree/CIao/transition_request = ""
+parameters/BlendTree/CIao/current_index = -1
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="AnimationTree" unique_id=828898243]

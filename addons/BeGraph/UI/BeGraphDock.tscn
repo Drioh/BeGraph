@@ -29,6 +29,13 @@ grow_end = -2.0
 thickness = 2
 vertical = true
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cy14o"]
+bg_color = Color(0.09411765, 0.09411765, 0.09411765, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
 [node name="BeGraphDock" type="Control" unique_id=1658419202]
 layout_mode = 3
 anchors_preset = 15
@@ -169,9 +176,13 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_cy14o")
+show_grid = false
+snapping_enabled = false
 right_disconnects = true
 minimap_enabled = false
 minimap_size = Vector2(120, 80)
+show_menu = false
 show_zoom_buttons = false
 script = ExtResource("4_5bs10")
 

@@ -67,7 +67,7 @@ func _render_placeholders(text: String, container: Control, is_main_instruction:
 		for child in container.get_children():
 			container.remove_child(child)
 			child.queue_free()
-
+	
 	var last_end := 0
 	for m in placeholder_regex.search_all(text):
 		var start := m.get_start()
