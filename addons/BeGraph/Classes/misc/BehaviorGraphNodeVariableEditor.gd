@@ -230,6 +230,8 @@ var var_property_editor: EditorProperty
 ## The [BehaviorNode] resource that owns the variable being edited.
 @onready var node : BehaviorNode
 
+var _editor_signature: Array = []
+
 ## The [BlackboardVariable] currently bound to this control, [code]null[/code] if the variable isn't bound to a blackboard entry.
 var linked_property : BlackboardVariable = null:
 	set(v):
@@ -302,9 +304,11 @@ func setup_variable_editor(n : BehaviorNode,property:Dictionary,bb:Array[Blackbo
 	editor.property_changed.connect(change_property)
 	editor.update_property()
 
+	_editor_signature = _signature_for(property)
+	
 	node.changed.connect(var_property_editor.update_property,CONNECT_DEFERRED)
 	node.blackboard_key_set.connect(sync_blackboard_keys)
-	node.conditions_changed.connect(refresh_editor.bind(property))
+	node.conditions_changed.connect(refresh_editor.bind(property),CONNECT_DEFERRED)
 	
 	bb_link_button.about_to_popup.connect(_populate_popup,CONNECT_DEFERRED)
 	bb_unlink_button.pressed.connect(node.set_node_property_blackboard_key.bind(key))
@@ -327,6 +331,11 @@ func setup_variable_editor(n : BehaviorNode,property:Dictionary,bb:Array[Blackbo
 ## Rebuilds [member var_property_editor] from scratch using the [param property] info dictionary.[br]
 ## Used when the underlying property's type/hint changes dynamically, e.g. after [signal BehaviorNode.conditions_changed] fires for an enum-backed value.
 func refresh_editor(property: Dictionary) -> void:
+	var new_signature : Array = _signature_for(property)
+	if new_signature == _editor_signature:
+		return 
+	_editor_signature = new_signature
+	
 	if var_property_editor:
 		var_property_editor.get_parent().remove_child(var_property_editor)
 		var_property_editor.queue_free()
@@ -349,7 +358,7 @@ func refresh_editor(property: Dictionary) -> void:
 	var_property_editor = editor
 	var_property_editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var_property_editor.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	editor.property_changed.connect(change_property)
+	editor.property_changed.connect(change_property,CONNECT_DEFERRED)
 	editor.update_property()
 
 ## Callback for [signal EditorProperty.property_changed], forwarded from [member var_property_editor]: applies the new value to [member node].
@@ -466,3 +475,6 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_DRAG_END:
 		fallback_layer.set_indexed("theme_override_styles/panel:bg_color",Color(0.0, 0.0, 0.0, 0.0))
 		fallback_layer.set_indexed("theme_override_styles/panel:border_color",Color(0.0, 0.0, 0.0, 0.0))
+
+func _signature_for(property: Dictionary) -> Array:
+	return [property["type"], property["hint"], property["hint_string"], property["usage"]]

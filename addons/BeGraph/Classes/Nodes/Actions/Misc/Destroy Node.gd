@@ -14,6 +14,7 @@ func tick(delta:float) -> Status:
 		push_error("\"%s\" cannot resolve node to destroy" % resource_name)
 		return Status.FAILURE
 	target.queue_free()
+	
 	tick_next(delta)
 	return Status.SUCCESS
 

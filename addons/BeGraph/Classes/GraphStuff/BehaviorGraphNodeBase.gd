@@ -32,7 +32,7 @@ func set_node(n: BehaviorNode) -> void:
 	delete_button.icon = load("res://addons/BeGraph/Icons/close_icon.svg")
 	delete_button.pressed.connect(graph_edit._on_delete_nodes_request.bind(del_array))
 	tb.add_child(delete_button)
-
+	
 	_on_node_set()
 
 ## Override per costruire il corpo di questo nodo / collegare i suoi controlli specifici, una volta che [member node] è disponibile.
