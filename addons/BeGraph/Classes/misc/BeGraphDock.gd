@@ -30,8 +30,7 @@ var loaded_graph : BehaviorGraph = null
 func _ready() -> void:
 	edit_button.pressed.connect(edit_graph)
 	info_button.pressed.connect(func():
-		if info_button.button_pressed: info_panel.show()
-		else: info_panel.hide())
+			info_panel.visible = info_button.button_pressed)
 	graph_edit.selected_node_changed.connect(_on_selected_node_changed)
 ## Opens [member loaded_graph] in the main editor's inspector/resource editor.
 func edit_graph()->void:

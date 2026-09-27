@@ -189,7 +189,7 @@ func _add_behavior_property(
 		"class_name":classname,
 		"type":typeof(default_value),
 		"hint":hint,
-		"hint_string":str(hint_string) if not hint_string is not Callable else hint_string,
+		"hint_string":str(hint_string) if hint_string is not Callable else hint_string,
 		"custom_info":custom_info,
 		"usage":usage|PROPERTY_USAGE_SCRIPT_VARIABLE|PROPERTY_USAGE_EDITOR|PROPERTY_USAGE_STORAGE,
 		"value":default_value,
@@ -297,6 +297,7 @@ func get_agent()->Node:
 	if graph == null:
 		push_error("Graph reference lost for node %s" % resource_name)
 		return null
+	
 	var agent : Node = graph.get_agent_node()
 	if agent == null:
 		push_error("Agent not set for graph %s" % graph)
@@ -330,12 +331,12 @@ func do_tick(delta:float) -> Status:
 ## Adds [param n] as a successor of this node. If [member output] is [code]true[/code] (no [member conditions] set), [param n] is appended to [member _next_ref] (unless already present); [param from_port] is unused in this case. Otherwise, [param n] becomes the successor of the condition at index [param from_port], replacing any previous one.
 func add_next(n : BehaviorNode, from_port : int) -> void:
 	if output:
-		if not _next_ref.has(n.resource_name):
-			if not allows_multiple_outputs:
-				_next_ref[0] = n.resource_name
-				return
+		if _next_ref.has(n.resource_name):
+			return
+		if not allows_multiple_outputs:
+			_next_ref[0] = n.resource_name
+		else:
 			_next_ref.append(n.resource_name)
-		return
 	else:
 		var current : StringName = conditions[from_port]["next"] if conditions[from_port]["next"] else &""
 		if current == &"" or current != n.resource_name: 

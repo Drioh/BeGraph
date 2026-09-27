@@ -38,7 +38,8 @@ func set_node(n: BehaviorNode) -> void:
 func _on_node_set() -> void:
 	pass
 
-## Applies the background/border/titlebar colors saved in [ProjectSettings] under [param category] ... to the panel, titlebar and every slot.func set_node_color(category: String) -> void:
+## Applies the background/border/titlebar colors saved in [ProjectSettings] under [param category] ... to the panel, titlebar and every slot.
+func set_node_color(category: String) -> void:
 	var background_color: Color = ProjectSettings.get_setting("%s/background_color" % category)
 	var selection_color: Color = ProjectSettings.get_setting("%s/border_color" % category)
 	set_indexed("theme_override_styles/panel:bg_color", background_color)

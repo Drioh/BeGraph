@@ -200,10 +200,8 @@ const CONVERSION_DICT: Dictionary = {
 		TYPE_ARRAY,
 	],
 }
-
 ## Container holding, in order: the blackboard-link/unlink UI and the inline [EditorProperty] (or blackboard reference label).
 @onready var h_box_container: HBoxContainer = %HBoxContainer
-
 ## Icon representing the variable's [enum Variant.Type].
 @onready var type_icon: TextureRect = %TypeIcon
 ## The [EditorProperty] instantiated for this variable's value, used when the variable is not bound to a blackboard entry.
@@ -252,59 +250,22 @@ var linked_property : BlackboardVariable = null:
 ## Whether blackboard reference or the plain value editor is displayed. Setting this toggles the visibility of those two pairs of controls accordingly, and clears [member linked_property] when switched back off.
 @onready var linked : bool = false:
 	set(value):
-		if value:
-			if var_property_editor: 
-				var_property_editor.hide()
-			bb_link_button.hide()
-			bb_reference.show()
-			bb_unlink_button.show()
-		else:
-			if var_property_editor: 
-				var_property_editor.show()
-			
-			linked_property=null
-			bb_link_button.show()
-			bb_reference.hide()
-			bb_unlink_button.hide()
+		if !value:
+			linked_property = null
+		if var_property_editor: 
+			var_property_editor.visible = !value
+		bb_link_button.visible = !value
+		bb_reference.visible = value
+		bb_unlink_button.visible = value
 		linked = value
 
 ## Initializes this control for editing [param property] on [param n], using [param bb] as the graph's blackboard. Instantiates the matching [EditorProperty] via [method EditorInspector.instantiate_property_editor] and wires up value change propagation in both directions, restoring an existing blackboard binding if [param property] has one saved. Returns [code]false[/code] if no editor could be created for this property's type.
 func setup_variable_editor(n : BehaviorNode,property:Dictionary,bb:Array[BlackboardVariable]) -> bool:
 	node = n
 	
-	type = property["type"]
-	key = property["name"]
-	var hint : int = property["hint"]
-	var hint_string: String =  property["hint_string"]
-	var usage : int = property["usage"]
-	var editor: EditorProperty = EditorInspector.instantiate_property_editor(
-		node,
-		type, 
-		key, 
-		hint, 
-		hint_string, 
-		EDITOR_USAGES|usage, 
-		true
-	)
+	refresh_editor(property)
 
-	if editor == null:
-		return false
-	
-	editor.set_object_and_property(node, key)
-	editor.draw_label=false
-	editor.selectable=false
-	h_box_container.add_child(editor)
-	h_box_container.move_child(editor,1)
-	
-	var_property_editor=editor
-	var_property_editor.size_flags_horizontal=Control.SIZE_EXPAND_FILL
-	var_property_editor.size_flags_vertical=Control.SIZE_SHRINK_CENTER
-	
 	size_flags_horizontal=Control.SIZE_SHRINK_BEGIN
-	editor.property_changed.connect(change_property)
-	editor.update_property()
-
-	_editor_signature = _signature_for(property)
 	
 	node.changed.connect(var_property_editor.update_property,CONNECT_DEFERRED)
 	node.blackboard_key_set.connect(sync_blackboard_keys)
@@ -342,6 +303,8 @@ func refresh_editor(property: Dictionary) -> void:
 		var_property_editor = null
 
 	type = property["type"]
+	key = property["name"]
+	
 	var editor: EditorProperty = EditorInspector.instantiate_property_editor(
 		node, type, key, property["hint"], property["hint_string"],
 		EDITOR_USAGES | property["usage"], true
@@ -358,6 +321,7 @@ func refresh_editor(property: Dictionary) -> void:
 	var_property_editor = editor
 	var_property_editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var_property_editor.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	
 	editor.property_changed.connect(change_property,CONNECT_DEFERRED)
 	editor.update_property()
 
@@ -428,7 +392,7 @@ func update_bb_name(n:StringName)->void:
 func update_bb_value(v:Variant)->void:
 	if not typeof(v) in CONVERSION_DICT[type]:
 		node.set_node_property_blackboard_key(key)
-		linked=false
+		linked=false		
 
 ## Recursively searches [param node]'s [Control] descendants for the one whose global rect contains [param global_pos], returning the first (deepest) match found, or [code]null[/code] if none does.
 func _get_slot_at(node, global_pos):
@@ -442,13 +406,6 @@ func _get_slot_at(node, global_pos):
 			if found:
 				return found
 	return null
-
-## Recursively collects [param in_node] and every one of its descendants into a flat array (appending to, and returning, [param arr]).
-func get_all_children(in_node,arr:=[]):
-	arr.push_back(in_node)
-	for child in in_node.get_children():
-		arr = get_all_children(child,arr)
-	return arr
 
 ## Callback for the owning [BehaviorGraph]'s [signal Resource.changed]: unbinds [member linked_property] (reverting to the plain value editor) if it is no longer present in [param blackboard].
 func check_property(blackboard:Array[BlackboardVariable])->void:
@@ -466,12 +423,12 @@ func _notification(what: int) -> void:
 		
 		var cond_1 : bool = typeof(drag_data["resource"].value) in CONVERSION_DICT[type]
 		var cond_2 : bool = typeof(drag_data["resource"].value) == TYPE_NIL
-		if cond_1 or cond_2:
-			fallback_layer.set_indexed("theme_override_styles/panel:bg_color",ProjectSettings.get_setting("BeGraph/colors/allowed_variable_color_background"))
-			fallback_layer.set_indexed("theme_override_styles/panel:border_color",ProjectSettings.get_setting("BeGraph/colors/allowed_variable_color_border"))
-		else:
-			fallback_layer.set_indexed("theme_override_styles/panel:bg_color",ProjectSettings.get_setting("BeGraph/colors/not_allowed_variable_color_background"))
-			fallback_layer.set_indexed("theme_override_styles/panel:border_color",ProjectSettings.get_setting("BeGraph/colors/not_allowed_variable_color_border"))
+		
+		var bg_color : Color = ProjectSettings.get_setting("BeGraph/colors/%sallowed_variable_color_background"%"" if (cond_1 or cond_2) else "not_")
+		var border_color : Color = ProjectSettings.get_setting("BeGraph/colors/%sallowed_variable_color_border"%"" if (cond_1 or cond_2) else "not_")
+		fallback_layer.set_indexed("theme_override_styles/panel:bg_color",bg_color)
+		fallback_layer.set_indexed("theme_override_styles/panel:border_color",border_color)
+
 	if what == NOTIFICATION_DRAG_END:
 		fallback_layer.set_indexed("theme_override_styles/panel:bg_color",Color(0.0, 0.0, 0.0, 0.0))
 		fallback_layer.set_indexed("theme_override_styles/panel:border_color",Color(0.0, 0.0, 0.0, 0.0))

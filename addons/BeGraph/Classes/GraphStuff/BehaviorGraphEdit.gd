@@ -333,7 +333,7 @@ func _script_metadata(path: String) -> Dictionary:
 	return {
 		"label": consts.get("DISPLAY_NAME", path.get_file().get_basename()),
 		"icon": load(consts["DISPLAY_ICON"]) if consts.has("DISPLAY_ICON") else null,
-		"scene": load(consts["DISPLAY_SCENE"]) if consts.has("DISPOLAY_SCENE") else null,
+		"scene": load(consts["DISPLAY_SCENE"]) if consts.has("DISPLAY_SCENE") else null,
 		"info" : consts.get("DISPLAY_INFO","No info has been provided for this node")
 	}
 
