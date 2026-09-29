@@ -334,20 +334,18 @@ func add_next(n : BehaviorNode, from_port : int) -> void:
 		if _next_ref.has(n.resource_name):
 			return
 		if not allows_multiple_outputs:
-			_next_ref[0] = n.resource_name
-		else:
-			_next_ref.append(n.resource_name)
+			_next_ref.clear()
+		_next_ref.append(n.resource_name)
+		
 	else:
 		var current : StringName = conditions[from_port]["next"] if conditions[from_port]["next"] else &""
 		if current == &"" or current != n.resource_name: 
 			conditions[from_port]["next"] = n.resource_name
-		return
 
 ## Removes [param n] as a successor of this node (see [method add_next] for how successors are stored depending on [member output]/[member conditions]). Also prunes any dead (freed) weak references found along the way.
 func remove_next(n : BehaviorNode, from_port : int) -> void:
 	if output:
 		_next_ref.erase(n.resource_name)
-		return
 	else:
 		var current : StringName = conditions[from_port]["next"]
 		
@@ -355,7 +353,6 @@ func remove_next(n : BehaviorNode, from_port : int) -> void:
 		var cond_2 : bool = current == n.resource_name or current== null
 		if  cond_1 and cond_2: 
 			conditions[from_port]["next"] = null
-		return
 
 ## Ticks the successor stored at [param index] inside [member _next_ref] and returns its [enum Status]. Routes through [method do_tick] (rather than calling [method tick] directly) so the successor's status/tick-time gets recorded.
 func tick_next(delta:float,index:int = 0) -> Status:

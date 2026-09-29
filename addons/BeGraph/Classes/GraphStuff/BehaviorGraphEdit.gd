@@ -60,23 +60,8 @@ func set_graph(graph: BehaviorGraph) -> void:
 		child.free()
 	current_graph = graph
 
-	load_nodes()
-	load_connections()
-
-## Instantiates a [BehaviorGraphNode] for every node in [member current_graph], restoring its name, position, and delete handling.
-func load_nodes() -> void:
 	for node_to_load in current_graph.nodes.values():
-		var node: BehaviorGraphNodeBase = _scene_for(node_to_load).instantiate()
-		add_child(node)
-		node.name = node_to_load.resource_name
-		node.graph_edit = self
-		node.set_node(node_to_load)
-		node.node._graph_ref = weakref(current_graph)
-		node.position_offset = node_to_load.position_in_graph
-
-		
-## Recreates every visual connection stored in [member current_graph.connections].
-func load_connections() -> void:
+		load_node(node_to_load)
 	for connection in current_graph.connections:
 		connect_node(
 			connection["from_node"], 
@@ -84,6 +69,15 @@ func load_connections() -> void:
 			connection["to_node"], 
 			connection["to_port"])
 
+## Instantiates a [BehaviorGraphNode], restoring its name, position, and delete handling.
+func load_node(node_to_load : BehaviorNode) -> void:
+	var node: BehaviorGraphNodeBase = _scene_for(node_to_load).instantiate()
+	add_child(node)
+	node.name = node_to_load.resource_name
+	node.graph_edit = self
+	node.set_node(node_to_load)
+	node.node._graph_ref = weakref(current_graph)
+	node.position_offset = node_to_load.position_in_graph
 #endregion
 
 #region Node management
@@ -128,7 +122,11 @@ func _on_delete_nodes_request(nodes: Array[StringName]) -> void:
 		# Outgoing connections: nod.node itself is being discarded, so there's no need to
 		# call remove_next() on it - only the visual/graph-level bookkeeping matters here.
 		for c in get_connection_list_from_node(n):
-			disconnect_node(c["from_node"].validate_node_name(), c["from_port"], c["to_node"].validate_node_name(), c["to_port"])
+			disconnect_node(
+				c["from_node"].validate_node_name(), 
+				c["from_port"], 
+				c["to_node"].validate_node_name(), 
+				c["to_port"])
 			current_graph.remove_connection({
 				"from_node": StringName(c["from_node"].validate_node_name()),
 				"from_port": c["from_port"],
@@ -140,10 +138,8 @@ func _on_delete_nodes_request(nodes: Array[StringName]) -> void:
 		# (via remove_next) that this successor no longer exists, and its port color refreshed.
 		for c in get_connection_list():
 			var to_name: StringName = StringName(c["to_node"].validate_node_name())
-			if to_name != n:
-				continue
 			var from_name: StringName = StringName(c["from_node"].validate_node_name())
-			if not has_node(NodePath(from_name)):
+			if not has_node(NodePath(from_name)) or to_name != n:
 				continue
 			var f_node: BehaviorGraphNodeBase = get_node(NodePath(from_name))
 
@@ -157,8 +153,6 @@ func _on_delete_nodes_request(nodes: Array[StringName]) -> void:
 			})
 			f_node.refresh_port_colors()
 
-		if EditorInterface.get_inspector().get_edited_object() == nod.node:
-			EditorInterface.inspect_object(current_graph)
 		current_graph.remove_node(nod.node)
 		remove_child(nod)
 	selected_node_changed.emit(null)
