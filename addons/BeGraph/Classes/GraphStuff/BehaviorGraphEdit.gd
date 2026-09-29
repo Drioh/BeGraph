@@ -11,6 +11,13 @@ const NODE_PATH = "res://addons/BeGraph/Classes/Nodes/"
 ## Scene instantiated for each new [BehaviorGraphNode].
 const NODE = preload("res://addons/BeGraph/UI/BehaviorGraphNode.tscn")
 
+## Offset (graph coordinates) applied to duplicated nodes so they don't land exactly on top of the originals.
+const DUPLICATE_OFFSET := Vector2(40, 40)
+
+## Snapshot taken by [method copy_selected_nodes]: [code]{"nodes": Array[BehaviorNode], "connections": Array[Dictionary]}[/code].[br]
+## It only holds [BehaviorNode] resources (never visual [GraphNode]s), detached from any graph.
+var _clipboard : Dictionary = {}
+
 #endregion
 
 #region State
@@ -40,6 +47,11 @@ func _ready() -> void:
 	popup_request.connect(_on_popup_request)
 	node_selected.connect(_on_node_selected)
 	node_deselected.connect(_on_node_deselected)
+	
+	copy_nodes_request.connect(copy_selected_nodes)
+	cut_nodes_request.connect(_on_cut_nodes_request)
+	paste_nodes_request.connect(_on_paste_nodes_request)
+	duplicate_nodes_request.connect(duplicate_selected_nodes)
 #endregion
 
 
@@ -69,15 +81,22 @@ func set_graph(graph: BehaviorGraph) -> void:
 			connection["to_node"], 
 			connection["to_port"])
 
-## Instantiates a [BehaviorGraphNode], restoring its name, position, and delete handling.
-func load_node(node_to_load : BehaviorNode) -> void:
+## Instantiates the visual node for [param node_to_load], restoring its name and position.[br]
+## If [param register_in_graph] is [code]true[/code] the [BehaviorNode] is also added to [member current_graph] (used when creating nodes at runtime, e.g. paste/duplicate); when loading an existing graph it is already there.[br]
+## Returns the created visual node.
+func load_node(node_to_load : BehaviorNode, register_in_graph : bool = false) -> BehaviorGraphNodeBase:
+	# Must be set before set_node(): inline editors of blackboard-bound properties read it while being built.
+	node_to_load._graph_ref = weakref(current_graph)
+	if register_in_graph:
+		current_graph.add_node(node_to_load)
+
 	var node: BehaviorGraphNodeBase = _scene_for(node_to_load).instantiate()
 	add_child(node)
 	node.name = node_to_load.resource_name
 	node.graph_edit = self
 	node.set_node(node_to_load)
-	node.node._graph_ref = weakref(current_graph)
 	node.position_offset = node_to_load.position_in_graph
+	return node
 #endregion
 
 #region Node management
@@ -336,3 +355,128 @@ func _scene_for(n: BehaviorNode) -> PackedScene:
 	if consts.has("DISPLAY_SCENE"):
 		return load(consts["DISPLAY_SCENE"])
 	return NODE
+
+#region Copy / Paste / Duplicate
+
+## Stores a snapshot of the selected nodes (and of the connections between them) in the clipboard.
+func copy_selected_nodes() -> void:
+	if current_graph == null:
+		return
+	var snapshot : Dictionary = _capture_selection()
+	if snapshot["nodes"].is_empty():
+		return
+	_clipboard = snapshot
+
+## Copies the selected nodes, then deletes them.
+func _on_cut_nodes_request() -> void:
+	copy_selected_nodes()
+	var names : Array[StringName] = []
+	for graph_node in _get_selected_nodes():
+		names.append(graph_node.name)
+	if not names.is_empty():
+		_on_delete_nodes_request(names)
+
+## Pastes the clipboard with its top-left corner at the mouse (or slightly offset from the originals if the mouse is outside the graph).
+func _on_paste_nodes_request() -> void:
+	var offset : Vector2 = DUPLICATE_OFFSET
+	var mouse : Vector2 = get_local_mouse_position()
+	if Rect2(Vector2.ZERO, size).has_point(mouse):
+		offset = (mouse + scroll_offset) / zoom - _snapshot_origin(_clipboard)
+	_paste_snapshot(_clipboard, offset)
+
+## Duplicates the selected nodes in place (shifted by [constant DUPLICATE_OFFSET]) without touching the clipboard.
+func duplicate_selected_nodes() -> void:
+	if current_graph == null:
+		return
+	_paste_snapshot(_capture_selection(), DUPLICATE_OFFSET)
+
+## Builds a snapshot from the current selection: cloned [BehaviorNode]s plus the connections whose both ends are selected.
+func _capture_selection() -> Dictionary:
+	var nodes : Array[BehaviorNode] = []
+	var names : Dictionary = {}
+	for graph_node in _get_selected_nodes():
+		nodes.append(_clone_behavior_node(graph_node.node))
+		names[StringName(graph_node.node.resource_name)] = true
+
+	var connections : Array[Dictionary] = []
+	for c in current_graph.connections:
+		if names.has(StringName(c["from_node"])) and names.has(StringName(c["to_node"])):
+			connections.append(c.duplicate())
+	return {"nodes": nodes, "connections": connections}
+
+## Recreates a snapshot inside [member current_graph]: every node gets a fresh unique name and is created through [method load_node]; connections between them are then rebuilt through [method connect_nodes]. The new nodes end up selected.
+func _paste_snapshot(snapshot : Dictionary, offset : Vector2) -> void:
+	var nodes : Array = snapshot.get("nodes", [])
+	if current_graph == null or nodes.is_empty():
+		return
+
+	_deselect_all()
+
+	var name_map : Dictionary = {} # old name -> new name
+	var created : Array[BehaviorGraphNodeBase] = []
+	for source : BehaviorNode in nodes:
+		var copy : BehaviorNode = _clone_behavior_node(source)
+		var new_name : StringName = _generate_unique_node_name()
+		name_map[StringName(source.resource_name)] = new_name
+		copy.resource_name = new_name
+		copy.position_in_graph = source.position_in_graph + offset
+		_remove_missing_blackboard_bindings(copy)
+		created.append(load_node(copy, true))
+
+	for c in snapshot["connections"]:
+		connect_nodes(
+			name_map[StringName(c["from_node"])], c["from_port"],
+			name_map[StringName(c["to_node"])], c["to_port"])
+
+	for graph_node in created:
+		graph_node.selected = true
+
+## Deep-copies [param source] and strips everything tied to the graph it belonged to (successors), so the copy can be wired up from scratch.
+func _clone_behavior_node(source : BehaviorNode) -> BehaviorNode:
+	var copy : BehaviorNode = source.duplicate_deep(Resource.DEEP_DUPLICATE_ALL) as BehaviorNode
+	copy._next_ref.clear()
+	for condition in copy.conditions:
+		condition["next"] = null
+	return copy
+
+## Unbinds every property of [param node] linked to a blackboard key that doesn't exist in [member current_graph] (e.g. when pasting into a different graph). The property keeps its last value.
+func _remove_missing_blackboard_bindings(node : BehaviorNode) -> void:
+	var keys : Array[StringName] = []
+	for variable in current_graph.blackboard:
+		if variable:
+			keys.append(variable.name)
+	for prop in node.behavior_properties:
+		var key : StringName = prop["blackboard_key"]
+		if key != &"" and not keys.has(key):
+			prop["blackboard_key"] = &""
+
+## Returns a node name (same style as the auto-generated ones) not used by any node in the graph or any child of this GraphEdit.
+func _generate_unique_node_name() -> StringName:
+	var candidate := StringName("_GraphNode_%d" % randi_range(10000, 99999))
+	while current_graph.nodes.has(candidate) or has_node(NodePath(candidate)):
+		candidate = StringName("_GraphNode_%d" % randi_range(10000, 99999))
+	return candidate
+
+## Top-left corner (graph coordinates) of the bounding box of the snapshot's nodes.
+func _snapshot_origin(snapshot : Dictionary) -> Vector2:
+	var origin := Vector2(INF, INF)
+	for n : BehaviorNode in snapshot.get("nodes", []):
+		origin.x = minf(origin.x, n.position_in_graph.x)
+		origin.y = minf(origin.y, n.position_in_graph.y)
+	return origin if origin.is_finite() else Vector2.ZERO
+
+func _get_selected_nodes() -> Array[BehaviorGraphNodeBase]:
+	var ret : Array[BehaviorGraphNodeBase] = []
+	for child in get_children():
+		var graph_node := child as BehaviorGraphNodeBase
+		if graph_node != null and graph_node.selected:
+			ret.append(graph_node)
+	return ret
+
+func _deselect_all() -> void:
+	for child in get_children():
+		var element := child as GraphElement
+		if element != null:
+			element.selected = false
+
+#endregion
