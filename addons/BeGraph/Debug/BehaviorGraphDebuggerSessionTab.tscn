@@ -99,17 +99,14 @@ tooltip_text = "Show/Hide the blackboard panel"
 toggle_mode = true
 text = "Show Blackboard"
 
-[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1379906403]
-layout_mode = 2
-
-[node name="AgentLabel" type="Label" parent="HBoxContainer" unique_id=1477156347]
+[node name="Inspect Graph" type="Button" parent="Header" unique_id=156227401]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 3
-theme_override_styles/normal = SubResource("StyleBoxFlat_cy14o")
-text = "Waiting for a Behavior Agent to report in..."
+tooltip_text = "Show/Hide the blackboard panel"
+toggle_mode = true
+text = "Inspect Associated Graph"
 
-[node name="RunningLabel" type="Label" parent="HBoxContainer" unique_id=534982355]
+[node name="RunningLabel" type="Label" parent="." unique_id=534982355]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3

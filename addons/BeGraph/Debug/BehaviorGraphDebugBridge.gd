@@ -149,7 +149,7 @@ func _send_blackboard_delta(path: String, graph: BehaviorGraph) -> void:
 	if deltas.size() > 0:
 		EngineDebugger.send_message(MSG_BLACKBOARD, [path, deltas])
 
-## Reads [param node]'s current behavior property values (resolving blackboard-bound ones through [method BehaviorNode.get], exactly like the node itself does) into a serializable [code]{"name","value","blackboard_key"}[/code] shape.
+## Reads [param node]'s current behavior property values (resolving blackboard-bound ones through [method BehaviorNode.get], exactly like the node itself adoes) into a serializable [code]{"name","value","blackboard_key"}[/code] shape.
 func _serialize_properties(node: BehaviorNode) -> Array:
 	var ret : Array = []
 	for prop in node.behavior_properties:

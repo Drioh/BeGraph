@@ -59,20 +59,21 @@ func _update_process_flags() -> void:
 	set_physics_process(enabled and graph_process_mode == ProcessThread.PHYSICS)
 	set_process(enabled and graph_process_mode == ProcessThread.IDLE)
 
-
-## Exposes the dynamic [code]starting_point[/code] enum property (its options are the names of every access point found in [member behavior_graph]), used from the inspector to pick which entry point this agent starts ticking from.
+## Exposes the dynamic [code]starting_point[/code] enum property (its options are the labels of every access point found in [member behavior_graph]), used from the inspector to pick which entry point this agent starts ticking from.
 func _get_property_list() -> Array[Dictionary]:
 	var ret: Array[Dictionary] = []
 	if behavior_graph != null:
 		var nodes := behavior_graph.get_nodes_by_category("access_point_node")
-		var hint_string := ""
+		var labels := PackedStringArray()
 		for node in nodes:
-			hint_string = ",".join(PackedStringArray([node.label]))
+			# Fallback to the node name so an unlabeled access point still gets a readable, non-empty enum entry.
+			var label : String = node.label if node.label != "" else String(node.resource_name)
+			labels.append(label)
 		ret.append({
 			"name": "starting_point",
 			"type": TYPE_INT,
 			"hint": PROPERTY_HINT_ENUM,
-			"hint_string": hint_string,
+			"hint_string": ",".join(labels),
 			"usage": PROPERTY_USAGE_DEFAULT
 		})
 		ret.append_array(get_overridable_property_list())
@@ -93,7 +94,6 @@ func _get(property: StringName) -> Variant:
 func _set(property: StringName, value: Variant) -> bool:
 	if property == "starting_point":
 		_starting_point_idx = value
-		#_select_starting_node(_starting_point_idx)
 		return true
 	if property.begins_with(OBP):
 		bb_props[StringName(property.get_slice("/",1))] = value
@@ -150,6 +150,7 @@ func _resolve_delta(delta: float) -> float:
 	var elapsed : float = (now - _manual_tick_time) / 1000.0
 	_manual_tick_time = now
 	return elapsed
+
 ## Ticks [member starting_node] every idle frame when [member graph_process_mode] is [constant ProcessThread.IDLE] (outside the editor).
 func _process(_delta: float) -> void:
 	if not Engine.is_editor_hint() && enabled:
@@ -162,7 +163,6 @@ func _physics_process(_delta: float) -> void:
 	if not Engine.is_editor_hint() && enabled:
 		if starting_node != null:
 			starting_node.do_tick(_delta)
-
 
 ## Manually ticks [member starting_node], provided [member enabled] is [code]true[/code]. Intended to be called by user code when [member graph_process_mode] is [constant ProcessThread.MANUAL].
 func tick(_delta:float=-1.0) -> void:

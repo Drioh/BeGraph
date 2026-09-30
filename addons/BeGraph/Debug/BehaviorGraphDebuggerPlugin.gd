@@ -72,7 +72,6 @@ func _on_session_stopped(session_id: int) -> void:
 	s["tab"].agent_option.clear()
 	s["tab"].debug_view.build_from_data([], [])
 	s["tab"].set_blackboard({})
-	s["tab"].agent_label.text = "Waiting for a Behavior Agent to report in..."
 	s["tab"].running_label.text = ""
 
 #region Message handling
@@ -104,7 +103,6 @@ func _on_status_message(s: Dictionary, agent_path: String, deltas: Array) -> voi
 		if entry[1] == BehaviorNode.Status.RUNNING:
 			running.append(entry[0])
 	if running.size() > 0:
-		s["tab"].agent_label.text = "Agent: %s" % [agent_path]
 		s["tab"].running_label.text = "Running: %s" % [(running)]
 
 ## Forwards a behavior-properties delta (see [method BehaviorGraphDebugBridge._send_properties_delta]) to the currently selected agent's [BehaviorGraphDebugView]; ignored if it belongs to an agent that isn't currently displayed.
@@ -135,7 +133,6 @@ func _on_removed_message(s: Dictionary, agent_path: String) -> void:
 		s["current_agent"] = ""
 		s["tab"].debug_view.build_from_data([], [])
 		s["tab"].set_blackboard({})
-		s["tab"].agent_label.text = "Agent removed."
 		s["tab"].running_label.text = ""
 
 func _on_agent_selected(index: int, session_id: int) -> void:
@@ -155,7 +152,6 @@ func _select_agent(s: Dictionary, agent_path: String) -> void:
 	if s["graphs"].has(agent_path):
 		var g : Array = s["graphs"][agent_path]
 		s["tab"].debug_view.build_from_data(g[0], g[1])
-		s["tab"].agent_label.text = "Agent: %s" % agent_path
 	s["tab"].set_blackboard(s["blackboard"].get(agent_path, {}))
 
 #endregion
