@@ -7,7 +7,10 @@ const DISPLAY_INFO : String = "Prints the string in {value} to the console with 
 
 func tick(delta:float)->Status:
 	var _value = get("value")
-	print(_value)
+	if get("print_rich"):
+		print_rich(_value)
+	else:
+		print(_value)
 	tick_next(delta)
 	return Status.SUCCESS
 
@@ -24,4 +27,5 @@ func set_allows_multiple_outputs() -> bool: return false
 
 func set_properties()-> void:
 	_add_behavior_property("value","" ,PROPERTY_HINT_NONE,"","","",PROPERTY_USAGE_NIL_IS_VARIANT)
+	_add_behavior_property("print_rich",false)
 	

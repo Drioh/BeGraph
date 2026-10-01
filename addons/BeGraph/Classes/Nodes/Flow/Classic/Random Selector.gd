@@ -3,17 +3,24 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Random Selector"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon.svg"
-const DISPLAY_INFO : String = "Behaves like Selector, but ticks its successors in a random order each time, stopping at the first SUCCESS or RUNNING.\n\nReturns FAILURE only if all successors fail."
+const DISPLAY_INFO : String = "Behaves like Selector, but ticks its successors in a random order, stopping at the first SUCCESS or RUNNING.\n\nThe order is re-rolled on every tick (no memory): if a successor returns RUNNING, the next tick may pick a different one. Use 'Random Selector (Memory)' to keep the running successor.\n\nReturns FAILURE only if all successors fail."
 
 func set_instruction() -> String:
 	return "Random Selector"
 
 func tick(delta:float) -> Status:
-	var shuffled : Array[BehaviorNode] = _next_ref.duplicate()
-	shuffled.shuffle()
+	var count : int = _next_ref.size()
+	if count == 0:
+		return Status.FAILURE
 
-	for i in shuffled.size():
-		var status : Status = tick_next(delta,i)
+	var order : Array[int] = []
+	order.resize(count)
+	for i in count:
+		order[i] = i
+	order.shuffle()
+
+	for index in order:
+		var status : Status = tick_next(delta, index)
 		if status == Status.SUCCESS or status == Status.RUNNING:
 			return status
 	return Status.FAILURE

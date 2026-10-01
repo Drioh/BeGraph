@@ -30,7 +30,7 @@ func tick(delta:float) -> Status:
 		if _node == null:
 			push_error("\"%s\" couldn't resolve node to move" % resource_name)
 			return Status.FAILURE
-		if _node == null:
+		if _destination == null:
 			push_error("\"%s\" couldn't resolve destination to move towards" % resource_name)
 			return Status.FAILURE
 	dirty=false

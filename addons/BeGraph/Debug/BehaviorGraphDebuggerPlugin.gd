@@ -4,44 +4,32 @@
 class_name BehaviorGraphDebuggerPlugin
 extends EditorDebuggerPlugin
 
-const MESSAGE_PREFIX : String = "begraph"
-const MSG_GRAPH : String = "begraph:graph"
-const MSG_STATUS : String = "begraph:status"
-const MSG_PROPERTIES : String = "begraph:properties"
-const MSG_BLACKBOARD : String = "begraph:blackboard"
-const MSG_REMOVED : String = "begraph:removed"
-
 ## Scene instantiated once per session by [method _setup_session]; see [BehaviorGraphDebuggerSessionTab].
 const SESSION_TAB_SCENE : PackedScene = preload("res://addons/BeGraph/Debug/BehaviorGraphDebuggerSessionTab.tscn")
 
 ## session_id -> [code]{"tab": BehaviorGraphDebuggerSessionTab, "agents": Array[String], "graphs": Dictionary, "blackboard": Dictionary, "current_agent": String}[/code]; see [method _setup_session].
 var _sessions : Dictionary = {}
 
+var _handlers : Dictionary[String, Callable] = {}
+
 ## Returning [code]true[/code] here is what makes the debugger route every [code]"begraph:*"[/code] message to [method _capture].
 func _has_capture(prefix: String) -> bool:
-	return prefix == MESSAGE_PREFIX
+	return prefix == BeGraphProtocol.PREFIX
+
+func _init() -> void:
+	_handlers = {
+		BeGraphProtocol.GRAPH: _on_graph_message,
+		BeGraphProtocol.STATUS: _on_status_message,
+		BeGraphProtocol.PROPERTIES: _on_properties_message,
+		BeGraphProtocol.BLACKBOARD: _on_blackboard_message,
+		BeGraphProtocol.REMOVED: _on_removed_message,
+	}
 
 func _capture(message: String, data: Array, session_id: int) -> bool:
-	if not _sessions.has(session_id):
+	if not _sessions.has(session_id) or not _handlers.has(message):
 		return false
-	var s : Dictionary = _sessions[session_id]
-
-	if message == MSG_GRAPH:
-		_on_graph_message(s, data[0], data[1], data[2], data[3])
-		return true
-	if message == MSG_STATUS:
-		_on_status_message(s, data[0], data[1])
-		return true
-	if message == MSG_PROPERTIES:
-		_on_properties_message(s, data[0], data[1])
-		return true
-	if message == MSG_BLACKBOARD:
-		_on_blackboard_message(s, data[0], data[1])
-		return true
-	if message == MSG_REMOVED:
-		_on_removed_message(s, data[0])
-		return true
-	return false
+	_handlers[message].callv([_sessions[session_id]] + data)
+	return true
 
 ## Called once for every running game session (and again for each new one): instantiates [constant SESSION_TAB_SCENE] and registers it via [method EditorDebuggerSession.add_session_tab].
 func _setup_session(session_id: int) -> void:
@@ -76,12 +64,8 @@ func _on_session_stopped(session_id: int) -> void:
 
 #region Message handling
 
-func _on_graph_message(s: Dictionary, agent_path: String, nodes_data: Array, connections_data: Array, blackboard_data: Array) -> void:
+func _on_graph_message(s: Dictionary, agent_path: String, nodes_data: Array, connections_data: Array, blackboard: Dictionary) -> void:
 	s["graphs"][agent_path] = [nodes_data, connections_data]
-
-	var blackboard : Dictionary = {}
-	for entry in blackboard_data:
-		blackboard[entry["name"]] = [entry["type"], entry["value"]]
 	s["blackboard"][agent_path] = blackboard
 
 	if not s["agents"].has(agent_path):

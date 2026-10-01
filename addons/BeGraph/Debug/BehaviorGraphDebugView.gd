@@ -45,7 +45,7 @@ func set_graph(graph: BehaviorGraph) -> void:
 	if graph == null:
 		return
 	for behavior_node in graph.nodes.values():
-		_add_debug_node_from_info(_info_from_node(behavior_node))
+		_add_debug_node_from_info(behavior_node.to_debug_info())
 		_live_nodes[StringName(behavior_node.resource_name)] = behavior_node
 	for c in graph.connections:
 		if _debug_nodes.has(c["from_node"]) and _debug_nodes.has(c["to_node"]):
@@ -83,7 +83,7 @@ func _process(_delta: float) -> void:
 				_node_state[key] = {"status": n.last_status, "since": n.last_tick_time}
 			var gn : BehaviorGraphDebugNode = _debug_nodes.get(key)
 			if gn and not n.behavior_properties.is_empty():
-				gn.update_property_values(_serialize_properties(n))
+				gn.update_property_values(n.serialize_properties())
 	for key : StringName in _debug_nodes.keys():
 		_update_status_visual(key)
 
@@ -100,36 +100,6 @@ func _clear() -> void:
 	_node_category.clear()
 	_node_state.clear()
 	_live_nodes.clear()
-
-## Converts a live [param node] into the plain dictionary shape [method _add_debug_node_from_info] expects: [code]{"name","category","display_name","input","output","position","conditions","instruction","behavior_properties"}[/code], all plain/serializable values - i.e. exactly what [BehaviorGraphDebugBridge] also sends over the wire, so both modes build identical-looking nodes.
-func _info_from_node(node: BehaviorNode) -> Dictionary:
-	var const_map : Dictionary = node.get_script().get_script_constant_map() if node.get_script() else {}
-	var conditions : Array = []
-	for c in node.conditions:
-		conditions.append(String(c["text"]))
-	return {
-		"name": String(node.resource_name),
-		"category": node.node_category,
-		"display_name": const_map.get("DISPLAY_NAME", node.node_category),
-		"input": node.input,
-		"output": node.output,
-		"position": node.position_in_graph,
-		"conditions": conditions,
-		"instruction": node.instruction,
-		"behavior_properties": _serialize_properties(node),
-	}
-
-## Reads [param node]'s current behavior property values (resolving blackboard-bound ones through [method BehaviorNode.get], exactly like the node itself does) into the [code]{"name","value","blackboard_key"}[/code] shape used both here and by [method BehaviorGraphDebugBridge._serialize_properties]. Stringifies [Object] values, since those can't be safely displayed/serialized as-is.
-func _serialize_properties(node: BehaviorNode) -> Array:
-	var ret : Array = []
-	for prop in node.behavior_properties:
-		var value : Variant = node.get(prop["name"])
-		ret.append({
-			"name": String(prop["name"]),
-			"value": str(value) if value is Object else value,
-			"blackboard_key": String(prop["blackboard_key"]),
-		})
-	return ret
 
 ## Instantiates [constant DEBUG_NODE_SCENE] for [param info] and configures it via [method BehaviorGraphDebugNode.setup] - enough to see the graph's shape, its nodes' instructions/properties, and follow its live state.
 func _add_debug_node_from_info(info: Dictionary) -> void:

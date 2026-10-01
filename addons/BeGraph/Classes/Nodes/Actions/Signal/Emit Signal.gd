@@ -17,7 +17,7 @@ func tick(delta:float) -> Status:
 		push_error("\"%s\" couldn't find the BehaviorAgent" % resource_name)
 		return Status.FAILURE
 
-	agent.behavior_agent_signal.emit(get("args"))
+	agent.behavior_signal.emit(get("args"))
 	tick_next(delta)
 	return Status.SUCCESS
 

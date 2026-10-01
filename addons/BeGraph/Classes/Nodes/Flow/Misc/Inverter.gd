@@ -16,7 +16,6 @@ func tick(delta:float) -> Status:
 		Status.SUCCESS:
 			return Status.FAILURE
 		Status.FAILURE:
-			tick_next(delta)
 			return Status.SUCCESS
 		_:
 			return status

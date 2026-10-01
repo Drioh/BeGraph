@@ -27,7 +27,6 @@ func tick(delta:float) -> Status:
 	_current_count += 1
 	if times > 0 and _current_count >= times:
 		_current_count = 0
-		tick_next(delta)
 		return Status.SUCCESS
 
 	return Status.RUNNING

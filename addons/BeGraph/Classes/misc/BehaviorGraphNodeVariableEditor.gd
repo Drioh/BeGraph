@@ -424,8 +424,9 @@ func _notification(what: int) -> void:
 		var cond_1 : bool = typeof(drag_data["resource"].value) in CONVERSION_DICT[type]
 		var cond_2 : bool = typeof(drag_data["resource"].value) == TYPE_NIL
 		
-		var bg_color : Color = ProjectSettings.get_setting("BeGraph/colors/%sallowed_variable_color_background"%"" if (cond_1 or cond_2) else "not_")
-		var border_color : Color = ProjectSettings.get_setting("BeGraph/colors/%sallowed_variable_color_border"%"" if (cond_1 or cond_2) else "not_")
+		var prefix : String = "" if (cond_1 or cond_2) else "not_"
+		var bg_color : Color = ProjectSettings.get_setting("BeGraph/colors/%sallowed_variable_color_background"%prefix)
+		var border_color : Color = ProjectSettings.get_setting("BeGraph/colors/%sallowed_variable_color_border"%prefix)
 		fallback_layer.set_indexed("theme_override_styles/panel:bg_color",bg_color)
 		fallback_layer.set_indexed("theme_override_styles/panel:border_color",border_color)
 

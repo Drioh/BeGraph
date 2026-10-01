@@ -6,8 +6,6 @@ extends EditorPlugin
 var dock : EditorDock
 ## The root [Control] instantiated from [code]BeGraphDock.tscn[/code], containing the actual graph editor UI.
 var begraph_dock : Control
-## File dialog used by [method _on_save_as_pressed] to pick a destination path for a new [BehaviorGraph] resource.
-var file_dialog: EditorFileDialog
 ## Tracks whether [member dock] is currently added to the editor, to avoid double add/remove calls.
 var _dock_added : bool = false
 
@@ -76,6 +74,8 @@ func _enter_tree():
 	add_debugger_plugin(_debugger_plugin)
 	add_autoload_singleton(DEBUG_BRIDGE_AUTOLOAD_NAME, DEBUG_BRIDGE_SCRIPT_PATH)
 	
+	begraph_dock.ready.connect(_connect_dock_buttons, CONNECT_ONE_SHOT)
+	
 
 # Removes every [ProjectSettings] entry written by this addon, removes the dock, unregisters the live graph debugger, and disconnects the filesystem-dock signal.
 func _exit_tree():
@@ -95,6 +95,13 @@ func _exit_tree():
 func _enable_plugin() -> void:
 	pass
 
+func _connect_dock_buttons() -> void:
+	begraph_dock.close_button.pressed.connect(_remove_dock)
+	begraph_dock.save_button.pressed.connect(_on_save_pressed)
+	begraph_dock.save_as_button.pressed.connect(_on_save_as_pressed)
+	begraph_dock.new_button.pressed.connect(_on_new_pressed)
+	begraph_dock.load_button.pressed.connect(_on_load_pressed)
+
 ## Callback for [signal FileSystemDock.resource_removed]: unloads the currently edited graph (via [method BeGraphDock.load_graph]) if the removed resource is the one currently open in the dock.
 func _on_resource_removed(resource: Resource) -> void:
 	if resource == begraph_dock.loaded_graph:
@@ -108,7 +115,8 @@ func _on_files_moved(old_file: String, new_file: String) -> void:
 		begraph_dock.refresh_label()
 
 
-func _disable_plugin() -> void: _remove_dock()
+func _disable_plugin() -> void: 
+	_remove_dock()
 
 # Overrides [method EditorPlugin._handles]: this plugin's custom editing behavior applies to [BehaviorGraph] and [BehaviorNode] resources.
 func _handles(object: Object) -> bool:
@@ -125,16 +133,6 @@ func _make_visible(visible: bool) -> void:
 	if visible or EditorInterface.get_inspector().get_edited_object() is BehaviorGraph:
 		_add_dock()
 		dock.make_visible()
-		if not begraph_dock.close_button.pressed.is_connected(_on_close_pressed):
-			begraph_dock.close_button.pressed.connect(_on_close_pressed)
-		if not begraph_dock.save_button.pressed.is_connected(_on_save_pressed):
-			begraph_dock.save_button.pressed.connect(_on_save_pressed)
-		if not begraph_dock.save_as_button.pressed.is_connected(_on_save_as_pressed):
-			begraph_dock.save_as_button.pressed.connect(_on_save_as_pressed)
-		if not begraph_dock.new_button.pressed.is_connected(_on_new_pressed):
-			begraph_dock.new_button.pressed.connect(_on_new_pressed)
-		if not begraph_dock.load_button.pressed.is_connected(_on_load_pressed):
-			begraph_dock.load_button.pressed.connect(_on_load_pressed)
 	else:
 		_remove_dock()
 
@@ -187,20 +185,10 @@ func _save_loaded_graph(on_saved: Callable) -> void:
 	on_saved.call()
 
 func _prompt_save_path(graph: Resource, on_saved: Callable) -> void:
-	var d := EditorFileDialog.new()
-	d.file_mode = EditorFileDialog.FILE_MODE_SAVE_FILE
-	d.access = EditorFileDialog.ACCESS_RESOURCES
-	d.add_filter("*.tres", "Behavior Graph")
-	d.current_file = "NewBehaviorGraph.tres"
-	d.file_selected.connect(func(path: String):
-		ResourceSaver.save(graph, path)
-		EditorInterface.get_resource_filesystem().scan()
-		on_saved.call()
-		d.queue_free()
+	_open_file_dialog(EditorFileDialog.FILE_MODE_SAVE_FILE, func(path: String):
+		if _save_graph_to(graph, path):
+			on_saved.call()
 	)
-	d.canceled.connect(d.queue_free)
-	EditorInterface.get_base_control().add_child(d)
-	d.popup_centered_ratio()
 
 func _on_save_pressed() -> void:
 	_save_loaded_graph(func():
@@ -208,42 +196,49 @@ func _on_save_pressed() -> void:
 	)
 
 func _on_save_as_pressed() -> void:
-	file_dialog = EditorFileDialog.new()
-	file_dialog.file_mode = EditorFileDialog.FILE_MODE_SAVE_FILE
-	file_dialog.access = EditorFileDialog.ACCESS_RESOURCES
-	file_dialog.add_filter("*.tres", "Behavior Graph")
-	file_dialog.current_file = "NewBehaviorGraph.tres"
-	file_dialog.file_selected.connect(_on_file_selected)
-	EditorInterface.get_base_control().add_child(file_dialog)
-	file_dialog.popup_centered_ratio()
+	_open_file_dialog(EditorFileDialog.FILE_MODE_SAVE_FILE, func(path: String):
+		if _save_graph_to(begraph_dock.loaded_graph, path):
+			begraph_dock.load_graph(load(path))
+	)
 
 func _on_new_pressed() -> void:
 	_request_open_graph(BehaviorGraph.new())
 
 func _on_load_pressed() -> void:
-	var d := EditorFileDialog.new()
-	d.file_mode = EditorFileDialog.FILE_MODE_OPEN_FILE
-	d.access = EditorFileDialog.ACCESS_RESOURCES
-	d.add_filter("*.tres", "Behavior Graph")
-	d.file_selected.connect(func(path: String):
+	_open_file_dialog(EditorFileDialog.FILE_MODE_OPEN_FILE, func(path: String):
 		var res := load(path)
 		if res is BehaviorGraph:
 			_request_open_graph(res)
 		else:
 			push_error("\"%s\" is not a valid Behavior Graph" % path)
+	)
+
+## Creates a EditorFileDialog (.tres), shows it and frees it automatically when it gets closed.
+func _open_file_dialog(mode: EditorFileDialog.FileMode, on_selected: Callable) -> void:
+	var d := EditorFileDialog.new()
+	d.file_mode = mode
+	d.access = EditorFileDialog.ACCESS_RESOURCES
+	d.add_filter("*.tres", "Behavior Graph")
+	if mode == EditorFileDialog.FILE_MODE_SAVE_FILE:
+		d.current_file = "NewBehaviorGraph.tres"
+	d.file_selected.connect(func(path: String):
+		on_selected.call(path)
 		d.queue_free()
 	)
 	d.canceled.connect(d.queue_free)
 	EditorInterface.get_base_control().add_child(d)
 	d.popup_centered_ratio()
 
-#endregion
-
-## Callback for [signal EditorFileDialog.file_selected] from the save-as dialog: saves the currently loaded graph to [param path], rescans the filesystem, and reloads the dock from the newly-saved file.
-func _on_file_selected(path: String) -> void:
-	ResourceSaver.save(begraph_dock.loaded_graph, path)
+## Saves [param graph] in [param path] and scans the filesystem to reload it. Returns true if save is successful.
+func _save_graph_to(graph: Resource, path: String) -> bool:
+	var err := ResourceSaver.save(graph, path)
+	if err != OK:
+		push_error("Couldn't save resource %s to %s (error %d)" % [graph, path, err])
+		return false
 	EditorInterface.get_resource_filesystem().scan()
-	begraph_dock.load_graph(load(path))
+	return true
+
+#endregion
 #region SETTINGS
 
 ## Writes every [ProjectSettings] entry owned by this addon: the node-scripts path, the null-variable color, the custom-categories list, the blackboard drag/drop colors, and the background/border colors for every base and custom node category. [br]
