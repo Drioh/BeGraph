@@ -10,11 +10,13 @@ func set_instruction() -> String:
 
 func tick(delta:float) -> Status:
 	var target : Node = _resolve_node(get("node"))
-	if target == null or not _is_camera(target):
+	var is_camera : bool = target is Camera2D or target is Camera3D
+	if target == null or not is_camera:
 		push_error("\"%s\" couldn't resolve a camera" % resource_name)
 		return Status.FAILURE
-
-	if target.is_current():
+	
+	var condition = target.is_current() if target is Camera2D else target.current
+	if condition:
 		tick_condition(delta,0)
 	else:
 		tick_condition(delta,1)
@@ -33,7 +35,3 @@ func set_conditions() -> PackedStringArray:
 		"Current",
 		"Not current"
 	])
-
-## Returns [code]true[/code] if [param n] is a camera this node supports.
-func _is_camera(n: Node) -> bool:
-	return n is Camera2D or n is Camera3D

@@ -66,7 +66,7 @@ _source = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>
      style=\"mix-blend-mode:normal;fill:#ffffff;fill-opacity:1;stroke-width:17.7785;stroke-linejoin:miter;stroke-dasharray:none\" />
 </svg>
 "
-base_scale = 0.9
+base_scale = 10.0
 
 [node name="BeGraph" type="VBoxContainer" unique_id=1886218773]
 anchors_preset = 15
@@ -148,7 +148,6 @@ layout_mode = 2
 
 [node name="Label" type="Label" parent="ContentSplit/PanelContainer/PanelContainer/VBoxContainer" unique_id=1293246839]
 layout_mode = 2
-theme_override_font_sizes/font_size = 10
 text = "-LEGEND-"
 horizontal_alignment = 1
 
@@ -158,12 +157,14 @@ layout_mode = 2
 [node name="TextureRect" type="TextureRect" parent="ContentSplit/PanelContainer/PanelContainer/VBoxContainer/HBoxContainer" unique_id=1988833618]
 modulate = Color(0.3764706, 0.8745098, 0.4392157, 1)
 layout_mode = 2
+offset_transform_enabled = true
+offset_transform_scale = Vector2(0.8, 0.8)
 texture = SubResource("DPITexture_5uvbl")
-stretch_mode = 3
+expand_mode = 2
+stretch_mode = 5
 
 [node name="Label" type="Label" parent="ContentSplit/PanelContainer/PanelContainer/VBoxContainer/HBoxContainer" unique_id=94422083]
 layout_mode = 2
-theme_override_font_sizes/font_size = 8
 text = "SUCCESS"
 
 [node name="HBoxContainer2" type="HBoxContainer" parent="ContentSplit/PanelContainer/PanelContainer/VBoxContainer" unique_id=1635051874]
@@ -172,12 +173,14 @@ layout_mode = 2
 [node name="TextureRect" type="TextureRect" parent="ContentSplit/PanelContainer/PanelContainer/VBoxContainer/HBoxContainer2" unique_id=830311968]
 modulate = Color(1, 0, 0.23529412, 1)
 layout_mode = 2
+offset_transform_enabled = true
+offset_transform_scale = Vector2(0.8, 0.8)
 texture = SubResource("DPITexture_5uvbl")
-stretch_mode = 3
+expand_mode = 2
+stretch_mode = 5
 
 [node name="Label" type="Label" parent="ContentSplit/PanelContainer/PanelContainer/VBoxContainer/HBoxContainer2" unique_id=2081387930]
 layout_mode = 2
-theme_override_font_sizes/font_size = 8
 text = "FAILURE"
 
 [node name="HBoxContainer3" type="HBoxContainer" parent="ContentSplit/PanelContainer/PanelContainer/VBoxContainer" unique_id=26320799]
@@ -186,12 +189,14 @@ layout_mode = 2
 [node name="TextureRect" type="TextureRect" parent="ContentSplit/PanelContainer/PanelContainer/VBoxContainer/HBoxContainer3" unique_id=314717798]
 modulate = Color(1, 0.8745098, 0.4392157, 1)
 layout_mode = 2
+offset_transform_enabled = true
+offset_transform_scale = Vector2(0.8, 0.8)
 texture = SubResource("DPITexture_5uvbl")
-stretch_mode = 3
+expand_mode = 2
+stretch_mode = 5
 
 [node name="Label" type="Label" parent="ContentSplit/PanelContainer/PanelContainer/VBoxContainer/HBoxContainer3" unique_id=505450811]
 layout_mode = 2
-theme_override_font_sizes/font_size = 8
 text = "RUNNING"
 
 [node name="BlackboardPanel" type="PanelContainer" parent="ContentSplit" unique_id=902733442]

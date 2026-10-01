@@ -12,17 +12,27 @@ func set_instruction() -> String:
 
 func tick(delta:float) -> Status:
 	var target : Node = _resolve_node(get("node"))
-	if target == null or not _is_camera(target):
+	var is_camera = target is Camera2D or target is Camera3D
+	if target == null or !is_camera:
 		push_error("\"%s\" couldn't resolve a camera" % resource_name)
 		return Status.FAILURE
 
 	match get("mode"):
 		Mode.ON:
-			target.current = true
+			target.make_current()
 		Mode.OFF:
-			target.current = false
+			if target is Camera2D:
+				push_error("%s: target %s is a Camera2D, in order not to be the current camera, another Camera2D must be set as current in its stead."%[self,target])
+			elif target is Camera3D:
+				target.current=false
 		Mode.TOGGLE:
-			target.current = not target.current
+			if target is Camera2D:
+				if !target.is_current():
+					target.make_current()
+				else:
+					push_error("%s: target %s is a Camera2D, in order not to be the current camera, another Camera2D must be set as current in its stead."%[self,target])
+			elif target is Camera3D:
+				target.current=false
 
 	tick_next(delta)
 	return Status.SUCCESS
@@ -35,7 +45,3 @@ func set_allows_multiple_outputs() -> bool: return false
 func set_properties()-> void:
 	_add_behavior_property("node", NodePath(""), PROPERTY_HINT_NODE_TYPE, "Camera2D,Camera3D", "", "", PROPERTY_USAGE_NODE_PATH_FROM_SCENE_ROOT)
 	_add_behavior_property("mode", 0, PROPERTY_HINT_ENUM, "On,Off,Toggle")
-
-## Returns [code]true[/code] if [param n] is a camera this node supports.
-func _is_camera(n: Node) -> bool:
-	return n is Camera2D or n is Camera3D

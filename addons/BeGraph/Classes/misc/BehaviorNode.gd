@@ -15,8 +15,6 @@ const INTERNAL_USAGE := PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_READ_ONLY | PROP
 ## Never call this directly from outside the node: successors are ticked through [method tick_next]/[method tick_condition] (or, for the graph's starting node, by [BehaviorAgent]), which route through [method do_tick] instead so its execution can be tracked (e.g. by the live graph debugger).
 @abstract func tick(delta:float) -> Status
 
-func dirty_func(delta:float) -> void : pass
-
 ## The line displayed in the node. use [code]{}[/code] annotation to declare variables.
 @abstract func set_instruction() -> String
 
@@ -98,11 +96,13 @@ var regex :RegEx= RegEx.create_from_string(r"\{([^{}]+)\}")
 
 ## Weak reference to the [BehaviorGraph] this node belongs to. Used to resolve blackboard bindings and to notify the graph of connection changes.
 @export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE) var _graph_ref : WeakRef
+
 ## Weak references to this node's successor(s), used when [member output] is [code]true[/code].
 @export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE) var _next_ref : Array[StringName]
 
 ## Emitted whenever a property's blackboard binding is enabled or disabled via [method set_node_property_blackboard_key].
 signal blackboard_key_set(property:StringName,blackboard_key:StringName)
+
 ## Emitted whenever [member conditions] is rebuilt (e.g. after an enum-based property changes its number of entries).
 signal conditions_changed
 
@@ -306,7 +306,6 @@ func get_agent()->Node:
 		return null
 	return agent
 
-
 ## Checks if there is a property with the given name in [param behavior_properties]
 func _has(property:StringName) -> bool:
 	for prop in behavior_properties:
@@ -324,9 +323,6 @@ func is_blackboard_reference_enabled(key:StringName)->bool:
 ## Public entry point used to actually run this node: calls the concrete [method tick] implementation, then records [member last_status]/[member last_tick_time] and emits [signal ticked].[br]
 ## [method tick_next] and [method tick_condition] call this (instead of [method tick] directly) to reach a successor, and [BehaviorAgent] calls this on the graph's starting node - so every tick anywhere in the graph passes through here exactly once. This is what lets external tools (like the live graph debugger) track each node's status without any individual [BehaviorNode] subclass having to report it itself.
 func do_tick(delta:float) -> Status:
-	if dirty:
-		dirty_func(delta)
-		dirty = false
 	var status : Status = tick(delta)
 	last_status = status
 	last_tick_time = Time.get_ticks_msec()
@@ -382,14 +378,15 @@ func tick_condition(delta:float,index:int = 0) -> Status:
 ## Accepts either an absolute or relative [NodePath] (resolved through the owning [BehaviorAgent]'s [member BehaviorAgent.actor]) or a direct reference to a [Node] (useful if [param value] is connected to a blackboard variable containing the node).
 func _resolve_node(value: Variant) -> Node:
 	if not Engine.is_editor_hint():
-		if value is Node2D or value is Node3D or value is Vector2 or value is Vector2i or value is Vector3 or value is Vector3i:
-			return value
+		if value ==null:
+			push_error("BehaviorNode %s: trying to resolve null value"%resource_name)
 		if value is NodePath and value != NodePath(""):
 			var agent : Node = get_agent()
 			if agent == null or agent.owner == null:
 				push_error("BehaviorNode %s: cannot resolve scene root for %s" % [resource_name, value])
 				return null
 			return agent.actor.get_node(value)
+		return value
 	return null
 
 ## Serializable form of node, for debug purposes.
