@@ -275,7 +275,7 @@ _graph_ref = Object(WeakRef,"script":null)
 _next_ref = Array[StringName]([&"_GraphNode_28406"])
 
 [resource]
-resource_local_to_scene = true
+resource_name = "Trogolo"
 script = ExtResource("4_k7ocg")
 blackboard = Array[ExtResource("1_sguni")]([SubResource("Resource_0y5uo"), SubResource("Resource_k7ocg"), ExtResource("2_gad0g")])
 nodes = Dictionary[StringName, ExtResource("2_0y5uo")]({

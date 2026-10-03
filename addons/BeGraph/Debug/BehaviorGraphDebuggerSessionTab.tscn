@@ -106,12 +106,22 @@ tooltip_text = "Show/Hide the blackboard panel"
 toggle_mode = true
 text = "Inspect Associated Graph"
 
-[node name="RunningLabel" type="Label" parent="." unique_id=534982355]
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=878485444]
+layout_mode = 2
+
+[node name="GraphLabel" type="Label" parent="HBoxContainer" unique_id=1388067273]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/normal = SubResource("StyleBoxFlat_cy14o")
-text = "Waiting for a Behavior Agent to report in..."
+text = "Running: Waiting for a Behavior Agent to report in..."
+
+[node name="RunningLabel" type="Label" parent="HBoxContainer" unique_id=534982355]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/normal = SubResource("StyleBoxFlat_cy14o")
+text = "Running : Waiting for a Behavior Agent to report in..."
 
 [node name="ContentSplit" type="HBoxContainer" parent="." unique_id=1718728516]
 layout_mode = 2

@@ -23,11 +23,10 @@ extends Resource
 ##The agent running this graph
 @export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY) var _agent_ref : WeakRef = weakref(null)
 
-## Creates the graph's first [AccessPointNode] (named [code]"start_node"[/code]) if [member nodes] is empty, guaranteeing every new [BehaviorGraph] has at least one valid entry point.
+## Creates the graph's first [AccessPointNode] if [member nodes] is empty, guaranteeing every new [BehaviorGraph] has at least one valid entry point.
 func _init() -> void:
-	if nodes.size()==0:
+	if nodes.is_empty():
 		var first_node = AccessPointNode.new()
-		first_node.resource_name = "start_node"
 		add_node(first_node)
 
 

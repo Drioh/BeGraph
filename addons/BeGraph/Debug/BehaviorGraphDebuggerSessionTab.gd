@@ -5,6 +5,7 @@ extends VBoxContainer
 
 ## Lets the person pick which running [BehaviorAgent] to inspect.
 @onready var agent_option : OptionButton = %AgentOption
+@onready var graph_label: Label = %GraphLabel
 @onready var running_label: Label = %RunningLabel
 ## Renders the selected agent's graph, live.
 @onready var debug_view : BehaviorGraphDebugView = %DebugView

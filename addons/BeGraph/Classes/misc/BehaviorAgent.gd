@@ -212,3 +212,9 @@ func get_overridable_property_list()->Array[Dictionary]:
 ## Returns this agent's live, runtime-duplicated [BehaviorGraph] (the one actually being ticked via [method do_tick] each frame), for read-only inspection by external tools such as the live graph debugger. Returns [code]null[/code] before [method _ready] has run (e.g. in the editor, or before the game has started).
 func get_debug_graph() -> BehaviorGraph:
 	return _behavior_graph
+
+func get_debug_graph_info() -> Dictionary:
+	return {
+		"name": behavior_graph.resource_name,
+		"path": behavior_graph.resource_path
+	}

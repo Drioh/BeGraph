@@ -26,7 +26,6 @@ func _init() -> void:
 	}
 
 func _capture(message: String, data: Array, session_id: int) -> bool:
-	print(message)
 	if not _sessions.has(session_id) or not _handlers.has(message):
 		return false
 	_handlers[message].callv([_sessions[session_id]] + data)
@@ -61,13 +60,16 @@ func _on_session_stopped(session_id: int) -> void:
 	s["tab"].agent_option.clear()
 	s["tab"].debug_view.build_from_data([], [])
 	s["tab"].set_blackboard({})
-	s["tab"].running_label.text = ""
+	s["tab"].running_label.text = "Running: Waiting for a Behavior Agent to report in..."
+	s["tab"].graph_label.text = "Graph: Waiting for a Behavior Agent to report in..."
 
 #region Message handling
 
-func _on_graph_message(s: Dictionary, agent_path: String, nodes_data: Array, connections_data: Array, blackboard: Dictionary) -> void:
+func _on_graph_message(s: Dictionary, agent_path: String, nodes_data: Array, connections_data: Array, blackboard: Dictionary, graph_name : String) -> void:
 	s["graphs"][agent_path] = [nodes_data, connections_data]
 	s["blackboard"][agent_path] = blackboard
+	s["tab"].graph_label.text = graph_name
+	print("GRAFO: %s"%graph_name)
 
 	if not s["agents"].has(agent_path):
 		s["agents"].append(agent_path)
@@ -127,6 +129,7 @@ func _on_agent_selected(index: int, session_id: int) -> void:
 	if index < 0 or index >= s["agents"].size():
 		return
 	_select_agent(s, s["agents"][index])
+	
 
 func _select_agent(s: Dictionary, agent_path: String) -> void:
 	var index : int = s["agents"].find(agent_path)
