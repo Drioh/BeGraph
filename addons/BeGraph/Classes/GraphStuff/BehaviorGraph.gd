@@ -92,16 +92,3 @@ func set_agent(n: Node) -> void:
 
 func get_agent_node() -> Node:
 	return _agent_ref.get_ref()
-
-## Prepares a freshly duplicated graph for execution: binds it to [param agent], rebuilds successor links from [member connections] and points every node back to this graph.
-func setup_runtime(agent: Node) -> void:
-	set_agent(agent)
-	for c in connections:
-		var from_node : BehaviorNode = get_node(c["from_node"])
-		var to_node : BehaviorNode = get_node(c["to_node"])
-		if from_node == null or to_node == null:
-			push_error("Can't build connection %s -> %s" % [c["from_node"], c["to_node"]])
-			continue
-		from_node.add_next(to_node, c["from_port"])
-	for node in nodes.values():
-		node._graph_ref = weakref(self)

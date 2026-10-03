@@ -184,13 +184,12 @@ func _add_behavior_property(
 	hint_string:Variant="",
 	custom_info:String="",
 	classname:String="", 
-	usage:int=PROPERTY_USAGE_SCRIPT_VARIABLE|PROPERTY_USAGE_EDITOR|PROPERTY_USAGE_STORAGE,
-	type_override:int = -1)->void:
+	usage:int=PROPERTY_USAGE_SCRIPT_VARIABLE|PROPERTY_USAGE_EDITOR|PROPERTY_USAGE_STORAGE)->void:
 
 	var entry : Dictionary={
 		"name":name,
 		"class_name":classname,
-		"type":type_override if type_override != -1 else typeof(default_value),
+		"type":typeof(default_value),
 		"hint":hint,
 		"hint_string":str(hint_string) if hint_string is not Callable else hint_string,
 		"custom_info":custom_info,
