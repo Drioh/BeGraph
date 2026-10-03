@@ -26,6 +26,7 @@ func _init() -> void:
 	}
 
 func _capture(message: String, data: Array, session_id: int) -> bool:
+	print(message)
 	if not _sessions.has(session_id) or not _handlers.has(message):
 		return false
 	_handlers[message].callv([_sessions[session_id]] + data)

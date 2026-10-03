@@ -66,7 +66,7 @@ func _send_graph_structure(path: String, graph: BehaviorGraph) -> void:
 		"from_node": String(c["from_node"]), "from_port": c["from_port"],
 		"to_node": String(c["to_node"]), "to_port": c["to_port"],
 	})
-	# Il blackboard viaggia già nel formato {nome: [tipo, valore]} usato dal Plugin.
+
 	EngineDebugger.send_message(BeGraphProtocol.GRAPH,
 		[path, nodes_data, connections_data, _blackboard_snapshot(graph)])
 ## Sends only the nodes whose [member BehaviorNode.last_tick_time] changed since the previous broadcast for this agent, as [code][node_name:String, status:int][/code] pairs. Sends nothing at all if no node ticked since last time.
@@ -88,6 +88,7 @@ func _send_status_delta(path: String, graph: BehaviorGraph) -> void:
 func _send_properties_delta(path: String, graph: BehaviorGraph) -> void:
 	var last : Dictionary = _last_sent_properties[path]
 	var deltas : Array = []
+	var carlo 
 	for node in graph.nodes.values():
 		if node.behavior_properties.is_empty():
 			continue

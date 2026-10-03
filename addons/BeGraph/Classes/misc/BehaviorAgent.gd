@@ -109,24 +109,15 @@ func _ready() -> void:
 			return
 		
 		_behavior_graph = behavior_graph.duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
-		_behavior_graph.set_agent(self)
+		
+		_behavior_graph.setup_runtime(self)
+			
 		_select_starting_node(_starting_point_idx)
-		
-		for c in _behavior_graph.connections:
-			var from_node : BehaviorNode = _behavior_graph.get_node(c["from_node"])
-			var to_node : BehaviorNode = _behavior_graph.get_node(c["to_node"])
-			if from_node == null or to_node == null:
-				push_error("Can't build connection %s -> %s" % [c["from_node"], c["to_node"]])
-				continue
-			from_node.add_next(to_node, c["from_port"])
-		
 		if starting_node == null:
 			push_error("Starting Node not set for Behavior Agent %s" % self)
 			process_mode = Node.PROCESS_MODE_DISABLED
 			return
 		
-		for node in _behavior_graph.nodes.values():
-			node._graph_ref = weakref(_behavior_graph)
 
 		for p in bb_props:
 			var v = get("%s/%s"%[OBP,p])
