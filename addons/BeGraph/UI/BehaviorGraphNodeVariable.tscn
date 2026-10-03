@@ -74,11 +74,6 @@ size_flags_vertical = 4
 mouse_filter = 1
 icon = ExtResource("1_yo868")
 icon_alignment = 1
-item_count = 2
-popup/item_0/text = "Local Blackboard"
-popup/item_0/id = 0
-popup/item_1/text = "Shared Blackboard"
-popup/item_1/id = 1
 
 [node name="BBUnlinkButton" type="Button" parent="HBoxContainer" unique_id=18998032]
 unique_name_in_owner = true
