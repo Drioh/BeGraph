@@ -8,6 +8,10 @@
 
 config_version=5
 
+[BeGraph]
+
+colors/node_colors/custom_categories=PackedStringArray("Prova")
+
 [application]
 
 config/name="BeGraph"

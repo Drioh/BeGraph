@@ -2,8 +2,6 @@
 ## Visual [GraphNode] for a [BehaviorComment]: sharp-edged colored box with a TITLE ([LineEdit]) and a COMMENT ([TextEdit]), plus a [ColorPickerButton] in the titlebar bound to [member BehaviorComment.color]. No slots: comments don't connect to anything.
 extends BehaviorGraphNodeBase
 
-const COMMENT_COLOR : Color = Color(0.75, 0.536, 0.211, 0.529)
-
 @onready var color_picker: ColorPicker = %ColorPicker
 @onready var comment_edit: TextEdit = %CommentEdit
 
