@@ -12,9 +12,9 @@ func _on_node_set() -> void:
 	var comment: BehaviorComment = node
 	title_edit.text = comment.comment_title
 	comment_edit.text = comment.comment_text
-	color_picker.color = comment.color
+	color_picker.color = comment.background_color
 	resizable=true
-	_apply_color(comment.color)
+	_apply_color(comment.background_color,comment.border_color)
 	
 	var tb : HBoxContainer = get_titlebar_hbox()
 
@@ -38,7 +38,7 @@ func _on_node_set() -> void:
 	tb.add_child(color_picker_button)
 
 	color_picker.color_changed.connect(func(c: Color):
-		comment.color = c
+		comment.background_color = c
 		_apply_color(c)
 	)
 	
@@ -57,12 +57,12 @@ func _sync_from_node() -> void:
 		color_picker.color = comment.color
 		_apply_color(comment.color)
 
-func _apply_color(c: Color) -> void:
-	var border := c.lightened(0.35)
-	color_picker_button.self_modulate=c
-	set_indexed("theme_override_styles/panel:bg_color", c)
-	set_indexed("theme_override_styles/titlebar:bg_color", c)
-	set_indexed("theme_override_styles/panel_selected:bg_color", c)
+func _apply_color(bg: Color, bd:Color = Color(0)) -> void:
+	var border := bg.lightened(0.35) if bd == Color(0) else bd
+	color_picker_button.self_modulate=bg
+	set_indexed("theme_override_styles/panel:bg_color", bg)
+	set_indexed("theme_override_styles/titlebar:bg_color", bg)
+	set_indexed("theme_override_styles/panel_selected:bg_color", bg)
 	set_indexed("theme_override_styles/panel_selected:border_color", border)
-	set_indexed("theme_override_styles/titlebar_selected:bg_color", c)
+	set_indexed("theme_override_styles/titlebar_selected:bg_color", bg)
 	set_indexed("theme_override_styles/titlebar_selected:border_color", border)

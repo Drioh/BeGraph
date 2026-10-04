@@ -3,11 +3,12 @@
 [ext_resource type="Script" uid="uid://bewafpxl8wec6" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraphComment.gd" id="1_script"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+resource_local_to_scene = true
 content_margin_left = 10.0
 content_margin_top = 20.0
 content_margin_right = 10.0
 content_margin_bottom = 20.0
-bg_color = Color(0.542, 0.337, 0.084, 1)
+bg_color = Color(0.16635093, 0.52812576, 0.6967579, 1)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
@@ -15,15 +16,16 @@ corner_radius_bottom_left = 4
 expand_margin_top = 1.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel_sel"]
+resource_local_to_scene = true
 content_margin_left = 5.0
 content_margin_top = 5.0
 content_margin_right = 5.0
-bg_color = Color(0.542, 0.337, 0.084, 1)
+bg_color = Color(0.16635093, 0.52812576, 0.6967579, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.7023, 0.56905, 0.4046, 1)
+border_color = Color(0.4581281, 0.69328177, 0.8028926, 1)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
@@ -64,6 +66,7 @@ slot/1/right_color = Color(1, 1, 1, 1)
 slot/1/right_icon = null
 slot/1/draw_stylebox = true
 script = ExtResource("1_script")
+carlo = []
 
 [node name="CommentEdit" type="TextEdit" parent="." unique_id=175678867]
 unique_name_in_owner = true

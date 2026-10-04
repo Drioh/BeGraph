@@ -9,7 +9,8 @@ const DISPLAY_INFO : String = "Visual-only annotation node. Shows a title and a 
 
 @export var comment_title : String
 @export var comment_text : String
-@export var background_color: Color = ProjectSettings.get_setting("BeGraph/colors/node_colors/default_categories/comment_node")
+@export var background_color: Color = ProjectSettings.get_setting("BeGraph/colors/node_colors/comment_node/background")
+@export var border_color: Color = ProjectSettings.get_setting("BeGraph/colors/node_colors/comment_node/border")
 
 func set_instruction() -> String:return "{comment}"
 
