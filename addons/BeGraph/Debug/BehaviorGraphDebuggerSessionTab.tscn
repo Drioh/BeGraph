@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cdldony46ssd2"]
 
 [ext_resource type="Script" uid="uid://bvtrs8nhbh7mn" path="res://addons/BeGraph/Debug/BehaviorGraphDebuggerSessionTab.gd" id="1_tab"]
-[ext_resource type="Script" uid="uid://bnxeuw7d74t5o" path="res://addons/BeGraph/Debug/BehaviorGraphDebugView.gd" id="2_view"]
+[ext_resource type="Script" uid="uid://bnxeuw7d74t5o" path="res://addons/BeGraph/Debug/BehaviorGraphDebugGraph.gd" id="2_view"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cy14o"]
 content_margin_left = 8.0
