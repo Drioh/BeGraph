@@ -314,7 +314,9 @@ func refresh_editor(property: Dictionary) -> void:
 
 	editor.set_object_and_property(node, key)
 	editor.draw_label = false
+	editor.draw_background=false
 	editor.selectable = false
+	
 	h_box_container.add_child(editor)
 	h_box_container.move_child(editor, 1)
 

@@ -6,9 +6,6 @@ extends PanelContainer
 ## Scene reused for each property row's inline editor (same one [BehaviorGraphNode] uses).
 const BEHAVIOR_GRAPH_NODE_VARIABLE = preload("uid://bup4fdlymdgmo")
 
-## Color applied to secondary/placeholder text generated at runtime (rows the scene can't pre-style because their content doesn't exist yet).
-var muted_color: Color = Color(0.498, 0.498, 0.498)
-
 var flag_positive_color: Color = Color(0.0, 0.302, 0.145, 1.0)
 var flag_negative_color: Color = Color(0.545, 0.0, 0.11, 1.0)
 
@@ -67,7 +64,7 @@ func show_node(node: BehaviorNode, blackboard: Array[BlackboardVariable]) -> voi
 	var const_map = node.get_script().get_script_constant_map()
 	title_label.text = "%s (%s)"%[const_map["DISPLAY_NAME"],node.resource_name] if const_map.has("DISPLAY_NAME") else node.resource_name
 	
-	var color_str : String = "BeGraph/colors/node_colors/%s/border_color" % node.node_category
+	var color_str : String = "BeGraph/colors/node_colors/%s/border" % node.node_category
 	title_bar_color.color= ProjectSettings.get_setting(color_str)
 	
 	category_label.text = node.node_category
@@ -164,8 +161,6 @@ func _add_condition_row(condition: Dictionary) -> void:
 	var next: StringName = condition["next"] if condition["next"] else &""
 	var next_label := Label.new()
 	next_label.text = "-> %s" % next if next != &"" else not_connected_text
-	if next == &"":
-		next_label.add_theme_color_override("font_color", muted_color)
 	row.add_child(next_label)
 
 ## Removes every row from [member _conditions_container].
