@@ -191,7 +191,7 @@ behavior_properties = Array[Dictionary]([{
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1460, 100)
+position_in_graph = Vector2(1880, -60)
 _graph_ref = Object(WeakRef,"script":null)
 
 value = "Sono fortunato!"

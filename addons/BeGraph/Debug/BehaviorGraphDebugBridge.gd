@@ -62,7 +62,7 @@ func _broadcast() -> void:
 
 ## Sends [param graph]'s full structure (once per agent): every node's name/category/display name/input-output flags/graph position/condition texts/instruction/behavior properties, the connection list, and the full blackboard snapshot. Matches the dictionary shape [method BehaviorGraphDebugView._add_debug_node_from_info] expects.
 func _send_graph_structure(path: String, graph: BehaviorGraph, graph_name : String) -> void:
-	var nodes_data : Array = graph.nodes.values().map(func(n: BehaviorNode): return n.to_debug_info())
+	var nodes_data : Array = graph.nodes.values().filter(func(n): return n is not BehaviorFrame).map(func(n: BehaviorNode): return n.to_debug_info())
 	var connections_data : Array = graph.connections.map(func(c: Dictionary): return {
 		"from_node": String(c["from_node"]), "from_port": c["from_port"],
 		"to_node": String(c["to_node"]), "to_port": c["to_port"],

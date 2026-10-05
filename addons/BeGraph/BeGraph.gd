@@ -94,6 +94,7 @@ func _connect_dock_buttons() -> void:
 	begraph_dock.save_as_button.pressed.connect(_on_save_as_pressed)
 	begraph_dock.new_button.pressed.connect(_on_new_pressed)
 	begraph_dock.load_button.pressed.connect(_on_load_pressed)
+	begraph_dock.embed_button.pressed.connect(_on_embed_pressed)
 
 ## Callback for [signal FileSystemDock.resource_removed]: unloads the currently edited graph (via [method BeGraphDock.load_graph]) if the removed resource is the one currently open in the dock.
 func _on_resource_removed(resource: Resource) -> void:
@@ -107,6 +108,17 @@ func _on_files_moved(old_file: String, new_file: String) -> void:
 	if begraph_dock.loaded_graph.resource_path == old_file or begraph_dock.loaded_graph.resource_path == new_file:
 		begraph_dock.refresh_label()
 
+func _on_embed_pressed() -> void:
+	if begraph_dock.loaded_graph == null:
+		push_error("Open a Behavior Graph before embedding another one into it")
+		return
+	_open_file_dialog(EditorFileDialog.FILE_MODE_OPEN_FILE, func(path: String):
+		var res := load(path)
+		if res is BehaviorGraph:
+			begraph_dock.graph_edit.embed_graph(res)
+		else:
+			push_error("\"%s\" is not a valid Behavior Graph" % path)
+	)
 
 func _disable_plugin() -> void: 
 	_remove_dock()

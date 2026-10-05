@@ -52,6 +52,9 @@ func _ready() -> void:
 	cut_nodes_request.connect(_on_cut_nodes_request)
 	paste_nodes_request.connect(_on_paste_nodes_request)
 	duplicate_nodes_request.connect(duplicate_selected_nodes)
+	
+	graph_elements_linked_to_frame_request.connect(_on_elements_linked_to_frame)
+	end_node_move.connect(_sync_frame_attachments)
 #endregion
 
 
@@ -66,20 +69,26 @@ func set_graph(graph: BehaviorGraph) -> void:
 		clear_connections()
 
 	for child in get_children().duplicate():
-		if child is not BehaviorGraphNodeBase:
+		if child is not BehaviorGraphNodeBase and child is not BehaviorGraphFrame:
 			continue
 		remove_child(child)
 		child.free()
 	current_graph = graph
 
+	var frames : Array[BehaviorFrame] = []
 	for node_to_load in current_graph.nodes.values():
-		load_node(node_to_load)
+		if node_to_load is BehaviorFrame:
+			frames.append(node_to_load)
+		else:
+			load_node(node_to_load)
 	for connection in current_graph.connections:
 		connect_node(
 			connection["from_node"], 
 			connection["from_port"], 
 			connection["to_node"], 
 			connection["to_port"])
+	for frame_node in frames:
+		load_frame(frame_node)
 
 ## Instantiates the visual node for [param node_to_load], restoring its name and position.[br]
 ## If [param register_in_graph] is [code]true[/code] the [BehaviorNode] is also added to [member current_graph] (used when creating nodes at runtime, e.g. paste/duplicate); when loading an existing graph it is already there.[br]
@@ -132,7 +141,12 @@ func prune_invalid_connections_from(graph_node: BehaviorGraphNodeBase) -> void:
 ## Deletes the given nodes, refusing to delete a graph's last remaining starting point; also removes their connections - both outgoing and incoming (properly updating the surviving neighbor's [BehaviorNode] via [method BehaviorNode.remove_next], so a condition/[member BehaviorNode._next_ref] entry pointing at a deleted node never lingers) - and hands the inspector back to [member current_graph] if needed.[br]
 func _on_delete_nodes_request(nodes: Array[StringName]) -> void:
 	for n in nodes:
-		var nod := get_node_or_null(NodePath(n)) as BehaviorGraphNodeBase
+		var element := get_node_or_null(NodePath(n))
+		if element is BehaviorGraphFrame:
+			_delete_frame(element)
+			continue
+
+		var nod := element as BehaviorGraphNodeBase
 		if nod == null:
 			continue
 
@@ -147,6 +161,7 @@ func _on_delete_nodes_request(nodes: Array[StringName]) -> void:
 		current_graph.remove_node(nod.node)
 		remove_child(nod)
 		nod.queue_free()
+	_sync_frame_attachments()
 	selected_node_changed.emit(null)
 	
 ## Callback for [signal GraphEdit.node_selected]: forwards the selected node's [BehaviorNode].
@@ -424,10 +439,10 @@ func _remove_missing_blackboard_bindings(node : BehaviorNode) -> void:
 			prop["blackboard_key"] = &""
 
 ## Returns a node name (same style as the auto-generated ones) not used by any node in the graph or any child of this GraphEdit.
-func _generate_unique_node_name() -> StringName:
-	var candidate := StringName("_GraphNode_%d" % randi_range(10000, 99999))
+func _generate_unique_node_name(prefix : String = "_GraphNode_") -> StringName:
+	var candidate := StringName("%s%d" % [prefix, randi_range(10000, 99999)])
 	while current_graph.nodes.has(candidate) or has_node(NodePath(candidate)):
-		candidate = StringName("_GraphNode_%d" % randi_range(10000, 99999))
+		candidate = StringName("%s%d" % [prefix, randi_range(10000, 99999)])
 	return candidate
 
 ## Top-left corner (graph coordinates) of the bounding box of the snapshot's nodes.
@@ -451,5 +466,135 @@ func _deselect_all() -> void:
 		var element := child as GraphElement
 		if element != null:
 			element.selected = false
+
+#endregion
+
+#region Frames & embedding
+
+## Padding (graph coordinates) between the top-left corner of the embedded nodes and the frame.
+const FRAME_PADDING := Vector2(40, 60)
+
+## Copies every node of [param source] (and the connections between them) into [member current_graph], wrapped in a new frame titled after [param source]. [param source] is never modified.[br]
+## Properties bound to a blackboard variable are unbound and reset to the node's default value, since the blackboards of the two graphs are unrelated.[br]
+## Access points are skipped unless [param include_access_points] is true, so the embedded flow can be wired to the host graph; frames nested in [param source] are flattened (their nodes are copied, their frames aren't).
+func embed_graph(source: BehaviorGraph, include_access_points: bool = false) -> BehaviorGraphFrame:
+	if current_graph == null or source == null:
+		return null
+
+	var sources : Array[BehaviorNode] = []
+	for n in source.nodes.values():
+		var src := n as BehaviorNode
+		if src == null or src is BehaviorFrame:
+			continue
+		if src.node_category == "access_point_node" and not include_access_points:
+			continue
+		sources.append(src)
+	if sources.is_empty():
+		push_warning("Graph \"%s\" has no nodes to embed" % _graph_display_name(source))
+		return null
+
+	# Center the copy in the visible area of the graph.
+	var bounds := Rect2(sources[0].position_in_graph, Vector2.ZERO)
+	for src in sources:
+		bounds = bounds.expand(src.position_in_graph)
+	var offset : Vector2 = (scroll_offset + size * 0.5) / zoom - bounds.get_center()
+
+	var name_map : Dictionary = {} # old name -> new name
+	var created : Array[BehaviorGraphNodeBase] = []
+	for src in sources:
+		var copy : BehaviorNode = _clone_behavior_node(src)
+		var new_name : StringName = _generate_unique_node_name()
+		name_map[StringName(src.resource_name)] = new_name
+		copy.resource_name = new_name
+		copy.position_in_graph = src.position_in_graph + offset
+		_strip_blackboard_bindings(copy)
+		created.append(load_node(copy, true))
+
+	for c in source.connections:
+		var from_name := StringName(c["from_node"])
+		var to_name := StringName(c["to_node"])
+		if name_map.has(from_name) and name_map.has(to_name):
+			connect_nodes(name_map[from_name], c["from_port"], name_map[to_name], c["to_port"])
+
+	var frame_node := BehaviorFrame.new()
+	frame_node.resource_name = _generate_unique_node_name("_GraphFrame_")
+	frame_node.frame_title = _graph_display_name(source)
+	frame_node.position_in_graph = bounds.position + offset - FRAME_PADDING
+	frame_node.frame_size = bounds.size + Vector2(500, 300)
+	for graph_node in created:
+		frame_node.attached_nodes.append(graph_node.name)
+	current_graph.add_node(frame_node)
+	return load_frame(frame_node)
+
+## Creates the visual frame for [param frame_node] (already registered in [member current_graph]) and attaches the nodes it lists.
+func load_frame(frame_node: BehaviorFrame) -> BehaviorGraphFrame:
+	var frame := BehaviorGraphFrame.new()
+	add_child(frame)
+	move_child(frame, 0) # keep it behind the nodes
+	frame.name = frame_node.resource_name
+	frame.set_frame(frame_node, self)
+
+	for element_name in frame_node.attached_nodes:
+		var element := get_node_or_null(NodePath(element_name)) as BehaviorGraphNodeBase
+		if element == null:
+			continue
+		attach_graph_element_to_frame(element.name, frame.name)
+		frame.track(element)
+	if frame_node.autoshrink and not frame_node.attached_nodes.is_empty():
+		frame.autoshrink_enabled = true
+	return frame
+
+## GraphEdit only emits this signal: attaching is up to us.
+func _on_elements_linked_to_frame(elements: Array, frame_name: StringName) -> void:
+	var frame := get_node_or_null(NodePath(frame_name)) as BehaviorGraphFrame
+	if frame == null:
+		return
+	for element_name in elements:
+		var element := get_node_or_null(NodePath(element_name)) as BehaviorGraphNodeBase
+		if element == null:
+			continue
+		attach_graph_element_to_frame(element.name, frame_name)
+		frame.track(element)
+	_sync_frame_attachments()
+
+## Writes the live attachments of every frame back into its [BehaviorFrame], so they get saved with the graph.
+func _sync_frame_attachments() -> void:
+	for child in get_children():
+		var frame := child as BehaviorGraphFrame
+		if frame == null or frame.frame == null:
+			continue
+		var attached : Array[StringName] = []
+		for element_name in get_attached_nodes_of_frame(frame.name):
+			attached.append(element_name)
+		frame.frame.attached_nodes = attached
+
+## Removes only the frame: its nodes stay in the graph.
+func _delete_frame(frame: BehaviorGraphFrame) -> void:
+	for element_name in get_attached_nodes_of_frame(frame.name):
+		detach_graph_element_from_frame(element_name)
+	current_graph.remove_node(frame.frame)
+	remove_child(frame)
+	frame.queue_free()
+
+## Unbinds every blackboard-linked property of [param node], restoring the default value of the property (the stored one belongs to the old graph's context).
+func _strip_blackboard_bindings(node : BehaviorNode) -> void:
+	var defaults : BehaviorNode = null
+	for prop in node.behavior_properties:
+		if prop["blackboard_key"] == &"":
+			continue
+		if defaults == null:
+			defaults = node.get_script().new()
+		prop["blackboard_key"] = &""
+		for default_prop in defaults.behavior_properties:
+			if default_prop["name"] == prop["name"]:
+				prop["value"] = default_prop["value"]
+				break
+
+func _graph_display_name(graph: BehaviorGraph) -> String:
+	if graph.resource_name != "":
+		return graph.resource_name
+	if graph.resource_path != "":
+		return graph.resource_path.get_file().get_basename()
+	return "Embedded Graph"
 
 #endregion

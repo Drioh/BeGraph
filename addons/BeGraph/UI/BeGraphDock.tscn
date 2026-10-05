@@ -8,6 +8,8 @@
 [ext_resource type="Script" uid="uid://q1edsrsnappb" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraphEdit.gd" id="4_5bs10"]
 [ext_resource type="Texture2D" uid="uid://dp7v8krbo2g8n" path="res://addons/BeGraph/Icons/load_icon.svg" id="4_fo02r"]
 [ext_resource type="Texture2D" uid="uid://32kkp5pbn562" path="res://addons/BeGraph/Icons/save_as_icon.svg" id="4_vf8wo"]
+[ext_resource type="Texture2D" uid="uid://dwmxoxe6ph6he" path="res://addons/BeGraph/Icons/add_frame_icon.svg" id="5_fhgid"]
+[ext_resource type="Texture2D" uid="uid://by1pqwd4uob8o" path="res://addons/BeGraph/Icons/embed_graph_icon.svg" id="6_yi4b3"]
 [ext_resource type="Texture2D" uid="uid://clw4llfqosy5e" path="res://addons/BeGraph/Icons/info_icon.svg" id="7_fo02r"]
 [ext_resource type="PackedScene" uid="uid://6x5anjokya3t" path="res://addons/BeGraph/UI/BehaviorNodeInfoPanel.tscn" id="10_grsls"]
 
@@ -100,6 +102,28 @@ flat = true
 icon_alignment = 1
 
 [node name="VSeparator2" type="VSeparator" parent="VBoxContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=1984982261]
+layout_mode = 2
+offset_transform_enabled = true
+theme_override_constants/separation = 2
+theme_override_styles/separator = SubResource("StyleBoxLine_rnfta")
+
+[node name="FrameButton" type="Button" parent="VBoxContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=1207783668]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Collect selected nodes in frame"
+icon = ExtResource("5_fhgid")
+flat = true
+icon_alignment = 1
+
+[node name="EmbedButton" type="Button" parent="VBoxContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=1717636031]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Embed external graph"
+icon = ExtResource("6_yi4b3")
+flat = true
+icon_alignment = 1
+
+[node name="VSeparator3" type="VSeparator" parent="VBoxContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=481422621]
 layout_mode = 2
 offset_transform_enabled = true
 theme_override_constants/separation = 2

@@ -45,6 +45,8 @@ func set_graph(graph: BehaviorGraph) -> void:
 	if graph == null:
 		return
 	for behavior_node in graph.nodes.values():
+		if behavior_node is BehaviorFrame:
+			continue
 		_add_debug_node_from_info(behavior_node.to_debug_info())
 		_live_nodes[StringName(behavior_node.resource_name)] = behavior_node
 	for c in graph.connections:

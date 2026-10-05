@@ -12,6 +12,10 @@ extends Control
 ## Button that loads a Behavior Graph
 @onready var load_button: Button = %LoadButton
 
+@onready var frame_button: Button = %FrameButton
+
+@onready var embed_button: Button = %EmbedButton
+
 ## Button that saves [member loaded_graph] to its existing resource path.
 @onready var save_button: Button = %SaveButton
 ## Button that opens a file dialog to save [member loaded_graph] to a new path.
@@ -32,6 +36,7 @@ func _ready() -> void:
 	info_button.pressed.connect(func():
 			info_panel.visible = info_button.button_pressed)
 	graph_edit.selected_node_changed.connect(_on_selected_node_changed)
+	
 ## Opens [member loaded_graph] in the main editor's inspector/resource editor.
 func edit_graph()->void:
 	EditorInterface.edit_resource(loaded_graph)
