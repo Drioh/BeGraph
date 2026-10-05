@@ -42,7 +42,8 @@ func _on_node_set() -> void:
 		_apply_color(c)
 	)
 	
-	tb.move_child(tb.get_child(1),-1)
+	tb.move_child(free_from_frame_button, -1)
+	tb.move_child(delete_button, -1)
 	reset_size.call_deferred()
 	comment.changed.connect(_sync_from_node, CONNECT_DEFERRED)
 

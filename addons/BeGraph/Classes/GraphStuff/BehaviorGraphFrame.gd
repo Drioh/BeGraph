@@ -34,9 +34,12 @@ func set_frame(f: BehaviorFrame, edit: BehaviorGraphEdit) -> void:
 		frame.frame_title = t
 		title = t)
 	tb.add_child(_title_edit)
-
-	_color_button.custom_minimum_size = Vector2(28, 28)
-	_color_button.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+	
+	tb.add_child(VSeparator.new())
+	
+	_color_button.custom_minimum_size = Vector2(48, 28)
+	_color_button.size_flags_horizontal=Control.SIZE_SHRINK_BEGIN
+	_color_button.flat=true
 	_color_button.color = f.tint_color
 	_color_button.color_changed.connect(func(c: Color):
 		frame.tint_color = c
@@ -54,6 +57,17 @@ func set_frame(f: BehaviorFrame, edit: BehaviorGraphEdit) -> void:
 func track(element: GraphElement) -> void:
 	if not element.resized.is_connected(_refresh_autoshrink):
 		element.resized.connect(_refresh_autoshrink, CONNECT_DEFERRED)
+
+## Counterpart of [method track]: stops reacting to [param element] and re-wraps the remaining nodes.
+func untrack(element: GraphElement) -> void:
+	if element.resized.is_connected(_refresh_autoshrink):
+		element.resized.disconnect(_refresh_autoshrink)
+	_refresh_autoshrink.call_deferred()
+
+## Puts the cursor in the title field, ready to type a name.
+func focus_title() -> void:
+	_title_edit.grab_focus.call_deferred()
+	_title_edit.select_all.call_deferred()
 
 func _refresh_autoshrink() -> void:
 	if frame == null or not frame.autoshrink:

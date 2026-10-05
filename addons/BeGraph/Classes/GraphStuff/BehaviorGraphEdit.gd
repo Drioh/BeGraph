@@ -542,6 +542,7 @@ func load_frame(frame_node: BehaviorFrame) -> BehaviorGraphFrame:
 		frame.track(element)
 	if frame_node.autoshrink and not frame_node.attached_nodes.is_empty():
 		frame.autoshrink_enabled = true
+	_refresh_frame_buttons()
 	return frame
 
 ## GraphEdit only emits this signal: attaching is up to us.
@@ -567,6 +568,7 @@ func _sync_frame_attachments() -> void:
 		for element_name in get_attached_nodes_of_frame(frame.name):
 			attached.append(element_name)
 		frame.frame.attached_nodes = attached
+	_refresh_frame_buttons()
 
 ## Removes only the frame: its nodes stay in the graph.
 func _delete_frame(frame: BehaviorGraphFrame) -> void:
@@ -596,5 +598,70 @@ func _graph_display_name(graph: BehaviorGraph) -> String:
 	if graph.resource_path != "":
 		return graph.resource_path.get_file().get_basename()
 	return "Embedded Graph"
+
+## Creates a new frame around the currently selected nodes. Nodes that already belong to another frame are moved to the new one (an element can only be in one frame). Returns the new frame, or [code]null[/code] if nothing is selected.
+func create_frame_from_selection(frame_title: String = "Frame") -> BehaviorGraphFrame:
+	if current_graph == null:
+		return null
+	var selected : Array[BehaviorGraphNodeBase] = _get_selected_nodes()
+	if selected.is_empty():
+		push_warning("Select at least one node to create a frame")
+		return null
+
+	# Bounding box of the real on-screen rectangles of the selected nodes.
+	var bounds := Rect2(selected[0].position_offset, selected[0].size)
+	for graph_node in selected:
+		bounds = bounds.merge(Rect2(graph_node.position_offset, graph_node.size))
+
+	var frame_node := BehaviorFrame.new()
+	frame_node.resource_name = _generate_unique_node_name("_GraphFrame_")
+	frame_node.frame_title = frame_title
+	frame_node.position_in_graph = bounds.position - FRAME_PADDING
+	frame_node.frame_size = bounds.size + FRAME_PADDING * 2.0
+
+	for graph_node in selected:
+		var old_frame := get_element_frame(graph_node.name) as BehaviorGraphFrame
+		if old_frame != null:
+			detach_graph_element_from_frame(graph_node.name)
+			old_frame.untrack(graph_node)
+		frame_node.attached_nodes.append(graph_node.name)
+
+	current_graph.add_node(frame_node)
+	var frame : BehaviorGraphFrame = load_frame(frame_node)
+	_sync_frame_attachments() # also updates the frames the nodes just left
+	frame.focus_title()
+	return frame
+
+## Detaches every selected node from the frame it belongs to. The nodes stay where they are and the frame keeps its other nodes.
+func detach_selected_nodes_from_frame() -> void:
+	if current_graph == null:
+		return
+	for graph_node in _get_selected_nodes():
+		_detach_from_frame(graph_node.name)
+	_sync_frame_attachments()
+
+## Detaches a single node from its frame (used by the node's own "free from frame" button).
+func detach_node_from_frame(element_name: StringName) -> void:
+	if current_graph == null:
+		return
+	_detach_from_frame(element_name)
+	_sync_frame_attachments()
+
+## Detaches [param element_name] from its frame, if any, without syncing.
+func _detach_from_frame(element_name: StringName) -> void:
+	var frame := get_element_frame(element_name) as BehaviorGraphFrame
+	if frame == null:
+		return
+	detach_graph_element_from_frame(element_name)
+	var element := get_node_or_null(NodePath(element_name)) as GraphElement
+	if element != null:
+		frame.untrack(element)
+
+## Shows the "free from frame" button only on the nodes that currently belong to a frame.
+func _refresh_frame_buttons() -> void:
+	for child in get_children():
+		var graph_node := child as BehaviorGraphNodeBase
+		if graph_node != null:
+			graph_node.set_framed(get_element_frame(graph_node.name) != null)
 
 #endregion

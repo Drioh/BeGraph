@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" uid="uid://dp7v8krbo2g8n" path="res://addons/BeGraph/Icons/load_icon.svg" id="4_fo02r"]
 [ext_resource type="Texture2D" uid="uid://32kkp5pbn562" path="res://addons/BeGraph/Icons/save_as_icon.svg" id="4_vf8wo"]
 [ext_resource type="Texture2D" uid="uid://dwmxoxe6ph6he" path="res://addons/BeGraph/Icons/add_frame_icon.svg" id="5_fhgid"]
+[ext_resource type="Texture2D" uid="uid://c20u1mwcgvk1c" path="res://addons/BeGraph/Icons/free_frame.svg" id="6_504je"]
 [ext_resource type="Texture2D" uid="uid://by1pqwd4uob8o" path="res://addons/BeGraph/Icons/embed_graph_icon.svg" id="6_yi4b3"]
 [ext_resource type="Texture2D" uid="uid://clw4llfqosy5e" path="res://addons/BeGraph/Icons/info_icon.svg" id="7_fo02r"]
 [ext_resource type="PackedScene" uid="uid://6x5anjokya3t" path="res://addons/BeGraph/UI/BehaviorNodeInfoPanel.tscn" id="10_grsls"]
@@ -112,6 +113,14 @@ unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "Collect selected nodes in frame"
 icon = ExtResource("5_fhgid")
+flat = true
+icon_alignment = 1
+
+[node name="FreeFrameButton" type="Button" parent="VBoxContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=2067875201]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Remove selected nodes from frame"
+icon = ExtResource("6_504je")
 flat = true
 icon_alignment = 1
 

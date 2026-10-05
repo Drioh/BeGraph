@@ -14,6 +14,8 @@ extends Control
 
 @onready var frame_button: Button = %FrameButton
 
+@onready var free_frame_button: Button = %FreeFrameButton
+
 @onready var embed_button: Button = %EmbedButton
 
 ## Button that saves [member loaded_graph] to its existing resource path.
@@ -36,6 +38,8 @@ func _ready() -> void:
 	info_button.pressed.connect(func():
 			info_panel.visible = info_button.button_pressed)
 	graph_edit.selected_node_changed.connect(_on_selected_node_changed)
+	frame_button.pressed.connect(func(): graph_edit.create_frame_from_selection())
+	free_frame_button.pressed.connect(graph_edit.detach_selected_nodes_from_frame)
 	
 ## Opens [member loaded_graph] in the main editor's inspector/resource editor.
 func edit_graph()->void:
