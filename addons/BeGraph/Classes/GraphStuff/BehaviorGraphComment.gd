@@ -13,6 +13,10 @@ func _on_node_set() -> void:
 	comment_edit.text = comment.comment_text
 	
 	resizable=true
+	resize_end.connect(func(p):
+		comment.node_size=size
+		)
+	
 	_apply_color(comment.background_color,comment.border_color)
 	
 	var tb : HBoxContainer = get_titlebar_hbox()
@@ -36,31 +40,34 @@ func _on_node_set() -> void:
 	tb.add_child(color_picker_button)
 
 	color_picker_button.get_picker().color_changed.connect(func(c: Color):
-		comment.background_color = c
-		_apply_color(c)
+		_apply_color(c,c.lightened(0.35))
 	)
 	
 	tb.move_child(free_from_frame_button, -1)
 	tb.move_child(delete_button, -1)
-	reset_size.call_deferred()
 	comment.changed.connect(_sync_from_node, CONNECT_DEFERRED)
+	
+	if comment.node_size:
+		print(size)
+		size=comment.node_size
+		print(size)
 
 ## Realigns the controls if the resource is modified from the inspector (edit button).
 func _sync_from_node() -> void:
 	var comment: BehaviorComment = node
+	
 	if title_edit.text != comment.comment_title: 
 		title_edit.text = comment.comment_title
 	if comment_edit.text != comment.comment_text: 
 		comment_edit.text = comment.comment_text
 	if color_picker_button.color != comment.color:
 		color_picker_button.color = comment.color
-		_apply_color(comment.color)
+		_apply_color(comment.color,comment.color.lightened(0.35))
 
-func _apply_color(bg: Color, bd:Color = Color(0)) -> void:
-	var border := bg.lightened(0.35) if bd == Color(0) else bd
+func _apply_color(bg: Color, bd:Color) -> void:
 	set_indexed("theme_override_styles/panel:bg_color", bg)
 	set_indexed("theme_override_styles/titlebar:bg_color", bg)
 	set_indexed("theme_override_styles/panel_selected:bg_color", bg)
-	set_indexed("theme_override_styles/panel_selected:border_color", border)
+	set_indexed("theme_override_styles/panel_selected:border_color", bd)
 	set_indexed("theme_override_styles/titlebar_selected:bg_color", bg)
-	set_indexed("theme_override_styles/titlebar_selected:border_color", border)
+	set_indexed("theme_override_styles/titlebar_selected:border_color", bd)
