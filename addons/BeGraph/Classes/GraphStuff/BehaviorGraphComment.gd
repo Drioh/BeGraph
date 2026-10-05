@@ -2,17 +2,16 @@
 ## Visual [GraphNode] for a [BehaviorComment]: sharp-edged colored box with a TITLE ([LineEdit]) and a COMMENT ([TextEdit]), plus a [ColorPickerButton] in the titlebar bound to [member BehaviorComment.color]. No slots: comments don't connect to anything.
 extends BehaviorGraphNodeBase
 
-@onready var color_picker: ColorPicker = %ColorPicker
 @onready var comment_edit: TextEdit = %CommentEdit
 
 var title_edit: LineEdit = LineEdit.new()
-var color_picker_button : Button = Button.new()
+var color_picker_button : ColorPickerButton = ColorPickerButton.new()
 
 func _on_node_set() -> void:
 	var comment: BehaviorComment = node
 	title_edit.text = comment.comment_title
 	comment_edit.text = comment.comment_text
-	color_picker.color = comment.background_color
+	
 	resizable=true
 	_apply_color(comment.background_color,comment.border_color)
 	
@@ -28,16 +27,15 @@ func _on_node_set() -> void:
 	title_edit.text_changed.connect(func(t: String): comment.comment_title = t)
 	comment_edit.text_changed.connect(func(): comment.comment_text = comment_edit.text)
 	
-	color_picker_button.custom_minimum_size=Vector2(35,35)
-	color_picker_button.pressed.connect(func():
-		color_picker.visible=!color_picker.visible
-		reset_size.call_deferred()
-		)
-	color_picker_button.icon=load("res://addons/BeGraph/Icons/color_picker_icon.svg")
+	tb.add_child(VSeparator.new())
+	
+	color_picker_button.custom_minimum_size=Vector2(48,28)
+	color_picker_button.color = comment.background_color
 	color_picker_button.flat=true
+	color_picker_button.edit_intensity=false
 	tb.add_child(color_picker_button)
 
-	color_picker.color_changed.connect(func(c: Color):
+	color_picker_button.get_picker().color_changed.connect(func(c: Color):
 		comment.background_color = c
 		_apply_color(c)
 	)
@@ -54,13 +52,12 @@ func _sync_from_node() -> void:
 		title_edit.text = comment.comment_title
 	if comment_edit.text != comment.comment_text: 
 		comment_edit.text = comment.comment_text
-	if color_picker.color != comment.color:
-		color_picker.color = comment.color
+	if color_picker_button.color != comment.color:
+		color_picker_button.color = comment.color
 		_apply_color(comment.color)
 
 func _apply_color(bg: Color, bd:Color = Color(0)) -> void:
 	var border := bg.lightened(0.35) if bd == Color(0) else bd
-	color_picker_button.self_modulate=bg
 	set_indexed("theme_override_styles/panel:bg_color", bg)
 	set_indexed("theme_override_styles/titlebar:bg_color", bg)
 	set_indexed("theme_override_styles/panel_selected:bg_color", bg)

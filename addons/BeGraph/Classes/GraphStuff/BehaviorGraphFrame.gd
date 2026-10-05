@@ -40,6 +40,7 @@ func set_frame(f: BehaviorFrame, edit: BehaviorGraphEdit) -> void:
 	_color_button.custom_minimum_size = Vector2(48, 28)
 	_color_button.size_flags_horizontal=Control.SIZE_SHRINK_BEGIN
 	_color_button.flat=true
+	_color_button.edit_intensity=false
 	_color_button.color = f.tint_color
 	_color_button.color_changed.connect(func(c: Color):
 		frame.tint_color = c

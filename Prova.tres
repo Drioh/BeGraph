@@ -10,6 +10,7 @@
 [ext_resource type="Script" uid="uid://pjibqyy3ifwn" path="res://addons/BeGraph/Classes/Nodes/Flow/Misc/ValueComparator.gd" id="7_6a8nf"]
 [ext_resource type="Script" uid="uid://c82q06qm6p887" path="res://addons/BeGraph/Classes/Nodes/Actions/Print/Print String.gd" id="7_buygw"]
 [ext_resource type="Script" uid="uid://dsngbi4ynuox3" path="res://addons/BeGraph/Classes/Nodes/Actions/Misc/Reparent Node.gd" id="9_orwkh"]
+[ext_resource type="Script" uid="uid://dhcjy85mapqde" path="res://addons/BeGraph/Classes/Nodes/CommentNode.gd" id="10_6a8nf"]
 
 [sub_resource type="Resource" id="Resource_0y5uo"]
 resource_local_to_scene = true
@@ -310,12 +311,37 @@ _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"_GraphNode_28406"])
 
+[sub_resource type="Resource" id="Resource_uthrn"]
+resource_name = "CommentGraphNode"
+script = ExtResource("10_6a8nf")
+comment_title = "Questa è una prova"
+background_color = Color(0.56078434, 0.43137255, 0.23529412, 0.78431374)
+border_color = Color(0.79, 0.564, 0.269, 1)
+instruction = "{comment}"
+behavior_properties = Array[Dictionary]([{
+"blackboard_key": &"",
+"class_name": "",
+"custom_info": "",
+"hint": 18,
+"hint_string": "",
+"name": &"comment",
+"type": 4,
+"usage": 4102,
+"value": ""
+}])
+node_category = "comment_node"
+position_in_graph = Vector2(660, 880)
+_graph_ref = Object(WeakRef,"script":null)
+
+comment = ""
+
 [resource]
 resource_name = "Trogolo"
 script = ExtResource("4_k7ocg")
 blackboard = Array[ExtResource("1_sguni")]([SubResource("Resource_0y5uo"), SubResource("Resource_k7ocg"), ExtResource("2_gad0g")])
 nodes = Dictionary[StringName, ExtResource("2_0y5uo")]({
 &"BehaviorGraphNode": SubResource("Resource_orwkh"),
+&"CommentGraphNode": SubResource("Resource_uthrn"),
 &"_GraphNode_26953": SubResource("Resource_6yh0e"),
 &"_GraphNode_28406": SubResource("Resource_buygw"),
 &"_GraphNode_50170": SubResource("Resource_qrtwh"),
