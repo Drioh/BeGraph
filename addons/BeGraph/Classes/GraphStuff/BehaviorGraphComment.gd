@@ -17,7 +17,10 @@ func _on_node_set() -> void:
 		comment.node_size=size
 		)
 	
-	_apply_color(comment.background_color,comment.border_color)
+	var bg_col :Color = ProjectSettings.get_setting(comment.background_color)
+	var bd_col :Color = ProjectSettings.get_setting(comment.border_color)
+	
+	_apply_color(bg_col,bd_col)
 	
 	var tb : HBoxContainer = get_titlebar_hbox()
 
@@ -34,7 +37,7 @@ func _on_node_set() -> void:
 	tb.add_child(VSeparator.new())
 	
 	color_picker_button.custom_minimum_size=Vector2(48,28)
-	color_picker_button.color = comment.background_color
+	color_picker_button.color = bg_col
 	color_picker_button.flat=true
 	color_picker_button.edit_intensity=false
 	tb.add_child(color_picker_button)
@@ -48,9 +51,7 @@ func _on_node_set() -> void:
 	comment.changed.connect(_sync_from_node, CONNECT_DEFERRED)
 	
 	if comment.node_size:
-		print(size)
 		size=comment.node_size
-		print(size)
 
 ## Realigns the controls if the resource is modified from the inspector (edit button).
 func _sync_from_node() -> void:
