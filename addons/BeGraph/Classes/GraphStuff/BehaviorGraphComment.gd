@@ -61,9 +61,11 @@ func _sync_from_node() -> void:
 		title_edit.text = comment.comment_title
 	if comment_edit.text != comment.comment_text: 
 		comment_edit.text = comment.comment_text
-	if color_picker_button.color != comment.color:
-		color_picker_button.color = comment.color
-		_apply_color(comment.color,comment.color.lightened(0.35))
+	var bg_col :Color = ProjectSettings.get_setting(comment.background_color)
+
+	if color_picker_button.color != bg_col:
+		color_picker_button.color = bg_col
+		_apply_color(bg_col,bg_col.lightened(0.35))
 
 func _apply_color(bg: Color, bd:Color) -> void:
 	set_indexed("theme_override_styles/panel:bg_color", bg)

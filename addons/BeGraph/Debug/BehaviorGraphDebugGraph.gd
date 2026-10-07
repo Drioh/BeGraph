@@ -5,7 +5,7 @@ extends GraphEdit
 ## - [b]Same-process[/b] ([method set_graph]): points directly at a live [BehaviorGraph] (e.g. [method BehaviorAgent.get_debug_graph]) and polls it every frame. Used by an in-game debug overlay.[br]
 ## - [b]Data-driven[/b] ([method build_from_data]/[method apply_status_delta]/[method apply_properties_delta]): built from plain dictionaries with no live resource at all. Used by [BehaviorGraphDebuggerPlugin], since the editor and a running game are different processes and can only exchange serializable data through [EngineDebugger].[br][br]
 ## Its [GraphNode]s are instances of [BehaviorGraphDebugNode] (a dedicated scene, customizable directly in the editor) rather than plain code-built [GraphNode]s: those depend only on this view's own logic, so the view stays read-only by omission, while still being able to show each node's instruction and (togglable) live behavior property values. Structural edits (new nodes, (dis)connections, deletion) are simply never wired up. Panning, zooming and dragging node positions around still work, harmlessly.
-class_name BehaviorGraphDebugView
+class_name BehaviorGraphDebugGraph
 
 ## Color shown for each [enum BehaviorNode.Status] value while a node has been recently ticked (see [constant FADE_DURATION]).
 const STATUS_COLORS : Dictionary = {
@@ -121,10 +121,10 @@ func _add_debug_node_from_info(info: Dictionary) -> void:
 func _apply_category_color(gn: GraphNode, category: String) -> void:
 	if not _category_colors.has(category):
 		var setting_key := "BeGraph/colors/node_colors/%s" % category
-		if ProjectSettings.has_setting("%s/background_color" % setting_key):
+		if ProjectSettings.has_setting("%s/background" % setting_key):
 			_category_colors[category] = {
-				"bg": ProjectSettings.get_setting("%s/background_color" % setting_key),
-				"border": ProjectSettings.get_setting("%s/border_color" % setting_key),
+				"bg": ProjectSettings.get_setting("%s/background" % setting_key),
+				"border": ProjectSettings.get_setting("%s/border" % setting_key),
 			}
 		else:
 			_category_colors[category] = {"bg": DEFAULT_IDLE_COLOR, "border": DEFAULT_IDLE_COLOR}

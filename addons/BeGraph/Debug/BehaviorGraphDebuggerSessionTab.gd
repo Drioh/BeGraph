@@ -8,7 +8,7 @@ extends VBoxContainer
 @onready var graph_label: Label = %GraphLabel
 @onready var running_label: Label = %RunningLabel
 ## Renders the selected agent's graph, live.
-@onready var debug_view : BehaviorGraphDebugView = %DebugView
+@onready var debug_view : BehaviorGraphDebugGraph = %DebugView
 
 ## Shows/hides [member blackboard_panel].
 @onready var blackboard_toggle : Button = %BlackboardToggle

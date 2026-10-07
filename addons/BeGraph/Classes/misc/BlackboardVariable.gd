@@ -32,7 +32,7 @@ func _get(property: StringName) -> Variant:
 
 func _set(property: StringName, v: Variant) -> bool:
 	if property == "value":
-		var was_node_path := typeof(_value) == TYPE_NODE_PATH
+		var was_node_path : bool = typeof(_value) == TYPE_NODE_PATH
 		_value = v
 		value_changed.emit(_value)
 		if was_node_path != (typeof(_value) == TYPE_NODE_PATH):

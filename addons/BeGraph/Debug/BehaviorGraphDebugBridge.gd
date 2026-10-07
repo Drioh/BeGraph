@@ -4,7 +4,7 @@ extends Node
 class_name BehaviorGraphDebugBridge
 
 ## How often (seconds) agents are scanned and status/property/blackboard deltas are sent.
-@export var broadcast_interval : float = 0.1
+@export var broadcast_interval : float = 0.5
 
 ## agent path (String) -> true once its graph structure has been sent this session.
 var _announced : Dictionary = {}
@@ -70,6 +70,7 @@ func _send_graph_structure(path: String, graph: BehaviorGraph, graph_name : Stri
 
 	EngineDebugger.send_message(BeGraphProtocol.GRAPH,
 		[path, nodes_data, connections_data, _blackboard_snapshot(graph),graph_name])
+
 ## Sends only the nodes whose [member BehaviorNode.last_tick_time] changed since the previous broadcast for this agent, as [code][node_name:String, status:int][/code] pairs. Sends nothing at all if no node ticked since last time.
 func _send_status_delta(path: String, graph: BehaviorGraph) -> void:
 	var last : Dictionary = _last_sent_tick_time[path]
