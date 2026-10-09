@@ -434,9 +434,9 @@ func _remove_missing_blackboard_bindings(node : BehaviorNode) -> void:
 		if variable:
 			keys.append(variable.name)
 	for prop in node.behavior_properties:
-		var key : StringName = prop["blackboard_key"]
+		var key : StringName = node.behavior_properties[prop][&"blackboard_reference"]
 		if key != &"" and not keys.has(key):
-			prop["blackboard_key"] = &""
+			node.behavior_properties[prop][&"blackboard_reference"] = &""
 
 ## Returns a node name (same style as the auto-generated ones) not used by any node in the graph or any child of this GraphEdit.
 func _generate_unique_node_name(prefix : String = "_GraphNode_") -> StringName:
@@ -582,15 +582,11 @@ func _delete_frame(frame: BehaviorGraphFrame) -> void:
 func _strip_blackboard_bindings(node : BehaviorNode) -> void:
 	var defaults : BehaviorNode = null
 	for prop in node.behavior_properties:
-		if prop["blackboard_key"] == &"":
+		if node.behavior_properties[prop][&"blackboard_reference"] == &"":
 			continue
 		if defaults == null:
 			defaults = node.get_script().new()
-		prop["blackboard_key"] = &""
-		for default_prop in defaults.behavior_properties:
-			if default_prop["name"] == prop["name"]:
-				prop["value"] = default_prop["value"]
-				break
+		node.behavior_properties[prop][&"blackboard_reference"] = &""
 
 func _graph_display_name(graph: BehaviorGraph) -> String:
 	if graph.resource_name != "":

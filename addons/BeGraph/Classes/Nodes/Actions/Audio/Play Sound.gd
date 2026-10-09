@@ -7,6 +7,10 @@ const DISPLAY_INFO : String = "Plays {player} (AudioStreamPlayer) at the given {
 
 var _started : bool = false
 
+@export_custom(PROPERTY_HINT_NODE_PATH_VALID_TYPES,"BeGraph:property:AudioStreamPlayer") var player : NodePath = ^""
+@export_custom(PROPERTY_HINT_NONE,"BeGraph:property") var volume_db : float = 0.0
+@export_custom(PROPERTY_HINT_NONE,"BeGraph:property") var pitch_scale : float = 1.0
+
 func set_instruction() -> String:
 	return "Play sound on {player} (vol {volume_db} db, pitch {pitch_scale})"
 
@@ -34,8 +38,3 @@ func set_node_category()->String: return "action_node"
 func set_input()->bool: return true
 func set_output()->bool : return true
 func set_allows_multiple_outputs() -> bool: return false
-
-func set_properties()-> void:
-	_add_behavior_property("player", NodePath(""))
-	_add_behavior_property("volume_db", float(0.0))
-	_add_behavior_property("pitch_scale", float(1.0))

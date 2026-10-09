@@ -84,15 +84,11 @@ func _render_placeholders(text: String, container: Control, is_main_instruction:
 
 ## Resolves a single [code]{key}[/code] placeholder to an inline control, or a "null" label.
 func _add_placeholder_value(key: String, raw_match: String, container: Control) -> void:
-	if not node._has(key):
-		push_warning("Key \"%s\" not found amongst variables" % key)
-		_add_label(raw_match, container, true)
-		return
-
 	var variable: Variant = node.get(key)
+		
 	if variable == null:
 		if !node.get_node_property_info(key, "usage") and PROPERTY_USAGE_NIL_IS_VARIANT:
-			push_warning("Value for key \"%s\" is null" % key)
+			push_warning("Value for key \"%s\" is null or property does not exist in node" % key)
 			_add_label(raw_match, container, true)
 			return
 
@@ -129,7 +125,6 @@ func _add_inline_control(key: String, value: Variant, container: HFlowContainer)
 	if not control.setup_variable_editor(node, associated_property, graph_edit.current_graph.blackboard):
 		push_warning("No available editor for \"%s\" (type %s)" % [key, type])
 		_add_label("{%s}" % key, container)
-
 	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	control.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	control.resized.connect(reset_size, CONNECT_DEFERRED)

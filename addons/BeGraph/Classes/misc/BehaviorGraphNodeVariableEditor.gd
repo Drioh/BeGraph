@@ -267,7 +267,7 @@ func setup_variable_editor(n : BehaviorNode,property:Dictionary,bb:Array[Blackbo
 
 	size_flags_horizontal=Control.SIZE_SHRINK_BEGIN
 	
-	node.changed.connect(var_property_editor.update_property,CONNECT_DEFERRED)
+	node.changed.connect(func():var_property_editor.update_property(),CONNECT_DEFERRED)
 	node.blackboard_key_set.connect(sync_blackboard_keys)
 	node.conditions_changed.connect(refresh_editor.bind(property),CONNECT_DEFERRED)
 	
@@ -277,16 +277,17 @@ func setup_variable_editor(n : BehaviorNode,property:Dictionary,bb:Array[Blackbo
 	popup.index_pressed.connect(_on_popup_index_pressed)
 	popup.clear()
 	
-	var saved_key: StringName = property["blackboard_key"]
-	if saved_key == &"":
-		return true
+	if property.has("blackboard_key"):
+		var saved_key: StringName = property["blackboard_key"]
+		if saved_key == &"":
+			return true
 	
-	for v in bb:
-		if v.name!=saved_key:
-			continue
-		linked_property=v
-		bb_reference.text=saved_key
-		linked=true
+		for v in bb:
+			if v.name!=saved_key:
+				continue
+			linked_property=v
+			bb_reference.text=saved_key
+			linked=true
 	return true
 
 ## Rebuilds [member var_property_editor] from scratch using the [param property] info dictionary.[br]
@@ -305,9 +306,27 @@ func refresh_editor(property: Dictionary) -> void:
 	type = property["type"]
 	key = property["name"]
 	
+	var split_hint_string :PackedStringArray = property["hint_string"].split(":",false,2)
+	var hint_string : String = split_hint_string[2] if split_hint_string.size()>2 else ""
+	if property["hint"]==BG.HINT_ENUM and property["hint_string"].begins_with(BG.ENUMERATOR):
+		var constant_map : Dictionary = node.get_script().get_script_constant_map()
+		if constant_map.has(hint_string):
+			hint_string = str(node.get_script().get_script_constant_map()[hint_string])
+			hint_string = hint_string.trim_prefix("{").trim_suffix("}")
+			hint_string = hint_string.remove_char(34).remove_char(32)
+			hint_string = hint_string.replace_char(95,32).to_lower()
+		elif node.get(hint_string) && node.get(hint_string) is PackedStringArray:
+			hint_string = str(node.get(hint_string)).trim_prefix("[").trim_suffix("]")
+			hint_string = hint_string.remove_char(34)
+		
 	var editor: EditorProperty = EditorInspector.instantiate_property_editor(
-		node, type, key, property["hint"], property["hint_string"],
-		EDITOR_USAGES | property["usage"], true
+		node, 
+		type, 
+		key, 
+		property["hint"], 
+		hint_string,
+		EDITOR_USAGES | property["usage"], 
+		true
 	)
 	if editor == null:
 		return
@@ -329,8 +348,38 @@ func refresh_editor(property: Dictionary) -> void:
 
 ## Callback for [signal EditorProperty.property_changed], forwarded from [member var_property_editor]: applies the new value to [member node].
 func change_property(property: StringName, new_value: Variant, field: StringName, changing: bool) -> void:
-	if not changing:
+	print("trigger di change property")
+	if !node._set(property, new_value):
+		if type==TYPE_PACKED_STRING_ARRAY and node.get_node_property_info(property,"hint_string").begins_with(BG.CONDITION):
+			var old_value:Variant = node.get(property)
+			node.set(property, new_value)
+			var previous_size:int = old_value.size()
+			if previous_size==0:
+				node.set(property,PackedStringArray(["Value 0"])) # if the array gets a 0 size, it gets populated with a single value "Value 0"
+			if previous_size<new_value.size():
+				node.get(property)[-1]="new enum value" # if the action performed is a new entry creation, initializes it to "new enum value"
+			
+			var values = node.get(property)
+			var old_conditions : Array[Dictionary] = node.conditions.duplicate(true)
+			node.conditions.clear()
+			for i in values.size():
+				var cond : bool = i < old_conditions.size()
+				var kept_next : WeakRef = old_conditions[i]["next"] if cond else null
+				node.conditions.append({"text": values[i], "next": kept_next})
+				
+			node.output = false
+			node.conditions_changed.emit()
+			
+			# an element gets added or removed, so that previous size is both valid anddifferent than the old value
+			var cond_1 : bool = previous_size != -1 and previous_size != values.size()
+			# happens specifically when value gets set via the enter button when editing anentry
+			var cond_2 : bool = old_value==node.get(property)
+			if cond_1 or cond_2: 
+				notify_property_list_changed.call_deferred()
+			node.emit_changed()
+			return
 		node.set(property, new_value)
+		node.emit_changed()
 
 ## Callback for [signal BehaviorNode.blackboard_key_set]: if the changed property matches [member key], updates [member linked] to reflect whether a blackboard key is now bound ([param bb_key] non-empty) or not.
 func sync_blackboard_keys(k : StringName = &"",bb_key : StringName = &""):
@@ -394,7 +443,7 @@ func update_bb_name(n:StringName)->void:
 func update_bb_value(v:Variant)->void:
 	if not typeof(v) in CONVERSION_DICT[type]:
 		node.set_node_property_blackboard_key(key)
-		linked=false		
+		linked=false
 
 ## Recursively searches [param node]'s [Control] descendants for the one whose global rect contains [param global_pos], returning the first (deepest) match found, or [code]null[/code] if none does.
 func _get_slot_at(node, global_pos):

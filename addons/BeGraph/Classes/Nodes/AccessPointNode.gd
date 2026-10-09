@@ -24,5 +24,3 @@ func set_input()->bool:return false
 func set_output()->bool:return true
 
 func set_allows_multiple_outputs() -> bool: return false
-
-func set_properties()-> void: return

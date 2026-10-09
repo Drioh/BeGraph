@@ -11,6 +11,8 @@ enum Status{SUCCESS,FAILURE,RUNNING}
 ## Property usage flags shared by every internal/read-only field of this resource (storage + read-only + editor visible, but not user-editable).
 const INTERNAL_USAGE := PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_READ_ONLY | PROPERTY_USAGE_EDITOR
 
+const PROPERTY_USAGE_BEGRAPH_PROPERTY : int = 1 << 32
+
 ## Describes what the node does. Logic to determine which node is next in execution is written here.[br]
 ## Never call this directly from outside the node: successors are ticked through [method tick_next]/[method tick_condition] (or, for the graph's starting node, by [BehaviorAgent]), which route through [method do_tick] instead so its execution can be tracked (e.g. by the live graph debugger).
 @abstract func tick(delta:float) -> Status
@@ -28,15 +30,6 @@ const INTERNAL_USAGE := PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_READ_ONLY | PROP
 ## If set to [code]true[/code], allows this node to have multiple successors, while, if set to [code]false[/code], allows only for one successor.
 @abstract func set_allows_multiple_outputs() -> bool
 
-## Defines the variables that can be used inside a BehaviorNode's code.[br]
-## Must be populated using [method _add_behavior_property][br]
-## Example:[br][codeblock]
-##func set_properties()-> void:
-##    _add_behavior_property("value_1",int(0))
-##    _add_behavior_property("value_2",int(0))
-##[/codeblock]
-@abstract func set_properties()-> void
-
 ## Instruction displayed in node. To set this parameter, use the [method set_instruction] method
 @export_custom(PROPERTY_HINT_MULTILINE_TEXT, "", INTERNAL_USAGE)var instruction : String = ""
 
@@ -52,22 +45,6 @@ const INTERNAL_USAGE := PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_READ_ONLY | PROP
 ##    ])
 ##[/codeblock]
 @export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE)var conditions : Array[Dictionary]
-
-## Contains all of the behavior properties for this node. Has a custom definition of a property, different than the one returned by the [method get_property_list] method:[br]
-##[codeblock]
-##var entry : Dictionary={
-##    "name":StringName # a normal script variable uses String,
-##    "class_name":StringName,
-##    "type": int        # typeof(default_value),
-##    "hint": String,
-##    "hint_string": String,
-##    "custom_info": String,
-##    "usage": BitMap,
-##    "value": Variant,
-##    "blackboard_key": StringName
-##}
-##[/codeblock]
-@export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE)var behavior_properties:Array[Dictionary]
 
 ## For display purposes only, this parameter defines a node's category. Set using [method set_node_category].
 @export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE)var node_category : String = ""
@@ -99,6 +76,9 @@ var regex :RegEx= RegEx.create_from_string(r"\{([^{}]+)\}")
 
 ## Weak references to this node's successor(s), used when [member output] is [code]true[/code].
 @export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE) var _next_ref : Array[StringName]
+
+@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY)
+var _blackboard_bindings: Dictionary[StringName, StringName] = {}
 
 ## Emitted whenever a property's blackboard binding is enabled or disabled via [method set_node_property_blackboard_key].
 signal blackboard_key_set(property:StringName,blackboard_key:StringName)
@@ -132,11 +112,26 @@ func _init() -> void:
 	build_conditions()
 	instruction = set_instruction()
 	allows_multiple_outputs = set_allows_multiple_outputs()
-	set_properties()
 
-## Overrides [method Object._get_property_list] to expose this node's custom variables (defined via [method set_properties]) to the editor inspector.
-func _get_property_list() -> Array[Dictionary]:
-	return behavior_properties
+func _validate_property(property: Dictionary) -> void:
+	if property["type"]==TYPE_PACKED_STRING_ARRAY and property["hint_string"].begins_with(BG.CONDITION):
+		var old_conditions : Array[Dictionary] = conditions.duplicate(true)
+		conditions.clear()
+		var values :PackedStringArray = property["hint_string"].trim_prefix(BG.CONDITION).split(",",false)
+		for i in values.size():
+			var cond : bool = i < old_conditions.size()
+			var kept_next : WeakRef = old_conditions[i]["next"] if cond else null
+			conditions.append({"text": values[i], "next": kept_next})
+			
+		output = false
+		conditions_changed.emit()
+		
+		# an element gets added or removed, so that previous size is both valid anddifferent than the old value
+		var cond : bool = old_conditions.size() != -1 and old_conditions.size() != values.size()
+		if cond: 
+			notify_property_list_changed.call_deferred()
+	if property["hint_string"].begins_with("BeGraph"):
+		property["usage"]|=PROPERTY_USAGE_DEFAULT
 
 ## Override this function to set the node category. If the string returned matches one of the categories found in the Project Settings, then it will allow the node to have custom colors for background and border when selected
 func set_node_category()->String:
@@ -162,138 +157,40 @@ func build_conditions() -> void :
 		}
 		conditions.append(behavior_condition)
 
-## Utility function to build a property to inject into [method set_properties].[br]
-## Uses a custom property definition, different than the one returned by [method get_property_list]:
-##[codeblock]
-##var entry : Dictionary={
-##    "name":StringName # a normal script variable uses String,
-##    "class_name":StringName,
-##    "type": int        # typeof(default_value),
-##    "hint": String,
-##    "hint_string": String,
-##    "custom_info": String,
-##    "usage": BitMap,
-##    "value": Variant,
-##    "blackboard_key": StringName
-##}
-##[/codeblock]
-func _add_behavior_property(
-	name:StringName = &"", 
-	default_value : Variant = null,
-	hint:int=PROPERTY_HINT_NONE, 
-	hint_string:Variant="",
-	custom_info:String="",
-	classname:String="", 
-	usage:int=PROPERTY_USAGE_SCRIPT_VARIABLE|PROPERTY_USAGE_EDITOR|PROPERTY_USAGE_STORAGE,
-	type_override:int = -1)->void:
-
-	var entry : Dictionary={
-		"name":name,
-		"class_name":classname,
-		"type":type_override if type_override != -1 else typeof(default_value),
-		"hint":hint,
-		"hint_string":str(hint_string) if hint_string is not Callable else hint_string,
-		"custom_info":custom_info,
-		"usage":usage|PROPERTY_USAGE_SCRIPT_VARIABLE|PROPERTY_USAGE_EDITOR|PROPERTY_USAGE_STORAGE,
-		"value":default_value,
-		"blackboard_key":&""
-	}
-	behavior_properties.append(entry) #populates [param behavior_properties]
-	return
-
-## Overrides [method Object._set]: looks up [param property] among [member behavior_properties] and, if found, updates its value and emits [signal Resource.changed] with the property's name and current blackboard key. Returns [code]true[/code] if the property was found and set, or [code]false[/code] otherwise.
-func _set(property: StringName, value: Variant) -> bool:
-	for prop in behavior_properties:
-		if prop["name"] != property:
-			continue
-		
-		var old_value:Variant = prop["value"]
-		prop["value"] = value
-		
-		if prop["usage"] & PROPERTY_USAGE_NIL_IS_VARIANT:
-			# lets a property originally defined as null to mantain its possiiblity to havemultiple value types
-			prop["type"] = typeof(null)
-		
-		if prop["type"]==TYPE_PACKED_STRING_ARRAY and prop["custom_info"]=="conditions":
-			# property is both a PackedStringArray and is defined as a condition
-			var previous_size:int = old_value.size()
-			if previous_size==0:
-				# if the array gets a 0 size, it gets populated with a single value "Value 0"
-				prop["value"] = PackedStringArray(["Value 0"])
-			
-			if previous_size<value.size():
-				# if the action performed is a new entry creation, initializes it to "new enumvalue"
-				prop["value"][-1]="new enum value"
-			
-			var values = prop["value"]
-			for p in behavior_properties:
-				if p["custom_info"] != prop["name"]: 
-					continue
-				#when changing values, the PackedStringArray populates its "selector"'spossible values
-				p["hint_string"] = ",".join(values)
-				if int(p["value"]) >= values.size(): 
-					p["value"] = 0
-			
-			var old_conditions : Array[Dictionary] = conditions.duplicate(true)
-			conditions.clear()
-			for i in values.size():
-				var cond : bool = i < old_conditions.size()
-				var kept_next : WeakRef = old_conditions[i]["next"] if cond else null
-				conditions.append({"text": values[i], "next": kept_next})
-				
-			output = false
-			conditions_changed.emit()
-			
-			# an element gets added or removed, so that previous size is both valid anddifferent than the old value
-			var cond_1 : bool = previous_size != -1 and previous_size != values.size()
-			# happens specifically when value gets set via the enter button when editing anentry
-			var cond_2 : bool = old_value==prop["value"]
-			if cond_1 or cond_2: 
-				notify_property_list_changed.call_deferred()
-				
-		changed.emit()
-		return true
-	return false
-
 ## Enables a blackboard reference in [param behavior_property][br]
 ## If this method gets called just with the [code]name[/code] parameter, without [code]blackboard[/code] or [code]blackboard_key[/code], the blackboard reference gets disabled
-func set_node_property_blackboard_key(property:String, blackboard_key: StringName=&""):
-	for prop in behavior_properties:
-		if prop["name"] != property: 
-			continue
-		prop["blackboard_key"]=blackboard_key
-		blackboard_key_set.emit(property,blackboard_key)
-		return
-	push_error("unable to set property, %s name not found"%property)
-	return
-	
-## Overrides [method Object._get]: looks up [param property] among [member behavior_properties] and returns its current value, or [code]null[/code] if no matching property is found. This is what allows behavior properties to be read via plain [code]node.property_name[/code] syntax.
-func _get(property: StringName) -> Variant:
-	for prop in behavior_properties:
-		if prop["name"]!=property: 
-			continue
-		var key : StringName = prop["blackboard_key"]
-		
-		if key == &"": 
-			return prop["value"] #gets value from behavior_property
-		
-		var graph : BehaviorGraph = _graph_ref.get_ref()
-		if graph:
-			return graph.get_blackboard_property(key).value
-	return null
+func set_node_property_blackboard_key(property: StringName, blackboard_key: StringName = &"") -> void:
+	if blackboard_key == &"":
+		_blackboard_bindings.erase(property)
+	else:
+		_blackboard_bindings[property] = blackboard_key
+	blackboard_key_set.emit(property, blackboard_key)
+	emit_changed()
 
-## Returns the value stored under the given key (e.g. [code]"type"[/code], [code]"hint"[/code], [code]"blackboard_key"[/code]) if [param info] is provided. [br]
-## Returns the full property [Dictionary] otherwise (or if [param info] is not a valid key (check [param behavior_properties] or [method_add_behavior_property])
-func get_node_property_info(property:StringName,info:String="") -> Variant:
-	for prop in behavior_properties:
-		if prop["name"]!=property: 
-			continue
-		if info == "" or !prop[info]: 
-			return prop
-		
-		return prop[info]
-	push_error("property '%s' not found"%property)
-	return 
+func is_blackboard_reference_enabled(key: StringName) -> bool:
+	return _blackboard_bindings.values().has(key)
+
+func get_blackboard_key(property: StringName) -> StringName:
+	return _blackboard_bindings.get(property, &"")
+	
+func _get(property: StringName) -> Variant:
+	var key : StringName = _blackboard_bindings.get(property, &"")
+	if key == &"":
+		return null  # fallback to default get
+	var graph : BehaviorGraph = _graph_ref.get_ref()
+	if graph == null:
+		return null
+	return graph.get_blackboard_property(key).value
+
+func _set(property: StringName, value: Variant) -> bool:
+	var key : StringName = _blackboard_bindings.get(property, &"")
+	if key == &"":
+		return false
+	var graph : BehaviorGraph = _graph_ref.get_ref()
+	if graph:
+		graph.get_blackboard_property(key).value = value
+		emit_changed()
+	return true
 
 func get_agent()->Node:
 	var graph : BehaviorGraph = _graph_ref.get_ref()
@@ -307,19 +204,18 @@ func get_agent()->Node:
 		return null
 	return agent
 
-## Checks if there is a property with the given name in [param behavior_properties]
-func _has(property:StringName) -> bool:
-	for prop in behavior_properties:
-		if prop["name"] == property: 
-			return true
-	return false
-
-## Returns [code]true[/code] if the variable associated to the given [code]key[/code] properties a blackboard
-func is_blackboard_reference_enabled(key:StringName)->bool:
-	for property in behavior_properties:
-		if property["name"] == key: 
-			return property["blackboard_key"] != &""
-	return false
+## Returns the value stored under the given key (e.g. [code]"type"[/code], [code]"hint"[/code], [code]"blackboard_key"[/code]) if [param info] is provided. [br]
+## Returns the full property [Dictionary] otherwise (or if [param info] is not a valid key (check [param behavior_properties] or [method_add_behavior_property])
+func get_node_property_info(property:StringName,info:String="") -> Variant:
+	for prop in get_property_list():
+		if prop["name"]!=property: 
+			continue
+		if info == "" or !prop[info]: 
+			return prop
+		
+		return prop[info]
+	push_error("property '%s' not found"%property)
+	return 
 
 ## Public entry point used to actually run this node: calls the concrete [method tick] implementation, then records [member last_status]/[member last_tick_time] and emits [signal ticked].[br]
 ## [method tick_next] and [method tick_condition] call this (instead of [method tick] directly) to reach a successor, and [BehaviorAgent] calls this on the graph's starting node - so every tick anywhere in the graph passes through here exactly once. This is what lets external tools (like the live graph debugger) track each node's status without any individual [BehaviorNode] subclass having to report it itself.
@@ -407,12 +303,24 @@ func to_debug_info() -> Dictionary:
 
 ## Current values of behavior properties.
 func serialize_properties() -> Array:
-	return behavior_properties.map(func(p: Dictionary):
+	return get_property_list().map(func(p: Dictionary):
 		var v : Variant = get(p["name"])
+		var cond:bool = is_blackboard_reference_enabled(p["name"])
+		var key : String = get_blackboard_key(p["name"]) if cond else ""
 		return {
 			"name": String(p["name"]),
-			"type": typeof(v),
-			"value": BeGraphProtocol.safe_value(v),
-			"blackboard_key": String(p["blackboard_key"]),
+			"type": str(p["type"]),
+			"value": v,
+			"blackboard_key": key,
 		}
 	)
+
+func has_behavior_properties()->bool:
+	return not get_behavior_property_list().is_empty()
+
+func get_behavior_property_list()->Array[Dictionary]:
+	var ret : Array[Dictionary]
+	for p in get_property_list():
+		if p["hint_string"].begins_with("BeGraph"):
+			ret.append(p)
+	return ret

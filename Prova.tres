@@ -3,13 +3,9 @@
 [ext_resource type="Script" uid="uid://da0t4052e3fsp" path="res://addons/BeGraph/Classes/misc/BlackboardVariable.gd" id="1_sguni"]
 [ext_resource type="Script" uid="uid://ca0cevcqjpnsq" path="res://addons/BeGraph/Classes/misc/BehaviorNode.gd" id="2_0y5uo"]
 [ext_resource type="Resource" uid="uid://b00pat2p0pkar" path="res://Variabile di test.tres" id="2_gad0g"]
-[ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="3_gad0g"]
+[ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="4_0y5uo"]
 [ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="4_k7ocg"]
-[ext_resource type="Script" uid="uid://2b2d8s434gjs" path="res://addons/BeGraph/Classes/Nodes/Actions/Misc/Set Modulate.gd" id="4_orwkh"]
-[ext_resource type="Script" uid="uid://cqtl1rxtl657i" path="res://addons/BeGraph/Classes/Nodes/Actions/Movement/Patrol.gd" id="5_k7ocg"]
-[ext_resource type="Script" uid="uid://pjibqyy3ifwn" path="res://addons/BeGraph/Classes/Nodes/Flow/Misc/ValueComparator.gd" id="7_6a8nf"]
-[ext_resource type="Script" uid="uid://c82q06qm6p887" path="res://addons/BeGraph/Classes/Nodes/Actions/Print/Print String.gd" id="7_buygw"]
-[ext_resource type="Script" uid="uid://dhcjy85mapqde" path="res://addons/BeGraph/Classes/Nodes/CommentNode.gd" id="10_6a8nf"]
+[ext_resource type="Script" uid="uid://be01k3jh4ckwt" path="res://addons/BeGraph/Classes/Nodes/Actions/Print/Print.gd" id="5_gad0g"]
 
 [sub_resource type="Resource" id="Resource_0y5uo"]
 resource_local_to_scene = true
@@ -27,292 +23,35 @@ export_variable = true
 value = NodePath("..")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
-[sub_resource type="Resource" id="Resource_orwkh"]
-resource_name = "BehaviorGraphNode"
-script = ExtResource("4_orwkh")
-instruction = "Set {node}'s {mode} to {color}"
-behavior_properties = Array[Dictionary]([{
-"blackboard_key": &"Self",
-"class_name": "",
-"custom_info": "",
-"hint": 34,
-"hint_string": "CanvasItem",
-"name": &"node",
-"type": 22,
-"usage": 4198406,
-"value": NodePath("..")
-}, {
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 2,
-"hint_string": "Modulate,SelfModulate",
-"name": &"mode",
-"type": 2,
-"usage": 4102,
-"value": 0
-}, {
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 0,
-"hint_string": "",
-"name": &"color",
-"type": 20,
-"usage": 4102,
-"value": Color(1, 0, 1, 1)
-}])
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(240, 160)
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"_GraphNode_51134"])
-node = NodePath("..")
-mode = 0
-color = Color(1, 0, 1, 1)
-
-[sub_resource type="Resource" id="Resource_uthrn"]
-resource_name = "CommentGraphNode"
-script = ExtResource("10_6a8nf")
-comment_title = "dwadAWA"
-comment_text = "DAWDWA"
-node_size = Vector2(1460, 260)
-border_color = Color(0.79, 0.564, 0.269, 1)
-background_color = Color(0.033223465, 0.1796875, 0.14078298, 0.78431374)
-instruction = "{comment}"
-behavior_properties = Array[Dictionary]([{
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 18,
-"hint_string": "",
-"name": &"comment",
-"type": 4,
-"usage": 4102,
-"value": ""
-}])
-node_category = "comment_node"
-position_in_graph = Vector2(280, 580)
-_graph_ref = Object(WeakRef,"script":null)
-
-comment = ""
-
-[sub_resource type="Resource" id="Resource_buygw"]
-resource_name = "_GraphNode_28406"
-script = ExtResource("5_k7ocg")
-instruction = "Patrol {node} between {points}(mode: {mode})"
-behavior_properties = Array[Dictionary]([{
-"blackboard_key": &"Self",
-"class_name": "",
-"custom_info": "",
-"hint": 34,
-"hint_string": "Node2D,Node3D",
-"name": &"node",
-"type": 22,
-"usage": 4198406,
-"value": NodePath("..")
-}, {
-"blackboard_key": &"Positions",
-"class_name": "",
-"custom_info": "",
-"hint": 0,
-"hint_string": "",
-"name": &"points",
-"type": 28,
-"usage": 4102,
-"value": [NodePath("Point1"), NodePath("Point2"), NodePath("Point3")]
-}, {
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 2,
-"hint_string": "Speed,Duration",
-"name": &"mode",
-"type": 2,
-"usage": 4102,
-"value": 0
-}, {
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 0,
-"hint_string": "",
-"name": &"speed",
-"type": 3,
-"usage": 4102,
-"value": 150.0
-}, {
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 0,
-"hint_string": "",
-"name": &"duration",
-"type": 3,
-"usage": 4102,
-"value": 1.0
-}, {
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 0,
-"hint_string": "",
-"name": &"loop",
-"type": 1,
-"usage": 4102,
-"value": false
-}, {
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 0,
-"hint_string": "",
-"name": &"calculate_destination_each_frame",
-"type": 1,
-"usage": 4102,
-"value": true
-}, {
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 0,
-"hint_string": "",
-"name": &"time_to_wait_upon_reaching_destination",
-"type": 3,
-"usage": 4102,
-"value": 0.0
-}])
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(-460, 120)
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"BehaviorGraphNode"])
-node = NodePath("..")
-points = [NodePath("Point1"), NodePath("Point2"), NodePath("Point3")]
-mode = 0
-speed = 150.0
-duration = 0.0
-loop = false
-calculate_destination_each_frame = true
-time_to_wait_upon_reaching_destination = 0.0
-
-[sub_resource type="Resource" id="Resource_qrtwh"]
-resource_name = "_GraphNode_50170"
-script = ExtResource("7_buygw")
-instruction = "Prints {value}"
-behavior_properties = Array[Dictionary]([{
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 0,
-"hint_string": "",
-"name": &"value",
-"type": 0,
-"usage": 135174,
-"value": "Sono fortunato!"
-}])
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(1840, -80)
-_graph_ref = Object(WeakRef,"script":null)
-
-value = "Sono fortunato!"
-
-[sub_resource type="Resource" id="Resource_6a8nf"]
-resource_name = "_GraphNode_51134"
-script = ExtResource("7_6a8nf")
-instruction = "Compare {value_1} and {value_2}"
-conditions = Array[Dictionary]([{
-"next": "_GraphNode_50170",
-"text": "{value_1} > {value_2}"
-}, {
-"next": "_GraphNode_51406",
-"text": "{value_1} = {value_2}"
-}, {
-"next": null,
-"text": "{value_1} < {value_2}"
-}])
-behavior_properties = Array[Dictionary]([{
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 0,
-"hint_string": "",
-"name": &"value_1",
-"type": 2,
-"usage": 4102,
-"value": 5
-}, {
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 0,
-"hint_string": "",
-"name": &"value_2",
-"type": 2,
-"usage": 4102,
-"value": 1
-}])
-node_category = "control_flow_node"
-input = true
-position_in_graph = Vector2(880, 140)
-_graph_ref = Object(WeakRef,"script":null)
-
-value_1 = 5
-value_2 = 1
-
-[sub_resource type="Resource" id="Resource_6x78j"]
-resource_name = "_GraphNode_51406"
-script = ExtResource("7_buygw")
-instruction = "Prints {value}"
-behavior_properties = Array[Dictionary]([{
-"blackboard_key": &"",
-"class_name": "",
-"custom_info": "",
-"hint": 0,
-"hint_string": "",
-"name": &"value",
-"type": 0,
-"usage": 135174,
-"value": "Circa dai"
-}])
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(1880, 180)
-_graph_ref = Object(WeakRef,"script":null)
-
-value = "Circa dai"
-
-[sub_resource type="Resource" id="Resource_byvd5"]
-resource_name = "start_node"
-script = ExtResource("3_gad0g")
-label = "Dai"
+[sub_resource type="Resource" id="Resource_gad0g"]
+resource_name = "AccessPointGraphNode"
+script = ExtResource("4_0y5uo")
 node_category = "access_point_node"
 output = true
-position_in_graph = Vector2(-977.1665, 160.4308)
 is_starting_node = true
 _graph_ref = Object(WeakRef,"script":null)
 
-_next_ref = Array[StringName]([&"_GraphNode_28406"])
+
+[sub_resource type="Resource" id="Resource_byvd5"]
+resource_name = "BehaviorGraphNode"
+script = ExtResource("5_gad0g")
+value = Color(0.60402936, 0.4503184, 0.26934493, 1)
+stringa = "Valore da ricordare o forse"
+instruction = "Prints {value} and {prova_enumeratore} and {stringa}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(600, 60)
+_graph_ref = Object(WeakRef,"script":null)
+
 
 [resource]
 resource_name = "Trogolo"
 script = ExtResource("4_k7ocg")
 blackboard = Array[ExtResource("1_sguni")]([SubResource("Resource_0y5uo"), SubResource("Resource_k7ocg"), ExtResource("2_gad0g")])
 nodes = Dictionary[StringName, ExtResource("2_0y5uo")]({
-&"BehaviorGraphNode": SubResource("Resource_orwkh"),
-&"CommentGraphNode": SubResource("Resource_uthrn"),
-&"_GraphNode_28406": SubResource("Resource_buygw"),
-&"_GraphNode_50170": SubResource("Resource_qrtwh"),
-&"_GraphNode_51134": SubResource("Resource_6a8nf"),
-&"_GraphNode_51406": SubResource("Resource_6x78j"),
-&"start_node": SubResource("Resource_byvd5")
+&"": SubResource("Resource_gad0g"),
+&"BehaviorGraphNode": SubResource("Resource_byvd5")
 })
 connections = Array[Dictionary]([{
 "from_node": &"start_node",

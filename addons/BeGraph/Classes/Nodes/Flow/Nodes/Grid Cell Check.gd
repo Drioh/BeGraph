@@ -8,6 +8,10 @@ const DISPLAY_INFO : String = "Checks whether {cell} is occupied on {map} (TileM
 var _map : Node
 var _is_3d : bool = false
 
+@export_custom(PROPERTY_HINT_NODE_PATH_VALID_TYPES,"BeGraph:property:GridMap") var map : NodePath = ^""
+@export_custom(PROPERTY_HINT_NONE,"BeGraph:property") var cell : Vector3i = Vector3i.ZERO
+
+
 func set_instruction() -> String:
 	return "Check cell {cell} on {map}"
 
@@ -38,10 +42,6 @@ func set_node_category()->String: return "control_flow_node"
 func set_input()->bool: return true
 func set_output()->bool : return false
 func set_allows_multiple_outputs() -> bool: return false
-
-func set_properties()-> void:
-	_add_behavior_property("map", NodePath(""))
-	_add_behavior_property("cell", Vector3i.ZERO)
 
 func set_conditions() -> PackedStringArray:
 	return PackedStringArray([

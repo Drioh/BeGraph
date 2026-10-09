@@ -92,11 +92,11 @@ func show_node(node: BehaviorNode, blackboard: Array[BlackboardVariable]) -> voi
 	_build_flags(node)
 	
 	_clear_properties()
-	var has_properties : bool = !node.behavior_properties.is_empty()
+	var has_properties : bool = node.has_behavior_properties()
 	properties_caption_container.visible = has_properties
 	properties_container.visible = has_properties
-	for property in node.behavior_properties:
-		_add_property_row(node, property)
+	for p in node.get_behavior_property_list():
+		_add_property_row(node,p)
 
 	_refresh_conditions()
 

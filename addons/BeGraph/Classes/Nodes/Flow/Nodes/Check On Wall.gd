@@ -5,6 +5,8 @@ const DISPLAY_NAME : String = "Check On Wall"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon.svg"
 const DISPLAY_INFO : String = "Checks whether {node} (a CharacterBody2D/3D) is currently touching the wall (is_on_wall()), branching to 'On wall' or 'Not on wall'.\n\nFails if {node} can't be resolved or isn't a character body."
 
+@export_custom(PROPERTY_HINT_NODE_PATH_VALID_TYPES,"BeGraph:property:CharacterBody2D,CharacterBody3D") var node : NodePath = ^""
+
 func set_instruction() -> String:
 	return "Check if {node} is on wall"
 
@@ -24,9 +26,6 @@ func set_node_category()->String: return "control_flow_node"
 func set_input()->bool: return true
 func set_output()->bool : return false
 func set_allows_multiple_outputs() -> bool: return false
-
-func set_properties()-> void:
-	_add_behavior_property("node", NodePath(""), PROPERTY_HINT_NODE_TYPE, "CharacterBody2D,CharacterBody3D", "", "", PROPERTY_USAGE_NODE_PATH_FROM_SCENE_ROOT)
 
 func set_conditions() -> PackedStringArray:
 	return PackedStringArray([
