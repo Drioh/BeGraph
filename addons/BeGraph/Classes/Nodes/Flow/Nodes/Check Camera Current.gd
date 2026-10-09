@@ -6,12 +6,20 @@ const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon
 
 @export_custom(PROPERTY_HINT_NODE_TYPE, BG.PROPERTY+ "Camera2D,Camera3D") var node : NodePath = NodePath("")
 
+var _target : Node = null
+
+func on_start() -> void:
+	_target = _resolve_node(eval(&"node"))
+
+func on_blackboard_property_changed(key: StringName) -> void:
+	if key == get_blackboard_key(&"node"):
+		_target = _resolve_node(eval(&"node"))
+
 func tick(delta: float) -> Status:
-	var target : Node = _resolve_node(eval(&"node"))
-	if target == null or not (target is Camera2D or target is Camera3D):
+	if _target == null or not is_instance_valid(_target) or not (_target is Camera2D or _target is Camera3D):
 		return abort("couldn't resolve camera")
 		
-	var is_curr : bool = target.is_current() if target is Camera2D else target.current
+	var is_curr : bool = _target.is_current() if _target is Camera2D else _target.current
 	tick_condition(delta, 0 if is_curr else 1)
 	return Status.RUNNING
 

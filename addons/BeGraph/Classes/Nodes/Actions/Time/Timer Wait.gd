@@ -32,6 +32,12 @@ func tick(delta: float) -> Status:
 func _on_timeout() -> void:
 	_fired = true
 
+func on_end(_status: Status) -> void:
+	if _timer_ref != null and is_instance_valid(_timer_ref):
+		if _timer_ref.timeout.is_connected(_on_timeout):
+			_timer_ref.timeout.disconnect(_on_timeout)
+		_timer_ref.stop()
+
 func set_instruction() -> String: return "Wait for {timer} ({wait_time}s)"
 func set_node_category() -> String: return "action_node"
 func set_input() -> bool: return true

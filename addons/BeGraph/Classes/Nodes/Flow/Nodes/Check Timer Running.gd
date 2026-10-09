@@ -6,12 +6,20 @@ const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon
 
 @export_custom(PROPERTY_HINT_NODE_TYPE, BG.PROPERTY+"Timer") var node : NodePath = NodePath("")
 
+var _target : Timer = null
+
+func on_start() -> void:
+	_target = _resolve_node(eval(&"node")) as Timer
+
+func on_blackboard_property_changed(key: StringName) -> void:
+	if key == get_blackboard_key(&"node"):
+		_target = _resolve_node(eval(&"node")) as Timer
+
 func tick(delta: float) -> Status:
-	var target := _resolve_node(eval(&"node")) as Timer
-	if target == null:
+	if _target == null or not is_instance_valid(_target):
 		return abort("couldn't resolve Timer")
 		
-	tick_condition(delta, 0 if not target.is_stopped() else 1)
+	tick_condition(delta, 0 if not _target.is_stopped() else 1)
 	return Status.RUNNING
 
 func set_instruction() -> String: return "Check if timer {node} is running"

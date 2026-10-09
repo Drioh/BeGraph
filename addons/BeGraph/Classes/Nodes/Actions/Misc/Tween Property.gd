@@ -25,6 +25,10 @@ func tick(delta: float) -> Status:
 		return Status.RUNNING
 	return tick_next(delta)
 
+func on_end(_status: Status) -> void:
+	if _tween != null and _tween.is_valid() and _tween.is_running():
+		_tween.kill()
+
 func set_instruction() -> String: return "Tween {node}'s {property} to {target_value} over {duration}s"
 func set_node_category() -> String: return "action_node"
 func set_input() -> bool: return true

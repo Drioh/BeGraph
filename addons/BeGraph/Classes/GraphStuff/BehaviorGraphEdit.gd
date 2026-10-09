@@ -25,6 +25,8 @@ var _clipboard : Dictionary = {}
 ## The [BehaviorGraph] currently being edited.
 var current_graph: BehaviorGraph
 
+var undo_redo: EditorUndoRedoManager
+
 ## Root popup shown for node creation, rebuilt from [constant NODE_PATH] on each request.
 var _node_popup: PopupMenu
 
@@ -55,6 +57,8 @@ func _ready() -> void:
 	
 	graph_elements_linked_to_frame_request.connect(_on_elements_linked_to_frame)
 	end_node_move.connect(_sync_frame_attachments)
+	if Engine.is_editor_hint():
+		undo_redo = EditorInterface.get_editor_undo_redo()
 #endregion
 
 

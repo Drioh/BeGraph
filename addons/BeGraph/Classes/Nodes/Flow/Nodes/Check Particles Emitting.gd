@@ -6,12 +6,20 @@ const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon
 
 @export_custom(PROPERTY_HINT_NODE_TYPE, BG.PROPERTY+ "GPUParticles2D,GPUParticles3D,CPUParticles2D,CPUParticles3D") var node : NodePath = NodePath("")
 
+var _target : Node = null
+
+func on_start() -> void:
+	_target = _resolve_node(eval(&"node"))
+
+func on_blackboard_property_changed(key: StringName) -> void:
+	if key == get_blackboard_key(&"node"):
+		_target = _resolve_node(eval(&"node"))
+
 func tick(delta: float) -> Status:
-	var target := _resolve_node(eval(&"node"))
-	if target == null or not _is_particle_emitter(target):
+	if _target == null or not is_instance_valid(_target) or not _is_particle_emitter(_target):
 		return abort("couldn't resolve particle emitter")
 		
-	tick_condition(delta, 0 if target.emitting else 1)
+	tick_condition(delta, 0 if _target.emitting else 1)
 	return Status.RUNNING
 
 func _is_particle_emitter(n: Node) -> bool:

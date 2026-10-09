@@ -43,7 +43,6 @@ _graph_ref = Object(WeakRef,"script":null)
 resource_name = "BehaviorGraphNode"
 script = ExtResource("5_gad0g")
 value = Color(0.60402936, 0.4503184, 0.26934493, 1)
-stringa = "Valore da ricordare o forse"
 instruction = "Prints {value} and {prova_enumeratore} and {stringa}"
 node_category = "action_node"
 input = true

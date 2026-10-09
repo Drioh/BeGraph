@@ -9,14 +9,24 @@ const DISPLAY_INFO : String = "Measures distance between node_a and node_b vs th
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var node_b : NodePath = NodePath("")
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var threshold : float = 0.0
 
+var _node_a : Node = null
+var _node_b : Node = null
+
+func on_start() -> void:
+	_node_a = _resolve_node(eval(&"node_a"))
+	_node_b = _resolve_node(eval(&"node_b"))
+
+func on_blackboard_property_changed(key: StringName) -> void:
+	if key == get_blackboard_key(&"node_a"):
+		_node_a = _resolve_node(eval(&"node_a"))
+	if key == get_blackboard_key(&"node_b"):
+		_node_b = _resolve_node(eval(&"node_b"))
+
 func tick(delta: float) -> Status:
-	var a : Node = _resolve_node(eval(&"node_a"))
-	var b : Node = _resolve_node(eval(&"node_b"))
-	
-	if a == null or b == null:
+	if _node_a == null or _node_b == null or not is_instance_valid(_node_a) or not is_instance_valid(_node_b):
 		return abort("couldn't resolve target nodes")
 		
-	var dist : float = _get_position(a).distance_to(_get_position(b))
+	var dist : float = _get_position(_node_a).distance_to(_get_position(_node_b))
 	var th : float = eval(&"threshold") as float
 	
 	if dist > th:

@@ -7,17 +7,28 @@ const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon
 @export_custom(PROPERTY_HINT_NODE_TYPE, BG.PROPERTY+"AnimationPlayer,AnimatedSprite2D,AnimatedSprite3D") var node : NodePath = NodePath("")
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var animation : StringName = &""
 
+var _target : Node = null
+
+func on_start() -> void:
+	_target = _resolve_node(eval(&"node"))
+
+func on_blackboard_property_changed(key: StringName) -> void:
+	if key == get_blackboard_key(&"node"):
+		_target = _resolve_node(eval(&"node"))
+
 func tick(delta: float) -> Status:
-	var target : Node = _resolve_node(eval(&"node"))
+	if _target == null or not is_instance_valid(_target):
+		return abort("couldn't resolve an animation player or animated sprite")
+		
 	var playing : bool = false
 	var current : String = ""
 	
-	if target is AnimationPlayer:
-		playing = target.is_playing()
-		current = String(target.current_animation)
-	elif target is AnimatedSprite2D or target is AnimatedSprite3D:
-		playing = target.is_playing()
-		current = String(target.animation)
+	if _target is AnimationPlayer:
+		playing = _target.is_playing()
+		current = String(_target.current_animation)
+	elif _target is AnimatedSprite2D or _target is AnimatedSprite3D:
+		playing = _target.is_playing()
+		current = String(_target.animation)
 	else:
 		return abort("couldn't resolve an animation player or animated sprite")
 		

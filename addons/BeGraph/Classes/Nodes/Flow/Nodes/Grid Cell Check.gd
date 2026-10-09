@@ -7,18 +7,26 @@ const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon
 @export_custom(PROPERTY_HINT_NODE_PATH_VALID_TYPES, BG.PROPERTY + "GridMap,TileMap,TileMapLayer") var map : NodePath = ^""
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var cell : Vector3i = Vector3i.ZERO
 
+var _map : Node = null
+
+func on_start() -> void:
+	_map = _resolve_node(eval(&"map"))
+
+func on_blackboard_property_changed(key: StringName) -> void:
+	if key == get_blackboard_key(&"map"):
+		_map = _resolve_node(eval(&"map"))
+
 func tick(delta: float) -> Status:
-	var target_map := _resolve_node(eval(&"map"))
-	if target_map == null:
+	if _map == null or not is_instance_valid(_map):
 		return abort("couldn't resolve map node")
 		
 	var cell_pos : Vector3i = eval(&"cell") as Vector3i
 	var occupied : bool = false
 	
-	if target_map is GridMap:
-		occupied = target_map.get_cell_item(cell_pos) != GridMap.INVALID_CELL_ITEM
-	elif target_map.has_method("get_cell_source_id"):
-		occupied = target_map.get_cell_source_id(Vector2i(cell_pos.x, cell_pos.y)) != -1
+	if _map is GridMap:
+		occupied = _map.get_cell_item(cell_pos) != GridMap.INVALID_CELL_ITEM
+	elif _map.has_method("get_cell_source_id"):
+		occupied = _map.get_cell_source_id(Vector2i(cell_pos.x, cell_pos.y)) != -1
 	else:
 		return abort("map node is not a valid TileMap or GridMap")
 		

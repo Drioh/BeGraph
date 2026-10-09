@@ -11,21 +11,30 @@ const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var stop_distance : float = 5.0
 
 var _node_ref : Node
+var _target_ref : Node
 var _last_target_pos : Vector3 = Vector3.ZERO
 var _has_last_pos : bool = false
 
 func on_start() -> void:
 	_has_last_pos = false
 	_node_ref = _resolve_node(eval(&"node"))
+	_target_ref = _resolve_node(eval(&"target"))
 	if _node_ref == null:
 		abort("couldn't resolve node")
 
+func on_blackboard_property_changed(key: StringName) -> void:
+	if key == get_blackboard_key(&"node"):
+		_node_ref = _resolve_node(eval(&"node"))
+	if key == get_blackboard_key(&"target"):
+		_target_ref = _resolve_node(eval(&"target"))
+
 func tick(delta: float) -> Status:
-	var target_node := _resolve_node(eval(&"target"))
-	if target_node == null:
+	if _node_ref == null or not is_instance_valid(_node_ref):
+		return abort("couldn't resolve node")
+	if _target_ref == null or not is_instance_valid(_target_ref):
 		return abort("couldn't resolve target node")
 		
-	var target_pos : Vector3 = _get_position(target_node)
+	var target_pos : Vector3 = _get_position(_target_ref)
 	var target_vel : Vector3 = Vector3.ZERO
 	if _has_last_pos and delta > 0.0:
 		target_vel = (target_pos - _last_target_pos) / delta

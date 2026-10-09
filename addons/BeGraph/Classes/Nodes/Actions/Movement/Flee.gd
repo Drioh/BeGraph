@@ -16,7 +16,14 @@ func on_start() -> void:
 	if _node_ref == null:
 		abort("couldn't resolve node to flee with")
 
+func on_blackboard_property_changed(key: StringName) -> void:
+	if key == get_blackboard_key(&"node"):
+		_node_ref = _resolve_node(eval(&"node"))
+
 func tick(delta: float) -> Status:
+	if _node_ref == null or not is_instance_valid(_node_ref):
+		return abort("couldn't resolve node to flee with")
+		
 	var threat_pos = _resolve_position(eval(&"target"))
 	if threat_pos == null:
 		return abort("couldn't resolve target threat position")

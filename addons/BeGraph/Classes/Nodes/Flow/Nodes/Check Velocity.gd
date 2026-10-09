@@ -10,12 +10,20 @@ enum Axis { TOTAL, HORIZONTAL, VERTICAL }
 @export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+"Total,Horizontal,Vertical") var axis : Axis = Axis.TOTAL
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var threshold : float = 10.0
 
+var _target : Node = null
+
+func on_start() -> void:
+	_target = _resolve_node(eval(&"node"))
+
+func on_blackboard_property_changed(key: StringName) -> void:
+	if key == get_blackboard_key(&"node"):
+		_target = _resolve_node(eval(&"node"))
+
 func tick(delta: float) -> Status:
-	var target : Node = _resolve_node(eval(&"node"))
-	if target == null:
+	if _target == null or not is_instance_valid(_target):
 		return abort("couldn't resolve node")
 		
-	var speed : float = _speed_of(target)
+	var speed : float = _speed_of(_target)
 	if speed < 0.0:
 		return abort("unsupported body type")
 		

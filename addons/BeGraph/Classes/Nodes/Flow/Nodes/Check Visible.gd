@@ -7,12 +7,20 @@ const DISPLAY_INFO : String = "Checks whether {node} (a CanvasItem or Node3D) is
 
 @export_custom(PROPERTY_HINT_NODE_TYPE, BG.PROPERTY+"CanvasItem,Node3D") var node : NodePath = NodePath("")
 
+var _target : Node = null
+
+func on_start() -> void:
+	_target = _resolve_node(eval(&"node"))
+
+func on_blackboard_property_changed(key: StringName) -> void:
+	if key == get_blackboard_key(&"node"):
+		_target = _resolve_node(eval(&"node"))
+
 func tick(delta: float) -> Status:
-	var target : Node = _resolve_node(eval(&"node"))
-	if target == null or not (target is CanvasItem or target is Node3D):
+	if _target == null or not is_instance_valid(_target) or not (_target is CanvasItem or _target is Node3D):
 		return abort("couldn't resolve visual node")
 		
-	if target.visible:
+	if _target.visible:
 		tick_condition(delta, 0)
 	else:
 		tick_condition(delta, 1)

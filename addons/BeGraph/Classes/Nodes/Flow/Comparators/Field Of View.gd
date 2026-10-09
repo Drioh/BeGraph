@@ -13,18 +13,27 @@ enum Forward { POS_X, NEG_X, POS_Y, NEG_Y, POS_Z, NEG_Z }
 @export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+"+X (2D right),-X (2D left),+Y (2D down),-Y (2D up),+Z (3D back),-Z (3D forward)") var forward : Forward = Forward.POS_X
 
 var _node_ref : Node
+var _target_ref : Node
 
 func on_start() -> void:
 	_node_ref = _resolve_node(eval(&"node"))
+	_target_ref = _resolve_node(eval(&"target"))
 	if _node_ref == null:
 		abort("couldn't resolve source node")
 
+func on_blackboard_property_changed(key: StringName) -> void:
+	if key == get_blackboard_key(&"node"):
+		_node_ref = _resolve_node(eval(&"node"))
+	if key == get_blackboard_key(&"target"):
+		_target_ref = _resolve_node(eval(&"target"))
+
 func tick(delta: float) -> Status:
-	var target_node : Node = _resolve_node(eval(&"target"))
-	if target_node == null:
+	if _node_ref == null or not is_instance_valid(_node_ref):
+		return abort("couldn't resolve source node")
+	if _target_ref == null or not is_instance_valid(_target_ref):
 		return abort("couldn't resolve target node")
 		
-	var to_target : Vector3 = _get_position(target_node) - _get_position(_node_ref)
+	var to_target : Vector3 = _get_position(_target_ref) - _get_position(_node_ref)
 	var distance : float = to_target.length()
 	var max_dist : float = eval(&"max_distance") as float
 	var in_view : bool = true

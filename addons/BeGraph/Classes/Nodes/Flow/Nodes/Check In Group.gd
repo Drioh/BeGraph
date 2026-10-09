@@ -7,12 +7,20 @@ const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var node : NodePath = NodePath("")
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var group : StringName = &""
 
+var _target : Node = null
+
+func on_start() -> void:
+	_target = _resolve_node(eval(&"node"))
+
+func on_blackboard_property_changed(key: StringName) -> void:
+	if key == get_blackboard_key(&"node"):
+		_target = _resolve_node(eval(&"node"))
+
 func tick(delta: float) -> Status:
-	var target : Node = _resolve_node(eval(&"node"))
-	if target == null:
+	if _target == null or not is_instance_valid(_target):
 		return abort("couldn't resolve node")
 		
-	var in_grp : bool = target.is_in_group(eval(&"group"))
+	var in_grp : bool = _target.is_in_group(eval(&"group"))
 	tick_condition(delta, 0 if in_grp else 1)
 	return Status.RUNNING
 

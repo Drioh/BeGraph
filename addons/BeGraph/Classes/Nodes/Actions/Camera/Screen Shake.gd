@@ -37,6 +37,11 @@ func _restore() -> void:
 	if is_instance_valid(_camera):
 		_write_offset(_base_offset)
 
+func on_end(_status: Status) -> void:
+	if _tween != null and _tween.is_valid() and _tween.is_running():
+		_tween.kill()
+	_restore()
+
 func _read_offset() -> Vector2:
 	return _camera.offset if _camera is Camera2D else Vector2(_camera.h_offset, _camera.v_offset)
 

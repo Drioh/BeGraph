@@ -26,7 +26,7 @@ _next_ref = Array[StringName]([&"BehaviorGraphNode"])
 [sub_resource type="Resource" id="Resource_m7ynu"]
 resource_name = "BehaviorGraphNode"
 script = ExtResource("4_322oe")
-value = "ALDOOOOO"
+value = "Prova"
 instruction = "Prints {value}"
 node_category = "action_node"
 input = true
