@@ -114,22 +114,6 @@ func _init() -> void:
 	allows_multiple_outputs = set_allows_multiple_outputs()
 
 func _validate_property(property: Dictionary) -> void:
-	if property["type"]==TYPE_PACKED_STRING_ARRAY and property["hint_string"].begins_with(BG.CONDITION):
-		var old_conditions : Array[Dictionary] = conditions.duplicate(true)
-		conditions.clear()
-		var values :PackedStringArray = property["hint_string"].trim_prefix(BG.CONDITION).split(",",false)
-		for i in values.size():
-			var cond : bool = i < old_conditions.size()
-			var kept_next : WeakRef = old_conditions[i]["next"] if cond else null
-			conditions.append({"text": values[i], "next": kept_next})
-			
-		output = false
-		conditions_changed.emit()
-		
-		# an element gets added or removed, so that previous size is both valid anddifferent than the old value
-		var cond : bool = old_conditions.size() != -1 and old_conditions.size() != values.size()
-		if cond: 
-			notify_property_list_changed.call_deferred()
 	if property["hint_string"].begins_with("BeGraph"):
 		property["usage"]|=PROPERTY_USAGE_DEFAULT
 

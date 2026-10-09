@@ -293,16 +293,6 @@ func setup_variable_editor(n : BehaviorNode,property:Dictionary,bb:Array[Blackbo
 ## Rebuilds [member var_property_editor] from scratch using the [param property] info dictionary.[br]
 ## Used when the underlying property's type/hint changes dynamically, e.g. after [signal BehaviorNode.conditions_changed] fires for an enum-backed value.
 func refresh_editor(property: Dictionary) -> void:
-	var new_signature : Array = _signature_for(property)
-	if new_signature == _editor_signature:
-		return 
-	_editor_signature = new_signature
-	
-	if var_property_editor:
-		var_property_editor.get_parent().remove_child(var_property_editor)
-		var_property_editor.queue_free()
-		var_property_editor = null
-
 	type = property["type"]
 	key = property["name"]
 	
@@ -318,7 +308,18 @@ func refresh_editor(property: Dictionary) -> void:
 		elif node.get(hint_string) && node.get(hint_string) is PackedStringArray:
 			hint_string = str(node.get(hint_string)).trim_prefix("[").trim_suffix("]")
 			hint_string = hint_string.remove_char(34)
-		
+	
+	var new_signature : Array = [type, property["hint"], hint_string, property["usage"]]
+	
+	if new_signature == _editor_signature:
+		return #no need for this editor to refresh, its signature hasn't changed
+	_editor_signature = new_signature
+	
+	if var_property_editor:
+		var_property_editor.get_parent().remove_child(var_property_editor)
+		var_property_editor.queue_free()
+		var_property_editor = null
+
 	var editor: EditorProperty = EditorInspector.instantiate_property_editor(
 		node, 
 		type, 
@@ -484,6 +485,3 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_DRAG_END:
 		fallback_layer.set_indexed("theme_override_styles/panel:bg_color",Color(0.0, 0.0, 0.0, 0.0))
 		fallback_layer.set_indexed("theme_override_styles/panel:border_color",Color(0.0, 0.0, 0.0, 0.0))
-
-func _signature_for(property: Dictionary) -> Array:
-	return [property["type"], property["hint"], property["hint_string"], property["usage"]]
