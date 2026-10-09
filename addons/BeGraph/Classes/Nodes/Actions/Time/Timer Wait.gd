@@ -3,54 +3,37 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Timer Wait"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
-const DISPLAY_INFO : String = "Starts {timer} (a Timer node) as one-shot with {wait_time}s and returns RUNNING until it times out, then SUCCESS.\n\nFails if {timer} can't be resolved."
 
-var _timer : Timer
+@export_custom(BG.HINT_NONE, BG.PROPERTY+"Timer") var timer : NodePath = NodePath("")
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var wait_time : float = 1.0
+
+var _timer_ref : Timer
 var _fired : bool = false
 
-func set_instruction() -> String:
-	return "Wait for {timer} ({wait_time}s)"
+func on_start() -> void:
+	_fired = false
+	_timer_ref = _resolve_node(eval(&"timer")) as Timer
+	if _timer_ref == null:
+		abort("couldn't resolve Timer node")
+		return
+		
+	if not _timer_ref.timeout.is_connected(_on_timeout):
+		_timer_ref.timeout.connect(_on_timeout, CONNECT_ONE_SHOT)
+		
+	_timer_ref.wait_time = maxf(eval(&"wait_time") as float, 0.001)
+	_timer_ref.one_shot = true
+	_timer_ref.start()
 
-func tick(delta:float) -> Status:
-	if dirty:
-		_timer = _resolve_node(get("timer")) as Timer
-		if _timer == null:
-			push_error("\"%s\" couldn't resolve Timer node" % resource_name)
-			return Status.FAILURE
- 
-		var agent : BehaviorAgent = get_agent() as BehaviorAgent
-		if agent == null:
-			push_error("\"%s\" couldn't resolve owning BehaviorAgent" % resource_name)
-			return Status.FAILURE
- 
-		_timer.process_callback = Timer.TIMER_PROCESS_PHYSICS \
-			if agent.graph_process_mode == BehaviorAgent.ProcessThread.PHYSICS \
-			else Timer.TIMER_PROCESS_IDLE
- 
-		if not _timer.timeout.is_connected(_on_timeout):
-			_timer.timeout.connect(_on_timeout, CONNECT_ONE_SHOT)
- 
-		_fired = false
-		_timer.wait_time = max(get("wait_time"), 0.001)
-		_timer.one_shot = true
-		_timer.start()
-		dirty = false
- 
+func tick(delta: float) -> Status:
 	if _fired:
-		dirty = true
-		tick_next(delta)
-		return Status.SUCCESS
- 
+		return tick_next(delta)
 	return Status.RUNNING
 
 func _on_timeout() -> void:
 	_fired = true
 
-func set_node_category()->String: return "action_node"
-func set_input()->bool: return true
-func set_output()->bool : return true
+func set_instruction() -> String: return "Wait for {timer} ({wait_time}s)"
+func set_node_category() -> String: return "action_node"
+func set_input() -> bool: return true
+func set_output() -> bool: return true
 func set_allows_multiple_outputs() -> bool: return false
-
-func set_properties()-> void:
-	_add_behavior_property("timer", NodePath(""))
-	_add_behavior_property("wait_time", float(1.0))

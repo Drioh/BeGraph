@@ -3,48 +3,31 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Grid Cell Check"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon.svg"
-const DISPLAY_INFO : String = "Checks whether {cell} is occupied on {map} (TileMap or GridMap, auto-detected) and branches to 'Cell occupied' or 'Cell empty'.\n\nFails if {map} cannot be resolved."
 
-var _map : Node
-var _is_3d : bool = false
+@export_custom(PROPERTY_HINT_NODE_PATH_VALID_TYPES, BG.PROPERTY + "GridMap,TileMap,TileMapLayer") var map : NodePath = ^""
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var cell : Vector3i = Vector3i.ZERO
 
-@export_custom(PROPERTY_HINT_NODE_PATH_VALID_TYPES,"BeGraph:property:GridMap") var map : NodePath = ^""
-@export_custom(PROPERTY_HINT_NONE,"BeGraph:property") var cell : Vector3i = Vector3i.ZERO
-
-
-func set_instruction() -> String:
-	return "Check cell {cell} on {map}"
-
-func tick(delta:float) -> Status:
-	if dirty:
-		_map = _resolve_node(get("map"))
-		if _map == null:
-			push_error("\"%s\" couldn't resolve map node" % resource_name)
-			return Status.FAILURE
-		_is_3d = _map is GridMap
-		dirty = false
-
-	var cell : Vector3i = get("cell")
-	var occupied : bool
-
-	if _is_3d:
-		occupied = _map.get_cell_item(cell) != GridMap.INVALID_CELL_ITEM
+func tick(delta: float) -> Status:
+	var target_map := _resolve_node(eval(&"map"))
+	if target_map == null:
+		return abort("couldn't resolve map node")
+		
+	var cell_pos : Vector3i = eval(&"cell") as Vector3i
+	var occupied : bool = false
+	
+	if target_map is GridMap:
+		occupied = target_map.get_cell_item(cell_pos) != GridMap.INVALID_CELL_ITEM
+	elif target_map.has_method("get_cell_source_id"):
+		occupied = target_map.get_cell_source_id(Vector2i(cell_pos.x, cell_pos.y)) != -1
 	else:
-		occupied = _map.get_cell_source_id(Vector2i(cell.x, cell.y)) != -1
-
-	if occupied:
-		tick_condition(delta,0)
-	else:
-		tick_condition(delta,1)
+		return abort("map node is not a valid TileMap or GridMap")
+		
+	tick_condition(delta, 0 if occupied else 1)
 	return Status.RUNNING
 
-func set_node_category()->String: return "control_flow_node"
-func set_input()->bool: return true
-func set_output()->bool : return false
+func set_instruction() -> String: return "Check cell {cell} on {map}"
+func set_node_category() -> String: return "control_flow_node"
+func set_input() -> bool: return true
+func set_output() -> bool: return false
 func set_allows_multiple_outputs() -> bool: return false
-
-func set_conditions() -> PackedStringArray:
-	return PackedStringArray([
-		"Cell occupied",
-		"Cell empty"
-	])
+func set_conditions() -> PackedStringArray: return PackedStringArray(["Cell occupied", "Cell empty"])

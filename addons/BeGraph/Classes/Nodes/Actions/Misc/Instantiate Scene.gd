@@ -3,40 +3,34 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Instantiate Scene"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
-const DISPLAY_INFO : String = "Loads the PackedScene at {scene_path}, instantiates it under {parent} and places it at {position} (read as 2D or 3D depending on the instance type).\n\nSucceeds once added; fails if the scene or parent can't be resolved."
 
-func set_instruction() -> String:
-	return "Instantiate {scene_path} under {parent}"
+@export_custom(PROPERTY_HINT_FILE, BG.PROPERTY+"*.tscn,*.scn") var scene_path : String = ""
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var parent : NodePath = NodePath("")
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var position : Vector3 = Vector3.ZERO
 
-func tick(delta:float) -> Status:
-	var scene : PackedScene = load(get("scene_path")) as PackedScene
+func tick(delta: float) -> Status:
+	var path : String = eval(&"scene_path")
+	var scene := load(path) as PackedScene
 	if scene == null:
-		push_error("\"%s\" couldn't load scene \"%s\"" % [resource_name, get("scene_path")])
-		return Status.FAILURE
-
-	var parent : Node = _resolve_node(get("parent"))
-	if parent == null:
-		push_error("\"%s\" couldn't resolve parent node" % resource_name)
-		return Status.FAILURE
-
+		return abort("couldn't load scene '%s'" % path)
+		
+	var parent_node := _resolve_node(eval(&"parent"))
+	if parent_node == null:
+		return abort("couldn't resolve parent node")
+		
 	var instance : Node = scene.instantiate()
-	parent.add_child(instance)
-
-	var pos : Vector3 = get("position")
+	parent_node.add_child(instance)
+	var pos : Vector3 = eval(&"position") as Vector3
+	
 	if instance is Node2D:
 		instance.global_position = Vector2(pos.x, pos.y)
 	elif instance is Node3D:
 		instance.global_position = pos
+		
+	return tick_next(delta)
 
-	tick_next(delta)
-	return Status.SUCCESS
-
-func set_node_category()->String: return "action_node"
-func set_input()->bool: return true
-func set_output()->bool : return true
+func set_instruction() -> String: return "Instantiate {scene_path} under {parent}"
+func set_node_category() -> String: return "action_node"
+func set_input() -> bool: return true
+func set_output() -> bool: return true
 func set_allows_multiple_outputs() -> bool: return false
-
-func set_properties()-> void:
-	_add_behavior_property("scene_path", "")
-	_add_behavior_property("parent", NodePath(""))
-	_add_behavior_property("position", Vector3.ZERO)

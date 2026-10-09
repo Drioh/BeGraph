@@ -3,158 +3,120 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Rotate"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
-const DISPLAY_INFO : String = "Rotation of a Node2D or Node3D {node}.\n\nDepending on {mode}:\n - turns {node} to a fixed {target_angle}° (ToAngle);\n - makes it face {target_node} (TowardsNode; tracked live every frame when {recalculate_target_each_frame} is enabled);\n - spins it forever (ContinuousSpin).\n\nFor Node3D, rotation happens around {axis_3d} (X, Y or Z).\n\nNode2D always rotates around Z and ignores {axis_3d}.\n\n{speed_mode} chooses whether turning is paced by {angular_speed}°/s or completes over a fixed {duration}s. {direction} forces the shortest path (or a specific clockwise/counterclockwise turn) when seeking a target angle, and also picks which way ContinuousSpin turns.\n\nReturns RUNNING while turning, SUCCESS on arrival (unless {loop} is enabled, which keeps it running/tracking forever instead); fails if {node} (or {target_node}, in TowardsNode mode) can't be resolved."
 
 enum Mode { TO_ANGLE, TOWARDS_NODE, CONTINUOUS_SPIN }
 enum SpeedMode { SPEED, DURATION }
 enum Direction { SHORTEST, CLOCKWISE, COUNTERCLOCKWISE }
 
-var _node : Node = null
-var _target_node : Node = null
-var _is_3d : bool = false
+@export_custom(PROPERTY_HINT_NODE_TYPE, BG.PROPERTY+"Node2D,Node3D") var node : NodePath = NodePath("")
+@export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+"ToAngle,TowardsNode,ContinuousSpin") var mode : Mode = Mode.TO_ANGLE
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var target_angle : float = 0.0
+@export_custom(PROPERTY_HINT_NODE_TYPE, BG.PROPERTY+"Node2D,Node3D") var target_node : NodePath = NodePath("")
+@export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+"X,Y,Z") var axis_3d : int = 1
+@export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+"Speed,Duration") var speed_mode : SpeedMode = SpeedMode.SPEED
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var angular_speed : float = 90.0
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var duration : float = 1.0
+@export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+"Shortest,Clockwise,Counterclockwise") var direction : Direction = Direction.SHORTEST
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var recalculate_target_each_frame : bool = false
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var loop : bool = false
 
-var _target_rotation : float = 0.0
+var _node_ref : Node = null
+var _target_node_ref : Node = null
+var _is_3d : bool = false
+var _target_rot : float = 0.0
 var _elapsed : float = 0.0
 
-func set_instruction() -> String:
-	return "Rotate {node} ({mode}, axis {axis_3d}) to {target_angle}° / facing {target_node} — {speed_mode}: {angular_speed}°/s or {duration}s ({direction})"
+func on_start() -> void:
+	_elapsed = 0.0
+	_node_ref = _resolve_node(eval(&"node"))
+	if _node_ref == null:
+		abort("couldn't resolve node to rotate")
+		return
+		
+	_is_3d = _node_ref is Node3D
+	if (eval(&"mode") as Mode) == Mode.TOWARDS_NODE:
+		_target_node_ref = _resolve_node(eval(&"target_node"))
+		if _target_node_ref == null:
+			abort("couldn't resolve target node to face")
+			return
+			
+	_target_rot = _calculate_target_rotation()
 
-func tick(delta:float) -> Status:
-	if dirty:
-		_node = _resolve_node(get("node"))
-		if _node == null:
-			push_error("\"%s\" couldn't resolve node to rotate" % resource_name)
-			return Status.FAILURE
-		_is_3d = _node is Node3D
+func tick(delta: float) -> Status:
+	if (eval(&"mode") as Mode) == Mode.CONTINUOUS_SPIN:
+		return _tick_spin(delta)
+	return _tick_towards(delta)
 
-		if get("mode") == Mode.TOWARDS_NODE:
-			_target_node = _resolve_node(get("target_node"))
-			if _target_node == null:
-				push_error("\"%s\" couldn't resolve target node to face" % resource_name)
-				return Status.FAILURE
-
-		_elapsed = 0.0
-		_target_rotation = _calculate_target_rotation()
-		dirty = false
-
-	if get("mode") == Mode.CONTINUOUS_SPIN:
-		return _tick_continuous_spin(delta)
-	return _tick_towards_target(delta)
-
-func _tick_continuous_spin(delta: float) -> Status:
-	_rotate_by(deg_to_rad(get("angular_speed")) * _direction_sign() * delta)
-
-	if get("speed_mode") == SpeedMode.DURATION:
+func _tick_spin(delta: float) -> Status:
+	var turn : float = -1.0 if (eval(&"direction") as Direction) == Direction.COUNTERCLOCKWISE else 1.0
+	_set_rotation(_get_rotation() + deg_to_rad(eval(&"angular_speed") as float) * turn * delta)
+	
+	if (eval(&"speed_mode") as SpeedMode) == SpeedMode.DURATION:
 		_elapsed += delta
-		if _elapsed >= get("duration") and not get("loop"):
+		if _elapsed >= (eval(&"duration") as float) and not eval(&"loop"):
 			_elapsed = 0.0
-			dirty = true
-			tick_next(delta)
-			return Status.SUCCESS
-
+			return tick_next(delta)
+			
 	return Status.RUNNING
 
-func _tick_towards_target(delta: float) -> Status:
+func _tick_towards(delta: float) -> Status:
 	_elapsed += delta
-
-	if get("recalculate_target_each_frame") and get("mode") == Mode.TOWARDS_NODE:
-		_target_rotation = _calculate_target_rotation()
-
+	if eval(&"recalculate_target_each_frame") and (eval(&"mode") as Mode) == Mode.TOWARDS_NODE:
+		_target_rot = _calculate_target_rotation()
+		
 	var current : float = _get_rotation()
-	var remaining : float = _apply_direction(wrapf(_target_rotation - current, -PI, PI))
-
-	if abs(remaining) <= 0.0005:
-		_set_rotation(_target_rotation)
+	var diff : float = wrapf(_target_rot - current, -PI, PI)
+	
+	if absf(diff) <= 0.0005:
+		_set_rotation(_target_rot)
 		return _finish(delta)
-
-	var step : float
-	if get("speed_mode") == SpeedMode.SPEED:
-		var max_step : float = deg_to_rad(get("angular_speed")) * delta
-		step = clamp(remaining, -max_step, max_step)
+		
+	var step : float = 0.0
+	if (eval(&"speed_mode") as SpeedMode) == SpeedMode.SPEED:
+		var max_step : float = deg_to_rad(eval(&"angular_speed") as float) * delta
+		step = clampf(diff, -max_step, max_step)
 	else:
-		var remaining_time : float = get("duration") - _elapsed
-		if remaining_time <= 0.0:
-			_set_rotation(_target_rotation)
+		var rem_t : float = (eval(&"duration") as float) - _elapsed
+		if rem_t <= 0.0:
+			_set_rotation(_target_rot)
 			return _finish(delta)
-		step = (remaining / remaining_time) * delta
-
+		step = (diff / rem_t) * delta
+		
 	_set_rotation(current + step)
 	return Status.RUNNING
 
-func _finish(delta:float) -> Status:
+func _finish(delta: float) -> Status:
 	_elapsed = 0.0
-	dirty = true
-	if get("loop"):
+	if eval(&"loop"):
 		return Status.RUNNING
-	tick_next(delta)
-	return Status.SUCCESS
+	return tick_next(delta)
 
 func _calculate_target_rotation() -> float:
-	match get("mode"):
-		Mode.TO_ANGLE:
-			return deg_to_rad(get("target_angle"))
+	match eval(&"mode") as Mode:
+		Mode.TO_ANGLE: return deg_to_rad(eval(&"target_angle") as float)
 		Mode.TOWARDS_NODE:
-			return _angle_to_target()
-		_:
-			return _get_rotation()
-
-func _angle_to_target() -> float:
-	if not _is_3d:
-		return _node.global_position.angle_to_point(_target_node.global_position)
-
-	var delta : Vector3 = _target_node.global_position - _node.global_position
-	match get("axis_3d"):
-		0: return atan2(delta.y, delta.z)
-		2: return atan2(delta.y, delta.x)
-		_: return atan2(delta.x, delta.z)
+			if not _is_3d:
+				return _node_ref.global_position.angle_to_point(_target_node_ref.global_position)
+			var d : Vector3 = _target_node_ref.global_position - _node_ref.global_position
+			match eval(&"axis_3d") as int:
+				0: return atan2(d.y, d.z)
+				2: return atan2(d.y, d.x)
+				_: return atan2(d.x, d.z)
+	return _get_rotation()
 
 func _get_rotation() -> float:
-	if _is_3d:
-		return _node.rotation[get("axis_3d")]
-	return _node.rotation
+	return _node_ref.rotation[eval(&"axis_3d") as int] if _is_3d else _node_ref.rotation
 
-func _set_rotation(angle : float) -> void:
+func _set_rotation(angle: float) -> void:
 	if _is_3d:
-		var r : Vector3 = _node.rotation
-		r[get("axis_3d")] = angle
-		_node.rotation = r
+		var r : Vector3 = _node_ref.rotation
+		r[eval(&"axis_3d") as int] = angle
+		_node_ref.rotation = r
 	else:
-		_node.rotation = angle
+		_node_ref.rotation = angle
 
-func _rotate_by(delta_angle : float) -> void:
-	_set_rotation(_get_rotation() + delta_angle)
-
-func _direction_sign() -> float:
-	if get("direction") == Direction.COUNTERCLOCKWISE:
-		return -1.0
-	return 1.0
-
-func _apply_direction(diff : float) -> float:
-	match get("direction"):
-		Direction.CLOCKWISE:
-			return diff if diff >= 0.0 else diff + TAU
-		Direction.COUNTERCLOCKWISE:
-			return diff if diff <= 0.0 else diff - TAU
-		_:
-			return diff
-
-func set_node_category()->String: return "action_node"
-
-func set_input()->bool: return true
-
-func set_output()->bool : return true
-
+func set_instruction() -> String: return "Rotate {node} ({mode}, axis {axis_3d})"
+func set_node_category() -> String: return "action_node"
+func set_input() -> bool: return true
+func set_output() -> bool: return true
 func set_allows_multiple_outputs() -> bool: return false
-
-func set_properties()-> void:
-	_add_behavior_property("node", NodePath(""), PROPERTY_HINT_NODE_TYPE, "Node2D,Node3D", "", "", PROPERTY_USAGE_NODE_PATH_FROM_SCENE_ROOT)
-	_add_behavior_property("mode", 0, PROPERTY_HINT_ENUM, "ToAngle,TowardsNode,ContinuousSpin")
-	_add_behavior_property("target_angle", float(0.0))
-	_add_behavior_property("target_node", NodePath(""), PROPERTY_HINT_NODE_TYPE, "Node2D,Node3D", "", "", PROPERTY_USAGE_NODE_PATH_FROM_SCENE_ROOT)
-	_add_behavior_property("axis_3d", 1, PROPERTY_HINT_ENUM, "X,Y,Z")
-	_add_behavior_property("speed_mode", 0, PROPERTY_HINT_ENUM, "Speed,Duration")
-	_add_behavior_property("angular_speed", float(90.0))
-	_add_behavior_property("duration", float(1.0))
-	_add_behavior_property("direction", 0, PROPERTY_HINT_ENUM, "Shortest,Clockwise,Counterclockwise")
-	_add_behavior_property("recalculate_target_each_frame", false)
-	_add_behavior_property("loop", false)

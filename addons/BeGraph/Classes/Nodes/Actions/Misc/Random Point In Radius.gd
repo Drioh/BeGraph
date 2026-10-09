@@ -3,33 +3,28 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Random Point In Radius"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
-const DISPLAY_INFO : String = "Writes a random 2D point within {radius} units of {center} into the blackboard entry named {variable_name} - handy for wander/patrol targets.\n\nSucceeds unless {variable_name} isn't found in the graph's blackboard, in which case it fails."
 
-func set_instruction() -> String:
-	return "Set {variable_name} = random point around {center} (r={radius})"
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var variable_name : StringName = &""
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var center : Vector2 = Vector2.ZERO
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var radius : float = 100.0
 
-func tick(delta:float) -> Status:
-	var graph : BehaviorGraph = _graph_ref.get_ref()
+func tick(delta: float) -> Status:
+	var graph := get_graph()
 	if graph == null:
-		return Status.FAILURE
-
-	var variable : BlackboardVariable = graph.get_blackboard_property(get("variable_name"))
+		return abort("lost graph reference")
+		
+	var key : StringName = eval(&"variable_name") as StringName
+	var variable := graph.get_blackboard_property(key)
 	if variable == null:
-		push_error("\"%s\" couldn't find variable \"%s\" in blackboard" % [resource_name, get("variable_name")])
-		return Status.FAILURE
+		return abort("blackboard variable '%s' not found" % key)
+		
+	var rad : float = eval(&"radius") as float
+	var offset := Vector2.RIGHT.rotated(randf_range(0.0, TAU)) * sqrt(randf()) * rad
+	variable.value = (eval(&"center") as Vector2) + offset
+	return tick_next(delta)
 
-	var offset : Vector2 = Vector2.RIGHT.rotated(randf_range(0.0, TAU)) * sqrt(randf()) * get("radius")
-	variable.value = get("center") + offset
-
-	tick_next(delta)
-	return Status.SUCCESS
-
-func set_node_category()->String: return "action_node"
-func set_input()->bool: return true
-func set_output()->bool : return true
+func set_instruction() -> String: return "Set {variable_name} = random point around {center} (r={radius})"
+func set_node_category() -> String: return "action_node"
+func set_input() -> bool: return true
+func set_output() -> bool: return true
 func set_allows_multiple_outputs() -> bool: return false
-
-func set_properties()-> void:
-	_add_behavior_property("variable_name", &"")
-	_add_behavior_property("center", Vector2.ZERO)
-	_add_behavior_property("radius", float(100.0))

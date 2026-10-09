@@ -24,6 +24,12 @@ export_variable = true
 value = NodePath("..")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
+[sub_resource type="Resource" id="Resource_gj27o"]
+script = ExtResource("1_sguni")
+name = &"Stringa Prova"
+value = ""
+metadata/_custom_type_script = "uid://da0t4052e3fsp"
+
 [sub_resource type="Resource" id="Resource_gad0g"]
 resource_name = "AccessPointGraphNode"
 script = ExtResource("4_0y5uo")
@@ -71,7 +77,7 @@ _graph_ref = Object(WeakRef,"script":null)
 [resource]
 resource_name = "Trogolo"
 script = ExtResource("4_k7ocg")
-blackboard = Array[ExtResource("1_sguni")]([SubResource("Resource_0y5uo"), SubResource("Resource_k7ocg"), ExtResource("2_gad0g")])
+blackboard = Array[ExtResource("1_sguni")]([SubResource("Resource_0y5uo"), SubResource("Resource_k7ocg"), ExtResource("2_gad0g"), SubResource("Resource_gj27o")])
 nodes = Dictionary[StringName, ExtResource("2_0y5uo")]({
 &"": SubResource("Resource_gad0g"),
 &"BehaviorGraphNode": SubResource("Resource_byvd5"),

@@ -7,96 +7,112 @@ const DISPLAY_INFO : String = "Moves {node} towards {destination} (Node, Vector2
 
 enum Mode { SPEED, DURATION }
 
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var node : NodePath = NodePath("")
+@export_custom(BG.HINT_NONE, BG.PROPERTY, PROPERTY_USAGE_NIL_IS_VARIANT) var destination : Variant = null
+@export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY + "Speed,Duration",) var mode : Mode = Mode.SPEED
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var speed : float = 100.0
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var duration : float = 1.0
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var moving_target : bool = false
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var changing_speed : bool = false
+
 var _elapsed : float = 0.0
-var _waiting : bool = false
-var _wait_elapsed : float = 0.0
 
 var _node : Node
-var _duration : float
 var _destination : Variant
-var wait_time : float
+var _mode : Mode
+var _speed : float
+var _duration : float
+var _moving_target : bool
+var _changing_speed : bool
+
+func on_start() -> void:
+	_elapsed = 0.0
+	
+	_mode = eval(&"mode") as Mode
+	_speed = eval(&"speed") as float
+	_duration = eval(&"duration") as float
+	
+	_moving_target = eval(&"moving_target") as bool
+	_changing_speed = eval(&"changing_speed") as bool
+	
+	var raw_node = eval(&"node")
+	_node = _resolve_node(raw_node)
+	
+	
+	var raw_destination = eval(&"destination")
+	_destination = _resolve_destination_pos(raw_destination)
+	
+
+func tick(delta: float) -> Status:
+	if _node == null:
+		return abort("couldn't resolve node to move")
+	
+	if _moving_target:
+		var raw_destination = eval(&"destination")
+		_destination = _resolve_destination_pos(raw_destination)
+	if _destination == null:
+		return abort("couldn't resolve destination to move towards")
+	
+	_elapsed += delta
+	var reached : bool = _move_towards_destination(delta)
+	if not reached:
+		return Status.RUNNING
+
+	_elapsed = 0.0
+	tick_next(delta)
+	return Status.SUCCESS
+
+
+func on_blackboard_property_changed(key: StringName) -> void:
+	if key == get_blackboard_key(&"destination"):
+		var raw_destination = eval(&"destination")
+		_destination = _resolve_destination_pos(raw_destination)
+
+func _resolve_destination_pos(raw_dest: Variant) -> Variant:
+	var resolved = _resolve_node(raw_dest)
+	if resolved is Node2D or resolved is Node3D:
+		return resolved.global_position
+	return raw_dest
+
+
+func _move_towards_destination(delta: float) -> bool:
+	var dest_pos : Variant = _destination
+	if dest_pos is Node2D or dest_pos is Node3D:
+		dest_pos = dest_pos.global_position
+
+	var distance_remaining : float = _node.global_position.distance_to(dest_pos)
+	if distance_remaining <= 0.001:
+		_node.global_position = dest_pos
+		return true
+	
+	var move_amount : float
+	
+	if _mode == Mode.SPEED:
+		if _changing_speed:
+			_speed = eval(&"speed") as float
+		move_amount = _speed * delta
+	else:
+		var remaining_time : float = _duration - _elapsed
+		if remaining_time <= 0.0:
+			_node.global_position = dest_pos
+			return true
+		move_amount = (distance_remaining / remaining_time) * delta
+	
+	_node.global_position = _node.global_position.move_toward(dest_pos, move_amount)
+	return _node.global_position.distance_to(dest_pos) <= 0.001
 
 
 func set_instruction() -> String:
 	return "Move {node} to {destination} ({mode})"
 
-func tick(delta:float) -> Status:
-	if dirty:
-		_node = _resolve_node(get("node"))
-		_duration = get("duration")
-		_destination = _resolve_node(get("destination"))
-		wait_time = get("time_to_wait_upon_reaching_destination")
-		
-		if _node == null:
-			push_error("\"%s\" couldn't resolve node to move" % resource_name)
-			return Status.FAILURE
-		if _destination == null:
-			push_error("\"%s\" couldn't resolve destination to move towards" % resource_name)
-			return Status.FAILURE
-	dirty=false
-	
-	var now : int = Time.get_ticks_msec()
-	
-	if _waiting:
-		_wait_elapsed += delta
-		if _wait_elapsed < wait_time:
-			return Status.RUNNING
-		_waiting = false
-		_wait_elapsed = 0.0
-		tick_next(delta)
-		return Status.SUCCESS
-	
-	_elapsed += delta
-	
-	if(get("calculate_destination_each_frame")):
-		_destination = _resolve_node(get("destination"))
+func set_node_category() -> String: 
+	return "action_node"
 
-	var reached : bool = _move_towards_destination(delta)
+func set_input() -> bool: 
+	return true
 
-	if not reached:
-		return Status.RUNNING
+func set_output() -> bool: 
+	return true
 
-	_elapsed = 0.0
-	
-	if wait_time > 0.0:
-		_waiting = true
-		_wait_elapsed = 0.0
-		return Status.RUNNING
-	
-	tick_next(delta)
-	return Status.SUCCESS
-
-func set_node_category()->String: return "action_node"
-func set_input()->bool: return true
-func set_output()->bool : return true
-func set_allows_multiple_outputs() -> bool: return false
-
-func set_properties()-> void:
-	_add_behavior_property("node", NodePath(""))
-	_add_behavior_property("destination", null ,PROPERTY_HINT_NONE,"","","",PROPERTY_USAGE_NIL_IS_VARIANT)
-	_add_behavior_property("mode", 0, PROPERTY_HINT_ENUM, "Speed,Duration")
-	_add_behavior_property("speed", float(100.0))
-	_add_behavior_property("duration", float(1.0))
-	_add_behavior_property("calculate_destination_each_frame", false)
-	_add_behavior_property("time_to_wait_upon_reaching_destination", float(0))
-
-func _move_towards_destination(delta: float) -> bool:
-	var distance_remaining : float = _node.global_position.distance_to(_destination)
-	
-	if distance_remaining <= 0.001:
-		_node.global_position = _destination
-		return true
-	
-	var move_amount : float
-	
-	if get("mode") == Mode.SPEED:
-		move_amount = get("speed") * delta
-	else:
-		var remaining_time : float = _duration - _elapsed
-		if remaining_time <= 0.0:
-			_node.global_position = _destination
-			return true
-		move_amount = (distance_remaining / remaining_time) * delta
-	
-	_node.global_position = _node.global_position.move_toward(_destination, move_amount)
-	return _node.global_position.distance_to(_destination) <= 0.001
+func set_allows_multiple_outputs() -> bool: 
+	return false

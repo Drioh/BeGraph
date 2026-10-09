@@ -3,57 +3,42 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Check Velocity"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon.svg"
-const DISPLAY_INFO : String = "Compares the speed of {node} (a CharacterBody2D/3D using velocity, or a RigidBody2D/3D using linear_velocity) with {threshold}, branching to 'speed > threshold' or 'speed <= threshold'.\n\n{axis} selects what is measured: the full velocity (Total), only the horizontal part (X in 2D, X/Z in 3D) or only the vertical part (Y). Horizontal and Vertical are absolute values.\n\nFails if {node} can't be resolved or isn't a supported body."
 
 enum Axis { TOTAL, HORIZONTAL, VERTICAL }
 
-func set_instruction() -> String:
-	return "Check {node}'s {axis} speed vs {threshold}"
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var node : NodePath = NodePath("")
+@export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+"Total,Horizontal,Vertical") var axis : Axis = Axis.TOTAL
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var threshold : float = 10.0
 
-func tick(delta:float) -> Status:
-	var target : Node = _resolve_node(get("node"))
-	var speed : float = _speed_of(target) if target != null else -1.0
+func tick(delta: float) -> Status:
+	var target : Node = _resolve_node(eval(&"node"))
+	if target == null:
+		return abort("couldn't resolve node")
+		
+	var speed : float = _speed_of(target)
 	if speed < 0.0:
-		push_error("\"%s\" couldn't resolve a character/rigid body" % resource_name)
-		return Status.FAILURE
-
-	if speed > get("threshold"):
-		tick_condition(delta,0)
-	else:
-		tick_condition(delta,1)
+		return abort("unsupported body type")
+		
+	tick_condition(delta, 0 if speed > (eval(&"threshold") as float) else 1)
 	return Status.RUNNING
 
-## Returns the measured speed, or -1 if [param n] isn't supported.
 func _speed_of(n : Node) -> float:
 	var v : Variant
-	if n is CharacterBody2D or n is CharacterBody3D:
-		v = n.velocity
-	elif n is RigidBody2D or n is RigidBody3D:
-		v = n.linear_velocity
-	else:
-		return -1.0
-
-	match get("axis"):
+	if n is CharacterBody2D or n is CharacterBody3D: v = n.velocity
+	elif n is RigidBody2D or n is RigidBody3D: v = n.linear_velocity
+	else: return -1.0
+	
+	match eval(&"axis") as Axis:
 		Axis.HORIZONTAL:
-			if v is Vector2:
-				return absf(v.x)
-			return Vector2(v.x, v.z).length()
+			return absf(v.x) if v is Vector2 else Vector2(v.x, v.z).length()
 		Axis.VERTICAL:
 			return absf(v.y)
-	return v.length()
+		_:
+			return v.length()
 
-func set_node_category()->String: return "control_flow_node"
-func set_input()->bool: return true
-func set_output()->bool : return false
+func set_instruction() -> String: return "Check {node}'s {axis} speed vs {threshold}"
+func set_node_category() -> String: return "control_flow_node"
+func set_input() -> bool: return true
+func set_output() -> bool: return false
 func set_allows_multiple_outputs() -> bool: return false
-
-func set_properties()-> void:
-	_add_behavior_property("node", NodePath(""))
-	_add_behavior_property("axis", 0, PROPERTY_HINT_ENUM, "Total,Horizontal,Vertical")
-	_add_behavior_property("threshold", float(10.0))
-
-func set_conditions() -> PackedStringArray:
-	return PackedStringArray([
-		"speed > {threshold}",
-		"speed <= {threshold}"
-	])
+func set_conditions() -> PackedStringArray: return PackedStringArray(["speed > {threshold}", "speed <= {threshold}"])

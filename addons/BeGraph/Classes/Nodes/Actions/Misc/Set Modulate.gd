@@ -3,38 +3,24 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Set Modulate"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
-const DISPLAY_INFO : String = "Sets {color} on either the \"modulate\" or \"self_modulate\" property of {node}, chosen via {mode}.\n\nBefore assigning, dynamically verifies (through the target's property list) that {node} actually exposes the property selected by {mode}, instead of assuming it does; most CanvasItems (Node2D, Control...) expose both, plain Nodes or Node3Ds don't.\n\nSucceeds once applied; fails if {node} can't be resolved or doesn't have the property selected by {mode}."
 
 enum Mode { MODULATE, SELF_MODULATE }
 
-func set_instruction() -> String:
-	return "Set {node}'s {mode} to {color}"
+@export_custom(PROPERTY_HINT_NODE_TYPE, BG.PROPERTY+"CanvasItem") var node : NodePath = NodePath("")
+@export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+"Modulate,SelfModulate") var mode : Mode = Mode.MODULATE
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var color : Color = Color.WHITE
 
-func tick(delta:float) -> Status:
-	var target : Node = _resolve_node(get("node"))
+func tick(delta: float) -> Status:
+	var target := _resolve_node(eval(&"node")) as CanvasItem
 	if target == null:
-		push_error("\"%s\" couldn't resolve node to modulate" % resource_name)
-		return Status.FAILURE
+		return abort("couldn't resolve CanvasItem")
+		
+	var prop : String = "modulate" if (eval(&"mode") as Mode) == Mode.MODULATE else "self_modulate"
+	target.set(prop, eval(&"color"))
+	return tick_next(delta)
 
-	var property_name : String = "modulate" if get("mode") == Mode.MODULATE else "self_modulate"
-
-	if not target is CanvasItem:
-		push_error("\"%s\": \"%s\" is not a CanvasItem" % [resource_name, target])
-		return Status.FAILURE
-
-	target.set(property_name, get("color"))
-	tick_next(delta)
-	return Status.SUCCESS
-
-func set_node_category()->String: return "action_node"
-
-func set_input()->bool: return true
-
-func set_output()->bool : return true
-
+func set_instruction() -> String: return "Set {node}'s {mode} to {color}"
+func set_node_category() -> String: return "action_node"
+func set_input() -> bool: return true
+func set_output() -> bool: return true
 func set_allows_multiple_outputs() -> bool: return false
-
-func set_properties()-> void:
-	_add_behavior_property("node", NodePath(""), PROPERTY_HINT_NODE_TYPE, "CanvasItem", "", "", PROPERTY_USAGE_NODE_PATH_FROM_SCENE_ROOT)
-	_add_behavior_property("mode", 0, PROPERTY_HINT_ENUM, "Modulate,SelfModulate")
-	_add_behavior_property("color", Color.WHITE)

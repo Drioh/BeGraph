@@ -90,9 +90,8 @@ func _send_status_delta(path: String, graph: BehaviorGraph) -> void:
 func _send_properties_delta(path: String, graph: BehaviorGraph) -> void:
 	var last : Dictionary = _last_sent_properties[path]
 	var deltas : Array = []
-	var carlo 
-	for node in graph.nodes.values():
-		if node.behavior_properties.is_empty():
+	for node : BehaviorNode in graph.nodes.values():
+		if node._blackboard_bindings.is_empty():
 			continue
 		var current : Array = node.serialize_properties()
 		var key : StringName = node.resource_name

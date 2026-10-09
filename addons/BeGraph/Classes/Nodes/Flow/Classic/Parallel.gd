@@ -3,44 +3,41 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Parallel"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon.svg"
-const DISPLAY_INFO : String = "Ticks every successor on the same tick. \n\nIn 'All' mode, any failure fails the node immediately and all must succeed.\n\nIn 'Threshold' mode, succeeds once at least {required_successes} have succeeded. \n\nReturns RUNNING while the outcome is undecided."
+const DISPLAY_INFO : String = "Ticks every successor on the same tick."
 
-enum Mode { N_OF_M, ALL }
+enum Mode { THRESHOLD, ALL }
 
-func set_instruction() -> String:
-	return "Parallel: {mode} mode"
+@export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+"Threshold,All", PROPERTY_USAGE_DEFAULT) var mode : Mode = Mode.THRESHOLD
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var required_successes : int = 1
 
-func tick(delta:float) -> Status:
-	var mode : int = get("mode")
-	var required_successes : int = _next_ref.size() if mode == Mode.ALL else get("required_successes")
-
-	var successes :int= 0
-	var failures :int= 0
-
+func tick(delta: float) -> Status:
+	var current_mode : Mode = eval(&"mode") as Mode
+	var required : int = _next_ref.size() if current_mode == Mode.ALL else eval(&"required_successes") as int
+	var successes : int = 0
+	var failures : int = 0
+	
 	for i in _next_ref.size():
-		var status : Status = tick_next(delta,i)
+		var status : Status = tick_next(delta, i)
 		match status:
 			Status.SUCCESS:
 				successes += 1
 			Status.FAILURE:
 				failures += 1
-				if mode == Mode.ALL:
-					return Status.FAILURE
-
-	if successes >= required_successes:
+			Status.ERROR:
+				return Status.ERROR
+				
+		if current_mode == Mode.ALL and status == Status.FAILURE:
+			return Status.FAILURE
+			
+	if successes >= required:
 		return Status.SUCCESS
-	if failures > _next_ref.size() - required_successes:
+	if failures > _next_ref.size() - required:
 		return Status.FAILURE
+		
 	return Status.RUNNING
 
-func set_node_category()->String: return "control_flow_node"
-
-func set_input()->bool: return true
-
-func set_output()->bool : return true
-
+func set_instruction() -> String: return "Parallel: {mode} mode"
+func set_node_category() -> String: return "control_flow_node"
+func set_input() -> bool: return true
+func set_output() -> bool: return true
 func set_allows_multiple_outputs() -> bool: return true
-
-func set_properties()-> void:
-	_add_behavior_property("mode", 0, PROPERTY_HINT_ENUM, "Threshold,All")
-	_add_behavior_property("required_successes", int(1))

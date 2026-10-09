@@ -3,30 +3,26 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Set Variable"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
-const DISPLAY_INFO : String = "Writes {value} into the blackboard entry named {variable_name}, overwriting it.\n\nSucceeds unless {variable_name} isn't found in the graph's blackboard, in which case it fails."
+const DISPLAY_INFO : String = "Writes {value} into the blackboard entry named {variable_name}."
 
-func set_instruction() -> String:
-	return "Set {variable_name} = {value}"
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var variable_name : StringName = &""
+@export_custom(BG.HINT_NONE, BG.PROPERTY, PROPERTY_USAGE_NIL_IS_VARIANT) var value : Variant = null
 
-func tick(delta:float) -> Status:
-	var graph : BehaviorGraph = _graph_ref.get_ref()
+func tick(delta: float) -> Status:
+	var key : StringName = eval(&"variable_name") as StringName
+	var graph := get_graph()
 	if graph == null:
-		return Status.FAILURE
-
-	var variable : BlackboardVariable = graph.get_blackboard_property(get("variable_name"))
+		return abort("graph reference lost")
+		
+	var variable := graph.get_blackboard_property(key)
 	if variable == null:
-		push_error("\"%s\" couldn't find variable \"%s\" in blackboard" % [resource_name, get("variable_name")])
-		return Status.FAILURE
+		return abort("variable '%s' not found in blackboard" % key)
+		
+	variable.value = eval(&"value")
+	return tick_next(delta)
 
-	variable.value = get("value")
-	tick_next(delta)
-	return Status.SUCCESS
-
-func set_node_category()->String: return "action_node"
-func set_input()->bool: return true
-func set_output()->bool : return true
+func set_instruction() -> String: return "Set {variable_name} = {value}"
+func set_node_category() -> String: return "action_node"
+func set_input() -> bool: return true
+func set_output() -> bool: return true
 func set_allows_multiple_outputs() -> bool: return false
-
-func set_properties()-> void:
-	_add_behavior_property("variable_name", &"")
-	_add_behavior_property("value", null, PROPERTY_HINT_NONE, "", "", "", PROPERTY_USAGE_NIL_IS_VARIANT)

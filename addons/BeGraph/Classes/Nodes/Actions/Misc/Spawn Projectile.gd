@@ -3,96 +3,84 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Spawn Projectile"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
-const DISPLAY_INFO : String = "Instantiates the scene {scene_path} under {parent}, places it at {offset} relative to {origin} (empty = the agent's actor), points it along {direction} and gives it {speed} units/second.\n\nIf {relative_to_origin} is true, {offset} and {direction} are rotated with {origin} (so (1, 0, 0) means 'forward' for a 2D node facing right); otherwise they are global.\n\nThe speed is applied to the instance's linear_velocity (RigidBody) or velocity (CharacterBody or any script exposing that property); other scenes are only placed and rotated.\n\nIf {lifetime} is greater than 0 the instance is freed after that many seconds. If {variable_name} isn't empty, the instance is also written into that blackboard entry.\n\nSucceeds once spawned; fails if the scene can't be loaded or {parent}/{origin} can't be resolved."
 
-func set_instruction() -> String:
-	return "Spawn {scene_path} under {parent} from {origin}"
+@export_custom(PROPERTY_HINT_FILE, BG.PROPERTY+ "*.tscn,*.scn") var scene_path : String = ""
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var parent : NodePath = NodePath("")
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var origin : NodePath = NodePath("")
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var offset : Vector3 = Vector3.ZERO
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var direction : Vector3 = Vector3.RIGHT
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var speed : float = 400.0
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var relative_to_origin : bool = true
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var lifetime : float = 0.0
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var variable_name : StringName = &""
 
-func tick(delta:float) -> Status:
-	var scene : PackedScene = load(get("scene_path")) as PackedScene
+func tick(delta: float) -> Status:
+	var path : String = eval(&"scene_path")
+	var scene := load(path) as PackedScene
 	if scene == null:
-		push_error("\"%s\" couldn't load scene \"%s\"" % [resource_name, get("scene_path")])
-		return Status.FAILURE
-
-	var parent : Node = _resolve_node(get("parent"))
-	if parent == null:
-		push_error("\"%s\" couldn't resolve parent node" % resource_name)
-		return Status.FAILURE
-
-	var origin : Node = null
-	if get("origin") != NodePath(""):
-		origin = _resolve_node(get("origin"))
-	if origin == null:
-		var agent : Node = get_agent()
-		origin = agent.actor if agent != null else null
-	if origin == null:
-		push_error("\"%s\" couldn't resolve origin node" % resource_name)
-		return Status.FAILURE
-
+		return abort("couldn't load scene '%s'" % path)
+		
+	var parent_node := _resolve_node(eval(&"parent"))
+	if parent_node == null:
+		return abort("couldn't resolve parent node")
+		
+	var origin_node : Node = null
+	if eval(&"origin") != NodePath(""):
+		origin_node = _resolve_node(eval(&"origin"))
+	if origin_node == null:
+		var agent := get_agent()
+		if agent != null and "actor" in agent:
+			origin_node = agent.actor
+			
+	if origin_node == null:
+		return abort("couldn't resolve origin node")
+		
 	var instance : Node = scene.instantiate()
-	parent.add_child(instance)
-
-	var offset : Vector3 = get("offset")
-	var direction : Vector3 = get("direction")
-	var relative : bool = get("relative_to_origin")
+	parent_node.add_child(instance)
+	
+	var off : Vector3 = eval(&"offset") as Vector3
+	var dir : Vector3 = eval(&"direction") as Vector3
+	var rel : bool = eval(&"relative_to_origin") as bool
+	var spd : float = eval(&"speed") as float
 	var velocity : Variant = null
-
+	
 	if instance is Node2D:
-		var origin_transform : Transform2D = origin.global_transform if origin is Node2D else Transform2D.IDENTITY
-		var offset_2d : Vector2 = Vector2(offset.x, offset.y)
-		var direction_2d : Vector2 = Vector2(direction.x, direction.y).normalized()
-		if relative:
-			direction_2d = origin_transform.basis_xform(direction_2d).normalized()
-			instance.global_position = origin_transform * offset_2d
-		else:
-			instance.global_position = origin_transform.origin + offset_2d
-		instance.rotation = direction_2d.angle()
-		velocity = direction_2d * float(get("speed"))
+		var origin_tr : Transform2D = origin_node.global_transform if origin_node is Node2D else Transform2D.IDENTITY
+		var off_2d := Vector2(off.x, off.y)
+		var dir_2d := Vector2(dir.x, dir.y).normalized()
+		if rel: dir_2d = origin_tr.basis_xform(dir_2d).normalized()
+		instance.global_position = origin_tr * off_2d if rel else origin_tr.origin + off_2d
+		instance.rotation = dir_2d.angle()
+		velocity = dir_2d * spd
 	elif instance is Node3D:
-		var origin_transform : Transform3D = origin.global_transform if origin is Node3D else Transform3D.IDENTITY
-		var direction_3d : Vector3 = direction.normalized()
-		if relative:
-			direction_3d = (origin_transform.basis * direction_3d).normalized()
-			instance.global_position = origin_transform * offset
-		else:
-			instance.global_position = origin_transform.origin + offset
-		if direction_3d != Vector3.ZERO:
-			var up : Vector3 = Vector3.UP if absf(direction_3d.dot(Vector3.UP)) < 0.999 else Vector3.RIGHT
-			instance.look_at(instance.global_position + direction_3d, up)
-		velocity = direction_3d * float(get("speed"))
-
+		var origin_tr : Transform3D = origin_node.global_transform if origin_node is Node3D else Transform3D.IDENTITY
+		var dir_3d : Vector3 = dir.normalized()
+		if rel: dir_3d = (origin_tr.basis * dir_3d).normalized()
+		instance.global_position = origin_tr * off if rel else origin_tr.origin + off
+		if dir_3d != Vector3.ZERO:
+			var up : Vector3 = Vector3.UP if absf(dir_3d.dot(Vector3.UP)) < 0.999 else Vector3.RIGHT
+			instance.look_at(instance.global_position + dir_3d, up)
+		velocity = dir_3d * spd
+		
 	if velocity != null:
-		if "linear_velocity" in instance:
-			instance.set("linear_velocity", velocity)
-		elif "velocity" in instance:
-			instance.set("velocity", velocity)
+		if "linear_velocity" in instance: instance.set("linear_velocity", velocity)
+		elif "velocity" in instance: instance.set("velocity", velocity)
+		
+	var life : float = eval(&"lifetime") as float
+	if life > 0.0:
+		instance.get_tree().create_timer(life).timeout.connect(instance.queue_free)
+		
+	var var_name : StringName = eval(&"variable_name") as StringName
+	if var_name != &"":
+		var graph := get_graph()
+		if graph != null:
+			var variable := graph.get_blackboard_property(var_name)
+			if variable != null: variable.value = instance
+			
+	return tick_next(delta)
 
-	var lifetime : float = get("lifetime")
-	if lifetime > 0.0:
-		instance.get_tree().create_timer(lifetime).timeout.connect(instance.queue_free)
-
-	var variable_name : StringName = get("variable_name")
-	if variable_name != &"":
-		var graph : BehaviorGraph = _graph_ref.get_ref()
-		var variable : BlackboardVariable = graph.get_blackboard_property(variable_name) if graph != null else null
-		if variable != null:
-			variable.value = instance
-
-	tick_next(delta)
-	return Status.SUCCESS
-
-func set_node_category()->String: return "action_node"
-func set_input()->bool: return true
-func set_output()->bool : return true
+func set_instruction() -> String: return "Spawn {scene_path} under {parent} from {origin}"
+func set_node_category() -> String: return "action_node"
+func set_input() -> bool: return true
+func set_output() -> bool: return true
 func set_allows_multiple_outputs() -> bool: return false
-
-func set_properties()-> void:
-	_add_behavior_property("scene_path", "", PROPERTY_HINT_FILE, "*.tscn,*.scn")
-	_add_behavior_property("parent", NodePath(""))
-	_add_behavior_property("origin", NodePath(""))
-	_add_behavior_property("offset", Vector3.ZERO)
-	_add_behavior_property("direction", Vector3.RIGHT)
-	_add_behavior_property("speed", float(400.0))
-	_add_behavior_property("relative_to_origin", true)
-	_add_behavior_property("lifetime", float(0.0))
-	_add_behavior_property("variable_name", &"")

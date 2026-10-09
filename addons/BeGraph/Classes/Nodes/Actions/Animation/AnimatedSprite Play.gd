@@ -3,47 +3,39 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "AnimatedSprite Play"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
-const DISPLAY_INFO : String = "Plays {animation} on {node} (an AnimatedSprite2D/3D) at {speed}, from the end if {backwards} is true. Leave {animation} empty to play the current one.\n\nIf {wait_until_finished} is true it returns RUNNING while the animation plays and SUCCESS once it finishes (a looping animation never finishes); otherwise it succeeds right after starting it.\n\nFails if {node} can't be resolved, has no SpriteFrames or doesn't have that animation."
 
-var _started : bool = false
+@export_custom(BG.HINT_NONE, BG.PROPERTY+"AnimatedSprite") var node : NodePath = NodePath("")
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var animation : StringName = &""
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var speed : float = 1.0
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var backwards : bool = false
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var wait_until_finished : bool = true
 
-func set_instruction() -> String:
-	return "Play {animation} on {node} at speed {speed}"
+var _sprite_ref : Node
 
-func tick(delta:float) -> Status:
-	var target : Node = _resolve_node(get("node"))
-	if not (target is AnimatedSprite2D or target is AnimatedSprite3D):
-		push_error("\"%s\" couldn't resolve an AnimatedSprite2D/3D" % resource_name)
-		return Status.FAILURE
+func on_start() -> void:
+	_sprite_ref = _resolve_node(eval(&"node"))
+	if not (_sprite_ref is AnimatedSprite2D or _sprite_ref is AnimatedSprite3D):
+		abort("couldn't resolve AnimatedSprite2D/3D")
+		return
+		
+	var anim : StringName = eval(&"animation") as StringName
+	if _sprite_ref.sprite_frames == null or (anim != &"" and not _sprite_ref.sprite_frames.has_animation(anim)):
+		abort("sprite frames do not have animation '%s'" % anim)
+		return
+		
+	_sprite_ref.play(anim, eval(&"speed") as float, eval(&"backwards") as bool)
 
-	if not _started:
-		var animation : StringName = get("animation")
-		if target.sprite_frames == null or (animation != &"" and not target.sprite_frames.has_animation(animation)):
-			push_error("\"%s\": \"%s\" has no animation \"%s\"" % [resource_name, target, animation])
-			return Status.FAILURE
-
-		target.play(animation, get("speed"), get("backwards"))
-		if not get("wait_until_finished"):
-			tick_next(delta)
-			return Status.SUCCESS
-		_started = true
+func tick(delta: float) -> Status:
+	if not eval(&"wait_until_finished"):
+		return tick_next(delta)
+		
+	if _sprite_ref.is_playing():
 		return Status.RUNNING
+		
+	return tick_next(delta)
 
-	if target.is_playing():
-		return Status.RUNNING
-
-	_started = false
-	tick_next(delta)
-	return Status.SUCCESS
-
-func set_node_category()->String: return "action_node"
-func set_input()->bool: return true
-func set_output()->bool : return true
+func set_instruction() -> String: return "Play {animation} on {node} at speed {speed}"
+func set_node_category() -> String: return "action_node"
+func set_input() -> bool: return true
+func set_output() -> bool: return true
 func set_allows_multiple_outputs() -> bool: return false
-
-func set_properties()-> void:
-	_add_behavior_property("node", NodePath(""))
-	_add_behavior_property("animation", &"")
-	_add_behavior_property("speed", float(1.0))
-	_add_behavior_property("backwards", false)
-	_add_behavior_property("wait_until_finished", true)
