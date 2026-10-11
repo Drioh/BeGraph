@@ -94,6 +94,8 @@ var regex :RegEx= RegEx.create_from_string(r"\{([^{}]+)\}")
 @export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY)
 var _blackboard_bindings: Dictionary[StringName, StringName] = {}
 
+@export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE) var breakpoint_enabled : bool = false
+
 ## Emitted whenever a property's blackboard binding is enabled or disabled via [method set_node_property_blackboard_key].
 signal blackboard_key_set(property:StringName,blackboard_key:StringName)
 
@@ -109,6 +111,262 @@ var last_status : int = -1
 var last_tick_time : int = -1
 
 var dirty : bool = true
+
+#region Decorator
+
+## Decorator applied to this node's execution, only meaningful when [member node_category] is [code]"action_node"[/code] (ignored otherwise). Read-only in the default inspector: edited through the node's own Tree UI (see [code]BehaviorGraphNode.gd[/code] / [code]%DecoratorTree[/code]) via [method set_decorator_type] and [method set_decorator_field].[br]
+## Fields, used depending on [code]type[/code]:[br]
+## - [code]type[/code]: [code]"none"[/code], [code]"inverter"[/code], [code]"force"[/code], [code]"repeater"[/code], [code]"time_limit"[/code], [code]"cooldown"[/code], [code]"delay"[/code], [code]"condition"[/code].[br]
+## - [code]variant[/code]: [code]force[/code] (0 Success / 1 Failure) or [code]repeater[/code] (0 Times / 1 Until Success / 2 Until Failure).[br]
+## - [code]seconds[/code]: main duration for [code]time_limit[/code] / [code]cooldown[/code] / [code]delay[/code].[br]
+## - [code]count[/code]: [code]repeater[/code] in Times mode - number of attempts, [code]0[/code] = infinite.[br]
+## - [code]timeout[/code]: [code]repeater[/code] in Until* mode - seconds before giving up, [code]0[/code] = infinite (same convention as [code]Wait Until.gd[/code]).[br]
+## - [code]between_delay[/code]: [code]repeater[/code] - seconds to wait between one attempt and the next, [code]0[/code] = no wait.[br]
+## - [code]on_timeout[/code]: [code]time_limit[/code] child - 0 Abort (also sets [member dirty]) / 1 Let Run.[br]
+## - [code]cooldown_mode[/code]: [code]cooldown[/code] child - 0 Always / 1 On Success.[br]
+## - [code]delay_mode[/code]: [code]delay[/code] child - 0 Before / 1 After.[br]
+## - [code]blackboard_key[/code]: [code]condition[/code] - name of the (boolean) [BlackboardVariable] dropped onto it.
+@export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE) var decorator : Dictionary = {
+	"type": "none",
+	"variant": 0,
+	"seconds": 0.0,
+	"count": 3,
+	"timeout": 0.0,
+	"between_delay": 0.0,
+	"on_timeout": 0,
+	"cooldown_mode": 0,
+	"delay_mode": 0,
+	"blackboard_key": &"",
+}
+
+## Every valid value for [code]decorator.type[/code] (the order the Tree UI lists them in, "none" aside).
+const DECORATOR_TYPES : PackedStringArray = ["none", "inverter", "force", "repeater", "time_limit", "cooldown", "delay", "condition"]
+
+## Field defaults applied by [method set_decorator_type] whenever [member decorator] switches to a given type - only the fields that type actually reads.
+const DECORATOR_DEFAULTS : Dictionary = {
+	"none": {},
+	"inverter": {},
+	"force": {"variant": 0},
+	"repeater": {"variant": 0, "count": 3, "timeout": 0.0, "between_delay": 0.0},
+	"time_limit": {"seconds": 5.0, "on_timeout": 0},
+	"cooldown": {"seconds": 2.0, "cooldown_mode": 0},
+	"delay": {"seconds": 1.0, "delay_mode": 0},
+	"condition": {"blackboard_key": &""},
+}
+
+## Emitted whenever [member decorator] changes (type or a single field), so the node's Tree UI can re-sync itself.
+signal decorator_changed
+
+# --- Decorator runtime state. Kept entirely separate from the underlying action's own state
+# (dirty, and any subclass-local var), except for the one deliberate, one-way write documented
+# on the Time Limiter's "Abort" case below. None of this is saved: it is rebuilt every time a
+# fresh execution cycle starts, via _reset_decorator_state(). ---
+
+## Generic single-purpose timer, reused across whichever decorator family is active (only one
+## can be active per node): elapsed time for Time Limiter / Cooldown-active-wait / Delay, and
+## the wait between one Repeater attempt and the next.
+var _dec_elapsed : float = 0.0
+## Repeater only: total elapsed time since the current repeat pass started; drives the Until* timeout.
+var _dec_repeat_elapsed : float = 0.0
+## Repeater only: attempts completed so far in the current Times pass.
+var _dec_attempts : int = 0
+## Repeater only: true while waiting out [code]between_delay[/code] before the next attempt.
+var _dec_waiting_between : bool = false
+## Repeater only: true right after an attempt ends and another one is coming - tells
+## [method _decorator_repeater] to call [method on_start] once before ticking again, since
+## [method do_tick] itself only does that at the start of a whole execution cycle.
+var _dec_repeat_restart_pending : bool = false
+## Cooldown only: seconds left before this node can run again, [code]-1[/code] = not on cooldown.
+## Deliberately NOT reset by [method _reset_decorator_state]: a cooldown must survive across
+## separate execution cycles of this node, the same way [code]Cooldown.gd[/code]'s own
+## [code]_cooldown_remaining[/code] does.
+var _dec_cooldown_remaining : float = -1.0
+## Delay ("After") only: the real status being held back while [code]seconds[/code] elapses, [code]-1[/code] = none pending.
+var _dec_delayed_status : int = -1
+
+
+## Resets every [code]_dec_*[/code] runtime variable that belongs to a single execution cycle. Called by [method do_tick] whenever this node restarts (i.e. it wasn't RUNNING last frame), right before [method on_start]. Never touches [member dirty] or anything belonging to the action itself.
+func _reset_decorator_state() -> void:
+	_dec_elapsed = 0.0
+	_dec_repeat_elapsed = 0.0
+	_dec_attempts = 0
+	_dec_waiting_between = false
+	_dec_repeat_restart_pending = false
+	_dec_delayed_status = -1
+
+## Switches [member decorator] to [param type], resetting its fields to [constant DECORATOR_DEFAULTS] for that type. Called by the node's Tree UI when a different decorator family gets checked.
+func set_decorator_type(type: String) -> void:
+	var fresh : Dictionary = {"type": type}
+	fresh.merge(DECORATOR_DEFAULTS.get(type, {}), true)
+	decorator = fresh
+	_reset_decorator_state()
+	decorator_changed.emit()
+	emit_changed()
+
+## Sets a single [member decorator] field (e.g. [code]"seconds"[/code]) without touching the others or the runtime state. Called by the Tree UI's inline cell editors.
+func set_decorator_field(field: StringName, value: Variant) -> void:
+	decorator[field] = value
+	decorator_changed.emit()
+	emit_changed()
+
+## Routes [method tick] through [member decorator] (when this is an [code]action_node[/code] with a decorator set); returns the decorated [enum Status]. Called by [method do_tick] instead of [method tick] directly.
+func _tick_with_decorator(delta: float) -> Status:
+	if supports_decorator():
+		return tick(delta)
+
+	match String(decorator.get("type", "none")):
+		"inverter": return _decorator_inverter(delta)
+		"force": return _decorator_force(delta)
+		"repeater": return _decorator_repeater(delta)
+		"time_limit": return _decorator_time_limit(delta)
+		"cooldown": return _decorator_cooldown(delta)
+		"delay": return _decorator_delay(delta)
+		"condition": return _decorator_condition(delta)
+		_: return tick(delta) # "none", or an unrecognized type
+
+## Inverter: ticks the action and swaps SUCCESS/FAILURE; RUNNING (and ERROR) pass through unchanged.
+func _decorator_inverter(delta: float) -> Status:
+	var status : Status = tick(delta)
+	match status:
+		Status.SUCCESS: return Status.FAILURE
+		Status.FAILURE: return Status.SUCCESS
+		_: return status
+
+## Force: ticks the action; once it stops RUNNING, replaces SUCCESS/FAILURE with the fixed result picked by [code]decorator.variant[/code] (0 Success / 1 Failure). ERROR is left untouched, since it signals a genuine abort rather than a regular outcome.
+func _decorator_force(delta: float) -> Status:
+	var status : Status = tick(delta)
+	if status == Status.RUNNING or status == Status.ERROR:
+		return status
+	return Status.SUCCESS if int(decorator.get("variant", 0)) == 0 else Status.FAILURE
+
+## Repeater: unifies "repeat N times" and "repeat until SUCCESS/FAILURE" into a single decorator.[br]
+## [code]decorator.variant[/code]: 0 Times (uses [code]count[/code], [code]0[/code] = infinite), 1 Until Success, 2 Until Failure (both use [code]timeout[/code] seconds, [code]0[/code] = infinite; times out as FAILURE).[br]
+## If [code]decorator.between_delay[/code] is [code]> 0[/code], waits that many seconds between one attempt and the next before ticking the action again.[br]
+## [b]Note:[/b] like [code]Repeat.gd[/code], this calls [method tick] several times before reporting a final outcome, and the action's own forward propagation (if it calls [method tick_next] itself) fires on every single attempt. A node carrying this decorator should therefore be a dead end in the graph (no outgoing connection) - document this in its [code]DISPLAY_INFO[/code].
+func _decorator_repeater(delta: float) -> Status:
+	var variant : int = int(decorator.get("variant", 0))
+	var between_delay : float = decorator.get("between_delay", 0.0) as float
+
+	# Waiting out the delay between one attempt and the next.
+	if _dec_waiting_between:
+		_dec_elapsed += delta
+		if _dec_elapsed < between_delay:
+			return Status.RUNNING
+		_dec_waiting_between = false
+		_dec_elapsed = 0.0
+
+	# Start a fresh attempt (skipped on the very first one: do_tick() already called on_start()
+	# once before _tick_with_decorator() was ever reached).
+	if _dec_repeat_restart_pending:
+		_dec_repeat_restart_pending = false
+		on_start()
+
+	_dec_repeat_elapsed += delta
+	var status : Status = tick(delta)
+
+	if status == Status.RUNNING or status == Status.ERROR:
+		return status
+
+	var done : bool = false
+	match variant:
+		0: # Times
+			_dec_attempts += 1
+			var total : int = int(decorator.get("count", 3))
+			done = total > 0 and _dec_attempts >= total
+		1: done = status == Status.SUCCESS # Until Success
+		2: done = status == Status.FAILURE # Until Failure
+
+	var timeout : float = decorator.get("timeout", 0.0) as float
+	var timed_out : bool = variant != 0 and timeout > 0.0 and _dec_repeat_elapsed >= timeout
+
+	if done:
+		return status
+	if timed_out:
+		return Status.FAILURE
+
+	# One more attempt coming, optionally behind a between-attempts wait.
+	_dec_repeat_restart_pending = true
+	if between_delay > 0.0:
+		_dec_waiting_between = true
+		_dec_elapsed = 0.0
+	return Status.RUNNING
+
+## Time Limiter: ticks the action, but forces FAILURE once [code]decorator.seconds[/code] elapses without it finishing.[br]
+## [code]decorator.on_timeout[/code]: 0 Abort also sets [member dirty] - the one deliberate, one-way write this feature makes outside its own [code]_dec_*[/code] state - forcing the action to be fully reinitialized the next time it runs; 1 Let Run leaves [member dirty] untouched, so the action's own in-progress state (e.g. a running [Tween]) survives to pick back up from where it was if this node runs again later.
+func _decorator_time_limit(delta: float) -> Status:
+	_dec_elapsed += delta
+	var limit : float = decorator.get("seconds", 0.0) as float
+
+	if limit > 0.0 and _dec_elapsed >= limit:
+		if int(decorator.get("on_timeout", 0)) == 0:
+			dirty = true
+		return Status.FAILURE
+
+	return tick(delta)
+
+## Cooldown: once the action finishes (always, or only on SUCCESS, depending on [code]decorator.cooldown_mode[/code]: 0 Always / 1 On Success), returns FAILURE immediately - without even ticking the action - for every call within the next [code]decorator.seconds[/code].
+func _decorator_cooldown(delta: float) -> Status:
+	if _dec_cooldown_remaining != -1.0:
+		_dec_cooldown_remaining -= delta
+		if _dec_cooldown_remaining > 0.0:
+			return Status.FAILURE
+		_dec_cooldown_remaining = -1.0
+
+	var status : Status = tick(delta)
+	if status != Status.RUNNING:
+		var mode : int = int(decorator.get("cooldown_mode", 0))
+		if mode == 0 or (mode == 1 and status == Status.SUCCESS):
+			_dec_cooldown_remaining = decorator.get("seconds", 0.0) as float
+
+	return status
+
+## Delay: [code]decorator.delay_mode[/code] 0 Before waits [code]decorator.seconds[/code] before ticking the action for the first time; 1 After ticks the action right away but, once it reports a non-RUNNING outcome, holds that outcome back for [code]decorator.seconds[/code] before actually returning it.
+func _decorator_delay(delta: float) -> Status:
+	var mode : int = int(decorator.get("delay_mode", 0))
+	var secs : float = decorator.get("seconds", 0.0) as float
+
+	if mode == 0: # Before
+		if _dec_elapsed < secs:
+			_dec_elapsed += delta
+			return Status.RUNNING
+		return tick(delta)
+
+	# After
+	if _dec_delayed_status != -1:
+		_dec_elapsed += delta
+		if _dec_elapsed < secs:
+			return Status.RUNNING
+		var held : Status = _dec_delayed_status as Status
+		_dec_delayed_status = -1
+		return held
+
+	var status : Status = tick(delta)
+	if status == Status.RUNNING:
+		return status
+	_dec_delayed_status = status
+	_dec_elapsed = 0.0
+	return Status.RUNNING
+
+## Condition: reads the boolean [BlackboardVariable] bound to [code]decorator.blackboard_key[/code] (same drag-and-drop binding as a regular behavior property, restricted to [constant TYPE_BOOL]). Unbound passes through to [method tick] unmodified; bound and [code]false[/code] returns FAILURE without ticking the action; bound and [code]true[/code] ticks the action normally.
+func _decorator_condition(delta: float) -> Status:
+	var key : StringName = decorator.get("blackboard_key", &"") as StringName
+	if key == &"":
+		return tick(delta)
+
+	var graph : BehaviorGraph = get_graph()
+	if graph == null:
+		return abort("decorator: lost graph reference while resolving condition '%s'" % key)
+
+	var variable : BlackboardVariable = graph.get_blackboard_property(key)
+	if variable == null or typeof(variable.value) != TYPE_BOOL:
+		return abort("decorator: blackboard variable '%s' not found or not boolean" % key)
+
+	if not bool(variable.value):
+		return Status.FAILURE
+	return tick(delta)
+
+#endregion
+
 @export_group("Properties")
 
 ## Initializes the node by calling every overridable [code]set_*[/code] method, in order: [br]
@@ -219,15 +477,34 @@ func get_node_property_info(property: StringName, info: String = "") -> Variant:
 	push_error("Property '%s' not found" % property)
 	return null
 
+## Override to opt a node out of do_tick()'s automatic tick_next() call on SUCCESS.[br]
+## Only needed by a node whose own tick() already decides on its own when/whether to call
+## tick_next() and reports upward *the successor's real status* (rather than a fixed
+## SUCCESS/FAILURE regardless of what's downstream) - see do_tick()'s doc for why mixing the
+## two causes a double tick_next() call.
+func _manual_successor_propagation() -> bool:
+	return false
+
 ## Public entry point used to actually run this node: calls the concrete [method tick] implementation, then records [member last_status]/[member last_tick_time] and emits [signal ticked].[br]
 ## [method tick_next] and [method tick_condition] call this (instead of [method tick] directly) to reach a successor, and [BehaviorAgent] calls this on the graph's starting node - so every tick anywhere in the graph passes through here exactly once. This is what lets external tools (like the live graph debugger) track each node's status without any individual [BehaviorNode] subclass having to report it itself.
 func do_tick(delta: float) -> Status:
+	if breakpoint_enabled:
+		breakpoint
 	if last_status != Status.RUNNING: # Node is not in RUNNING state during previous frame
 		last_status = -1
 		_connect_blackboard_signals()
+		_reset_decorator_state()
 		on_start()
 
-	var status: Status = tick(delta)
+	var status: Status = _tick_with_decorator(delta)
+
+	# Automatic forward propagation: fires tick_next() once, in the exact spot a node's own
+	# tick() used to call it, for any node that (a) finished with SUCCESS, (b) has a single,
+	# unconditional successor (no conditions, no multiple outputs), and (c) hasn't opted out
+	# because it needs to report the successor's *real* status instead of a fixed one.
+	if status == Status.SUCCESS and output and not allows_multiple_outputs and conditions.is_empty() and not _manual_successor_propagation():
+		tick_next(delta)
+
 	last_status = status
 	last_tick_time = Time.get_ticks_msec()
 
@@ -373,3 +650,6 @@ func _on_blackboard_value_changed(key: StringName, _new_value: Variant) -> void:
 
 func on_blackboard_property_changed(key: StringName) -> void:
 	pass
+
+func supports_decorator() -> bool:
+	return node_category != "access_point_node" and output and conditions.is_empty()

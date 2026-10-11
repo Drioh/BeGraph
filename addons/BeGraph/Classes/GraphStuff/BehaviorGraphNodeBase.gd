@@ -10,13 +10,13 @@ extends GraphNode
 var free_from_frame_button: Button
 ## Titlebar button that deletes this node.
 var delete_button: Button
+var breakpoint_button: Button
 
 ## The [BehaviorNode] represented by this visual node.
 var node: BehaviorNode
 ## Assigns [param n], configures slot/title/position and the edit/delete buttons in the titlebar, then calls [method _on_node_set] so subclasses can build their own specific body/behavior.
 func set_node(n: BehaviorNode) -> void:
 	node = n
-
 	set_slot_enabled_right(0, node.output)
 	set_slot_enabled_left(0, node.input)
 
@@ -37,6 +37,14 @@ func set_node(n: BehaviorNode) -> void:
 	# The name is read at press time, not captured now, so it's always the current one.
 	free_from_frame_button.pressed.connect(func(): graph_edit.detach_node_from_frame(name))
 	tb.add_child(free_from_frame_button)
+	
+	breakpoint_button = Button.new()
+	breakpoint_button.flat = true
+	breakpoint_button.icon=load("res://addons/BeGraph/Icons/breakpoint_icon.svg")
+	breakpoint_button.toggle_mode=true
+	breakpoint_button.toggled.connect(func(p):node.breakpoint_enabled=p)
+	tb.add_child(breakpoint_button)
+	breakpoint_button.button_pressed=node.breakpoint_enabled
 	
 	delete_button = Button.new()
 	var del_array : Array[StringName] = [StringName(self.name)]
