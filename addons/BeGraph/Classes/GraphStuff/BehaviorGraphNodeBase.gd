@@ -46,7 +46,8 @@ func set_node(n: BehaviorNode) -> void:
 	breakpoint_button.toggle_mode=true
 	breakpoint_button.toggled.connect(func(p):
 		node.breakpoint_enabled=p
-		mute_button.button_pressed=false
+		if p:
+			mute_button.button_pressed=false
 		breakpoint_button.modulate=EditorInterface.get_editor_settings().get_setting("interface/theme/accent_color") if p else Color.WHITE
 		)
 	tb.add_child(breakpoint_button)
@@ -60,11 +61,12 @@ func set_node(n: BehaviorNode) -> void:
 	mute_button.toggled.connect(func(p):
 		node.mute_enabled=p
 		mute_button.modulate = EditorInterface.get_editor_settings().get_setting("interface/theme/accent_color") if p else Color.WHITE
-		breakpoint_button.button_pressed=false
+		if p:
+			breakpoint_button.button_pressed=false
 		modulate.a=0.5 if p else 1.0
 		)
 	tb.add_child(mute_button)
-	mute_button.button_pressed=node.breakpoint_enabled
+	mute_button.button_pressed=node.mute_enabled
 	
 	delete_button = Button.new()
 	var del_array : Array[StringName] = [StringName(self.name)]

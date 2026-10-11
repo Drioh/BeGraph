@@ -14,15 +14,15 @@ var _handlers : Dictionary[String, Callable] = {}
 
 ## Returning [code]true[/code] here is what makes the debugger route every [code]"begraph:*"[/code] message to [method _capture].
 func _has_capture(prefix: String) -> bool:
-	return prefix == BeGraphProtocol.PREFIX
+	return prefix == BG.Protocol.PREFIX
 
 func _init() -> void:
 	_handlers = {
-		BeGraphProtocol.GRAPH: _on_graph_message,
-		BeGraphProtocol.STATUS: _on_status_message,
-		BeGraphProtocol.PROPERTIES: _on_properties_message,
-		BeGraphProtocol.BLACKBOARD: _on_blackboard_message,
-		BeGraphProtocol.REMOVED: _on_removed_message,
+		BG.Protocol.GRAPH: _on_graph_message,
+		BG.Protocol.STATUS: _on_status_message,
+		BG.Protocol.PROPERTIES: _on_properties_message,
+		BG.Protocol.BLACKBOARD: _on_blackboard_message,
+		BG.Protocol.REMOVED: _on_removed_message,
 	}
 
 func _capture(message: String, data: Array, session_id: int) -> bool:

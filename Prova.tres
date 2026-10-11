@@ -95,6 +95,18 @@ position_in_graph = Vector2(2072.0034, -37.26512)
 _graph_ref = Object(WeakRef,"script":null)
 
 
+[sub_resource type="Resource" id="Resource_byvd5"]
+resource_name = "_GraphNode_42805"
+script = ExtResource("6_byvd5")
+value = null
+instruction = "Prints {value}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(682, 294)
+_graph_ref = Object(WeakRef,"script":null)
+
+
 [resource]
 resource_name = "Trogolo"
 script = ExtResource("4_k7ocg")
@@ -103,6 +115,7 @@ nodes = Dictionary[StringName, ExtResource("2_0y5uo")]({
 &"": SubResource("Resource_gad0g"),
 &"BehaviorGraphNode": SubResource("Resource_orwkh"),
 &"_GraphNode_27401": SubResource("Resource_buygw"),
+&"_GraphNode_42805": SubResource("Resource_byvd5"),
 &"_GraphNode_68324": SubResource("Resource_6a8nf")
 })
 connections = Array[Dictionary]([{

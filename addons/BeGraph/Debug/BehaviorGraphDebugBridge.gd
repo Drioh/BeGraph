@@ -54,7 +54,7 @@ func _broadcast() -> void:
 
 	for path in _announced.keys().duplicate():
 		if not seen_paths.has(path):
-			EngineDebugger.send_message(BeGraphProtocol.REMOVED, [path])
+			EngineDebugger.send_message(BG.Protocol.REMOVED, [path])
 			_announced.erase(path)
 			_last_sent_tick_time.erase(path)
 			_last_sent_properties.erase(path)
@@ -68,7 +68,7 @@ func _send_graph_structure(path: String, graph: BehaviorGraph, graph_name : Stri
 		"to_node": String(c["to_node"]), "to_port": c["to_port"],
 	})
 
-	EngineDebugger.send_message(BeGraphProtocol.GRAPH,
+	EngineDebugger.send_message(BG.Protocol.GRAPH,
 		[path, nodes_data, connections_data, _blackboard_snapshot(graph),graph_name])
 
 ## Sends only the nodes whose [member BehaviorNode.last_tick_time] changed since the previous broadcast for this agent, as [code][node_name:String, status:int][/code] pairs. Sends nothing at all if no node ticked since last time.
@@ -84,7 +84,7 @@ func _send_status_delta(path: String, graph: BehaviorGraph) -> void:
 			last[key] = node.last_tick_time
 
 	if deltas.size() > 0:
-		EngineDebugger.send_message(BeGraphProtocol.STATUS, [path, deltas])
+		EngineDebugger.send_message(BG.Protocol.STATUS, [path, deltas])
 
 ## Sends only the nodes whose current behavior-property values differ from the previous broadcast for this agent, as [code][node_name:String, properties:Array][/code] pairs - [param properties] has the shape built by [method _serialize_properties]. Covers both a node ticking with new values and a node's blackboard-bound property changing because some other node wrote to that blackboard entry.
 func _send_properties_delta(path: String, graph: BehaviorGraph) -> void:
@@ -99,7 +99,7 @@ func _send_properties_delta(path: String, graph: BehaviorGraph) -> void:
 			deltas.append([String(key), current])
 			last[key] = current
 	if deltas.size() > 0:
-		EngineDebugger.send_message(BeGraphProtocol.PROPERTIES, [path, deltas])
+		EngineDebugger.send_message(BG.Protocol.PROPERTIES, [path, deltas])
 
 ## Sends only the blackboard entries whose value changed since the previous broadcast for this agent, as [code][name:String, type:int, value][/code] triples.
 func _send_blackboard_delta(path: String, graph: BehaviorGraph) -> void:
@@ -111,11 +111,11 @@ func _send_blackboard_delta(path: String, graph: BehaviorGraph) -> void:
 			deltas.append([key, current[key][0], current[key][1]])
 	_last_sent_blackboard[path] = current
 	if deltas.size() > 0:
-		EngineDebugger.send_message(BeGraphProtocol.BLACKBOARD, [path, deltas])
+		EngineDebugger.send_message(BG.Protocol.BLACKBOARD, [path, deltas])
 
 ## Builds a [code]{variable name (StringName): [type:int, value]}[/code] snapshot of [param graph]'s blackboard, used to seed [member _last_sent_blackboard] right after the full structure (with its own, independently-built blackboard array) has been sent, so the next delta only reports genuinely new changes.
 func _blackboard_snapshot(graph: BehaviorGraph) -> Dictionary:
 	var ret : Dictionary = {}
 	for variable in graph.blackboard:
-		ret[String(variable.name)] = [typeof(variable.value), BeGraphProtocol.safe_value(variable.value)]
+		ret[String(variable.name)] = [typeof(variable.value), BG.Protocol.safe_value(variable.value)]
 	return ret

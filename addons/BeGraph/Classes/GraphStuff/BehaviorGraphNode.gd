@@ -95,11 +95,15 @@ func set_node_script(path: String) -> void:
 
 func set_conditions() -> void:
 	h_box_container.visible = node.conditions.size() > 0
+	# Conditions must land directly after row 1 (h_box_container) - pull decorator_tree out
+	# first so it doesn't shift their slot indices, then re-append it last.
+	remove_child(decorator_tree)
 	for condition in node.conditions:
 		var container := HFlowContainer.new()
 		container.alignment = FlowContainer.ALIGNMENT_END
 		add_child(container)
 		_render_placeholders(condition.text, container, false)
+	add_child(decorator_tree)
 
 func _on_conditions_changed() -> void:
 	_clear_condition_rows()
@@ -111,7 +115,7 @@ func _on_conditions_changed() -> void:
 
 func _clear_condition_rows() -> void:
 	for child in get_children():
-		if child is Control and child != h_flow_container and child != h_box_container:
+		if child is Control and child != h_flow_container and child != h_box_container and child != decorator_tree:
 			remove_child(child)
 			child.queue_free()
 

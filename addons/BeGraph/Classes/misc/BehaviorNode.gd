@@ -494,10 +494,11 @@ func do_tick(delta: float) -> Status:
 		breakpoint
 	
 	if mute_enabled:
-		if conditions.is_empty():
-			tick_next(delta)
-		else: 
-			tick_condition(delta)
+		var muted_status : Status = tick_next(delta) if conditions.is_empty() else tick_condition(delta)
+		last_status = muted_status
+		last_tick_time = Time.get_ticks_msec()
+		ticked.emit(muted_status)
+		return muted_status
 	
 	if last_status != Status.RUNNING: # Node is not in RUNNING state during previous frame
 		last_status = -1
