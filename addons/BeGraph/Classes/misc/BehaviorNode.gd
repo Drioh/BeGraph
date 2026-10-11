@@ -96,6 +96,8 @@ var _blackboard_bindings: Dictionary[StringName, StringName] = {}
 
 @export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE) var breakpoint_enabled : bool = false
 
+@export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE) var mute_enabled : bool = false
+
 ## Emitted whenever a property's blackboard binding is enabled or disabled via [method set_node_property_blackboard_key].
 signal blackboard_key_set(property:StringName,blackboard_key:StringName)
 
@@ -114,7 +116,7 @@ var dirty : bool = true
 
 #region Decorator
 
-## Decorator applied to this node's execution, only meaningful when [member node_category] is [code]"action_node"[/code] (ignored otherwise). Read-only in the default inspector: edited through the node's own Tree UI (see [code]BehaviorGraphNode.gd[/code] / [code]%DecoratorTree[/code]) via [method set_decorator_type] and [method set_decorator_field].[br]
+## Decorator applied to this node's execution, only meaningful on nodes for which [method supports_decorator] returns true (any category except "access_point_node", with output enabled and no conditions). Read-only in the default inspector: edited through the node's own Tree UI (see [code]BehaviorGraphNode.gd[/code] / [code]%DecoratorTree[/code]) via [method set_decorator_type] and [method set_decorator_field].[br]
 ## Fields, used depending on [code]type[/code]:[br]
 ## - [code]type[/code]: [code]"none"[/code], [code]"inverter"[/code], [code]"force"[/code], [code]"repeater"[/code], [code]"time_limit"[/code], [code]"cooldown"[/code], [code]"delay"[/code], [code]"condition"[/code].[br]
 ## - [code]variant[/code]: [code]force[/code] (0 Success / 1 Failure) or [code]repeater[/code] (0 Times / 1 Until Success / 2 Until Failure).[br]
@@ -211,7 +213,7 @@ func set_decorator_field(field: StringName, value: Variant) -> void:
 
 ## Routes [method tick] through [member decorator] (when this is an [code]action_node[/code] with a decorator set); returns the decorated [enum Status]. Called by [method do_tick] instead of [method tick] directly.
 func _tick_with_decorator(delta: float) -> Status:
-	if supports_decorator():
+	if !supports_decorator():
 		return tick(delta)
 
 	match String(decorator.get("type", "none")):
@@ -490,6 +492,13 @@ func _manual_successor_propagation() -> bool:
 func do_tick(delta: float) -> Status:
 	if breakpoint_enabled:
 		breakpoint
+	
+	if mute_enabled:
+		if conditions.is_empty():
+			tick_next(delta)
+		else: 
+			tick_condition(delta)
+	
 	if last_status != Status.RUNNING: # Node is not in RUNNING state during previous frame
 		last_status = -1
 		_connect_blackboard_signals()

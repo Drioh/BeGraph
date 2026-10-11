@@ -16,13 +16,45 @@ var placeholder_regex := RegEx.new()
 #region Decorator UI
 
 const DECORATOR_ROWS: Array[Dictionary] = [
-	{"type": "inverter", "label": "Inverter"},
-	{"type": "force", "label": "Force", "variant_options": "Success,Failure"},
-	{"type": "repeater", "label": "Repeater", "variant_options": "Times,Until Success,Until Failure"},
-	{"type": "time_limit", "label": "Time Limiter"},
-	{"type": "cooldown", "label": "Cooldown"},
-	{"type": "delay", "label": "Delay"},
-	{"type": "condition", "label": "Condition"},
+	{
+		"type": "inverter",
+		"label": "Inverter",
+		"tooltip": "Ticks the node's own action and swaps its outcome: SUCCESS becomes FAILURE and FAILURE becomes SUCCESS. RUNNING and ERROR are returned unchanged."
+	},
+	{
+		"type": "force",
+		"label": "Force",
+		"variant_options": "Success,Failure",
+		"tooltip": "Ticks the action as usual, but once it stops RUNNING, replaces its real outcome with the fixed result chosen in the Value column. ERROR is left untouched, since it signals a genuine abort rather than a normal outcome.",
+		"variant_tooltip": "Which fixed result to report once the action finishes. Success: always reports SUCCESS. Failure: always reports FAILURE. Has no effect while the action is RUNNING or if it returns ERROR."
+	},
+	{
+		"type": "repeater",
+		"label": "Repeater",
+		"variant_options": "Times,Until Success,Until Failure",
+		"tooltip": "Reruns the action attempt after attempt instead of ticking it only once. Use the child rows below to control how many attempts are made (or for how long it keeps retrying) and how long to wait between attempts.\n\nNote: a node using this decorator should have no outgoing connection of its own, since the action's own successor (if it calls tick_next itself) fires on every single attempt.",
+		"variant_tooltip": "Times: repeats a fixed number of attempts, read from \"Count / Timeout\" below (0 = unlimited). Until Success: keeps retrying until the action returns SUCCESS, or gives up as FAILURE once the optional timeout elapses. Until Failure: keeps retrying until the action returns FAILURE, or gives up as FAILURE once the optional timeout elapses."
+	},
+	{
+		"type": "time_limit",
+		"label": "Time Limiter",
+		"tooltip": "Ticks the action normally, but forces FAILURE if it is still RUNNING once the number of seconds in the Value column has elapsed."
+	},
+	{
+		"type": "cooldown",
+		"label": "Cooldown",
+		"tooltip": "Once the action finishes, makes this node return FAILURE immediately - without even ticking the action - for the number of seconds set in the Value column."
+	},
+	{
+		"type": "delay",
+		"label": "Delay",
+		"tooltip": "Adds a pause of the duration set in the Value column, either before the action starts ticking for the first time, or after it finishes but before its result is actually reported (see the \"When\" row below)."
+	},
+	{
+		"type": "condition",
+		"label": "Condition",
+		"tooltip": "Gates the action behind a boolean Blackboard variable. Drag a boolean variable from the blackboard panel onto the Value column to bind it: while bound and true, the action ticks normally; while bound and false, this node returns FAILURE immediately without ticking it. Unbound, the action always ticks normally."
+	},
 ]
 
 var _decorator_rows: Dictionary = {}
@@ -171,30 +203,50 @@ func _build_decorator_tree() -> void:
 		item.set_editable(0, true)
 		item.set_text(1, row_info["label"])
 		item.set_selectable(1, false)
-		item.is_any_collapsed()
 		item.set_metadata(0, type)
 		_decorator_rows[type] = item
+
+		var desc : String = row_info.get("tooltip", "")
+		item.set_tooltip_text(0, "Enable the \"%s\" decorator for this node. Only one decorator can be active at a time; checking this box disables whichever other decorator was previously selected.\n\n%s" % [row_info["label"], desc])
+		item.set_tooltip_text(1, desc)
 
 		if row_info.has("variant_options"):
 			_setup_enum_cell(item, 2, row_info["variant_options"])
 			item.set_metadata(2, &"variant")
+			item.set_tooltip_text(2, row_info.get("variant_tooltip", desc))
+		elif desc != "":
+			item.set_tooltip_text(2, desc)
 
 		match type:
 			"repeater":
-				_create_range_child(item, "Count / Timeout", &"repeater_count_timeout", 0.0, 1.0)
-				_create_range_child(item, "Between Delay (s)", &"between_delay", 0.0, 0.01)
+				var count_child := _create_range_child(item, "Count / Timeout", &"repeater_count_timeout", 0.0, 1.0)
+				count_child.set_tooltip_text(1, "In \"Times\" mode: number of attempts before stopping (0 = infinite). In \"Until Success\" / \"Until Failure\" mode: seconds to keep retrying before giving up as FAILURE (0 = no timeout, retries forever).")
+				count_child.set_tooltip_text(2, count_child.get_tooltip_text(1))
+				var delay_child := _create_range_child(item, "Between Delay (s)", &"between_delay", 0.0, 0.01)
+				delay_child.set_tooltip_text(1, "Seconds to wait, doing nothing, between the end of one attempt and the start of the next. 0 = start the next attempt immediately.")
+				delay_child.set_tooltip_text(2, delay_child.get_tooltip_text(1))
 			"time_limit":
 				_setup_range_cell(item, 2, &"seconds")
-				_create_enum_child(item, "On Timeout", &"on_timeout", "Abort,Let Run")
+				item.set_tooltip_text(2, "Maximum number of seconds the action may keep running before this decorator forces a FAILURE. 0 (or negative) disables the limit.")
+				var timeout_child := _create_enum_child(item, "On Timeout", &"on_timeout", "Abort,Let Run")
+				timeout_child.set_tooltip_text(1, "What happens to the action's internal state when the time limit is hit. Abort: fully resets the action, so on_start() runs again from scratch next time. Let Run: leaves the action's internal state untouched, so it can resume where it left off (e.g. an in-progress Tween).")
+				timeout_child.set_tooltip_text(2, timeout_child.get_tooltip_text(1))
 			"cooldown":
 				_setup_range_cell(item, 2, &"seconds")
-				_create_enum_child(item, "Mode", &"cooldown_mode", "Always,On Success")
+				item.set_tooltip_text(2, "How many seconds this node stays on cooldown (returning FAILURE immediately, without ticking the action) after it finishes.")
+				var mode_child := _create_enum_child(item, "Mode", &"cooldown_mode", "Always,On Success")
+				mode_child.set_tooltip_text(1, "Always: starts the cooldown regardless of how the action finished. On Success: only starts the cooldown if the action finished with SUCCESS; a FAILURE does not trigger it.")
+				mode_child.set_tooltip_text(2, mode_child.get_tooltip_text(1))
 			"delay":
 				_setup_range_cell(item, 2, &"seconds")
-				_create_enum_child(item, "When", &"delay_mode", "Before,After")
+				item.set_tooltip_text(2, "Length of the pause, in seconds.")
+				var when_child := _create_enum_child(item, "When", &"delay_mode", "Before,After")
+				when_child.set_tooltip_text(1, "Before: waits the configured seconds (returning RUNNING) before ticking the action for the first time. After: ticks the action right away, but once it returns a final SUCCESS/FAILURE, holds that result back for the configured seconds before reporting it.")
+				when_child.set_tooltip_text(2, when_child.get_tooltip_text(1))
 			"condition":
 				item.set_selectable(2, false)
-
+				item.set_tooltip_text(2, "Drop a boolean Blackboard variable here to bind it. Until a variable is bound, this decorator has no effect and the action ticks as usual.")
+	
 	_refresh_decorator_tree()
 
 func _setup_range_cell(item: TreeItem, column: int, meta_key: StringName, min_v: float = 0.0, step: float = 0.01) -> void:
