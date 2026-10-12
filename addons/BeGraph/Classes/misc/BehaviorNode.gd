@@ -31,12 +31,16 @@ func abort(error_msg: String = "") -> Status:
 @abstract func set_instruction() -> String
 
 ## If set to [code]true[/code], allows this node to have a predecessor.
-@abstract func set_input()->bool
+func set_input()->bool : return true
 
 ## If set to [code]true[/code], allows this node to have a successor. [br]
 ## If conditions are set, this gets automatically set to [code]false[/code].
-@abstract func set_output()->bool
+func set_output()->bool : return true
 
+
+func set_mutable()->bool : return true
+
+func set_breakpointable()->bool:return true
 ## If set to [code]true[/code], allows this node to have multiple successors, while, if set to [code]false[/code], allows only for one successor.
 @abstract func set_allows_multiple_outputs() -> bool
 
@@ -357,6 +361,8 @@ func _init() -> void:
 	node_category = set_node_category()
 	input = set_input()
 	output=set_output()
+	mute_enabled = set_mutable()
+	breakpoint_enabled=set_breakpointable()
 	build_conditions()
 	instruction = set_instruction()
 	allows_multiple_outputs = set_allows_multiple_outputs()

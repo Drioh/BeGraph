@@ -39,34 +39,36 @@ func set_node(n: BehaviorNode) -> void:
 	free_from_frame_button.pressed.connect(func(): graph_edit.detach_node_from_frame(name))
 	tb.add_child(free_from_frame_button)
 	
-	breakpoint_button = Button.new()
-	breakpoint_button.flat = true
-	breakpoint_button.text = "B"
-	breakpoint_button.tooltip_text="If enabled, when this graph's flow reaches this note, a breakpoint is triggered.\nMutually exlusive with the \"mute\" feature"
-	breakpoint_button.toggle_mode=true
-	breakpoint_button.toggled.connect(func(p):
-		node.breakpoint_enabled=p
-		if p:
-			mute_button.button_pressed=false
-		breakpoint_button.modulate=EditorInterface.get_editor_settings().get_setting("interface/theme/accent_color") if p else Color.WHITE
-		)
-	tb.add_child(breakpoint_button)
-	breakpoint_button.button_pressed=node.breakpoint_enabled
+	if node.breakpoint_enabled:
+		breakpoint_button = Button.new()
+		breakpoint_button.flat = true
+		breakpoint_button.text = "B"
+		breakpoint_button.tooltip_text="If enabled, when this graph's flow reaches this note, a breakpoint is triggered.\nMutually exlusive with the \"mute\" feature"
+		breakpoint_button.toggle_mode=true
+		breakpoint_button.toggled.connect(func(p):
+			node.breakpoint_enabled=p
+			if p and node.mute_enabled:
+				mute_button.button_pressed=false
+			breakpoint_button.modulate=EditorInterface.get_editor_settings().get_setting("interface/theme/accent_color") if p else Color.WHITE
+			)
+		tb.add_child(breakpoint_button)
+		breakpoint_button.button_pressed=node.breakpoint_enabled
 	
-	mute_button = Button.new()
-	mute_button.flat = true
-	mute_button.text = "M"
-	mute_button.tooltip_text="If enabled, this node gets skipped and its first child (or condition) gets triggered.\nMutually exlusive with the \"breakpoint\" feature"
-	mute_button.toggle_mode=true
-	mute_button.toggled.connect(func(p):
-		node.mute_enabled=p
-		mute_button.modulate = EditorInterface.get_editor_settings().get_setting("interface/theme/accent_color") if p else Color.WHITE
-		if p:
-			breakpoint_button.button_pressed=false
-		modulate.a=0.5 if p else 1.0
-		)
-	tb.add_child(mute_button)
-	mute_button.button_pressed=node.mute_enabled
+	if node.mute_enabled:
+		mute_button = Button.new()
+		mute_button.flat = true
+		mute_button.text = "M"
+		mute_button.tooltip_text="If enabled, this node gets skipped and its first child (or condition) gets triggered.\nMutually exlusive with the \"breakpoint\" feature"
+		mute_button.toggle_mode=true
+		mute_button.toggled.connect(func(p):
+			node.mute_enabled=p
+			mute_button.modulate = EditorInterface.get_editor_settings().get_setting("interface/theme/accent_color") if p else Color.WHITE
+			if p and node.breakpoint_enabled:
+				breakpoint_button.button_pressed=false
+			modulate.a=0.5 if p else 1.0
+			)
+		tb.add_child(mute_button)
+		mute_button.button_pressed=node.mute_enabled
 	
 	delete_button = Button.new()
 	var del_array : Array[StringName] = [StringName(self.name)]
