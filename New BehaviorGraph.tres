@@ -22,6 +22,8 @@ is_starting_node = true
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"BehaviorGraphNode"])
+breakpoint_enabled = true
+mute_enabled = true
 
 [sub_resource type="Resource" id="Resource_m7ynu"]
 resource_name = "BehaviorGraphNode"
@@ -37,6 +39,8 @@ _graph_ref = Object(WeakRef,"script":null)
 _blackboard_bindings = Dictionary[StringName, StringName]({
 &"value": &"New_var"
 })
+breakpoint_enabled = true
+mute_enabled = true
 
 [resource]
 script = ExtResource("4_gl4j2")

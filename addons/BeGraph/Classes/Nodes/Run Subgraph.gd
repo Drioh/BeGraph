@@ -13,6 +13,7 @@ const DEPTH_META : StringName = &"begraph_subgraph_depth"
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var share_blackboard : bool = true
 
 var _cache_key : Array = [] # [subgraph_resource, access_point_wanted]
+var _cached_runtime : BehaviorGraph = null
 var _runtime_graph : BehaviorGraph = null
 var _entry : BehaviorNode = null
 
