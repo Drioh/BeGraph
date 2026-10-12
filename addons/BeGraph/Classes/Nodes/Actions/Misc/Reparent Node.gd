@@ -8,8 +8,8 @@ const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var new_parent : NodePath = NodePath("")
 
 func tick(delta: float) -> Status:
-	var target := _resolve_node(eval(&"node"))
-	var p_node := _resolve_node(eval(&"new_parent"))
+	var target := eval(&"node",true)
+	var p_node := eval(&"new_parent",true)
 	
 	if target == null or p_node == null:
 		return abort("couldn't resolve node or new parent")

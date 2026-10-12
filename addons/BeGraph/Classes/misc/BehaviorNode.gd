@@ -25,10 +25,6 @@ func on_end(status: Status) -> void: pass
 func abort(error_msg: String = "") -> Status:
 	if not error_msg.is_empty():
 		push_error("BehaviorNode '%s' (%s): %s" % [resource_name, get_script().resource_path.get_file(), error_msg])
-	
-	last_status = Status.ERROR
-	on_end(Status.ERROR)
-	ticked.emit(Status.ERROR)
 	return Status.ERROR
 
 ## The line displayed in the node. use [code]{}[/code] annotation to declare variables.
@@ -112,8 +108,6 @@ var last_status : int = -1
 ## [method Time.get_ticks_msec] timestamp of this node's last [method do_tick] call, or [code]-1[/code] if it has never been ticked.
 var last_tick_time : int = -1
 
-var dirty : bool = true
-
 #region Decorator
 
 ## Decorator applied to this node's execution, only meaningful on nodes for which [method supports_decorator] returns true (any category except "access_point_node", with output enabled and no conditions). Read-only in the default inspector: edited through the node's own Tree UI (see [code]BehaviorGraphNode.gd[/code] / [code]%DecoratorTree[/code]) via [method set_decorator_type] and [method set_decorator_field].[br]
@@ -124,7 +118,7 @@ var dirty : bool = true
 ## - [code]count[/code]: [code]repeater[/code] in Times mode - number of attempts, [code]0[/code] = infinite.[br]
 ## - [code]timeout[/code]: [code]repeater[/code] in Until* mode - seconds before giving up, [code]0[/code] = infinite (same convention as [code]Wait Until.gd[/code]).[br]
 ## - [code]between_delay[/code]: [code]repeater[/code] - seconds to wait between one attempt and the next, [code]0[/code] = no wait.[br]
-## - [code]on_timeout[/code]: [code]time_limit[/code] child - 0 Abort (also sets [member dirty]) / 1 Let Run.[br]
+## - [code]on_timeout[/code]: [code]time_limit[/code] child - 0 Abort / 1 Let Run.[br]
 ## - [code]cooldown_mode[/code]: [code]cooldown[/code] child - 0 Always / 1 On Success.[br]
 ## - [code]delay_mode[/code]: [code]delay[/code] child - 0 Before / 1 After.[br]
 ## - [code]blackboard_key[/code]: [code]condition[/code] - name of the (boolean) [BlackboardVariable] dropped onto it.
@@ -159,11 +153,6 @@ const DECORATOR_DEFAULTS : Dictionary = {
 ## Emitted whenever [member decorator] changes (type or a single field), so the node's Tree UI can re-sync itself.
 signal decorator_changed
 
-# --- Decorator runtime state. Kept entirely separate from the underlying action's own state
-# (dirty, and any subclass-local var), except for the one deliberate, one-way write documented
-# on the Time Limiter's "Abort" case below. None of this is saved: it is rebuilt every time a
-# fresh execution cycle starts, via _reset_decorator_state(). ---
-
 ## Generic single-purpose timer, reused across whichever decorator family is active (only one
 ## can be active per node): elapsed time for Time Limiter / Cooldown-active-wait / Delay, and
 ## the wait between one Repeater attempt and the next.
@@ -187,7 +176,7 @@ var _dec_cooldown_remaining : float = -1.0
 var _dec_delayed_status : int = -1
 
 
-## Resets every [code]_dec_*[/code] runtime variable that belongs to a single execution cycle. Called by [method do_tick] whenever this node restarts (i.e. it wasn't RUNNING last frame), right before [method on_start]. Never touches [member dirty] or anything belonging to the action itself.
+## Resets every [code]_dec_*[/code] runtime variable that belongs to a single execution cycle. Called by [method do_tick] whenever this node restarts (i.e. it wasn't RUNNING last frame), right before [method on_start]. Never touches anything belonging to the action itself.
 func _reset_decorator_state() -> void:
 	_dec_elapsed = 0.0
 	_dec_repeat_elapsed = 0.0
@@ -211,20 +200,7 @@ func set_decorator_field(field: StringName, value: Variant) -> void:
 	decorator_changed.emit()
 	emit_changed()
 
-## Routes [method tick] through [member decorator] (when this is an [code]action_node[/code] with a decorator set); returns the decorated [enum Status]. Called by [method do_tick] instead of [method tick] directly.
-func _tick_with_decorator(delta: float) -> Status:
-	if !supports_decorator():
-		return tick(delta)
 
-	match String(decorator.get("type", "none")):
-		"inverter": return _decorator_inverter(delta)
-		"force": return _decorator_force(delta)
-		"repeater": return _decorator_repeater(delta)
-		"time_limit": return _decorator_time_limit(delta)
-		"cooldown": return _decorator_cooldown(delta)
-		"delay": return _decorator_delay(delta)
-		"condition": return _decorator_condition(delta)
-		_: return tick(delta) # "none", or an unrecognized type
 
 ## Inverter: ticks the action and swaps SUCCESS/FAILURE; RUNNING (and ERROR) pass through unchanged.
 func _decorator_inverter(delta: float) -> Status:
@@ -294,14 +270,12 @@ func _decorator_repeater(delta: float) -> Status:
 	return Status.RUNNING
 
 ## Time Limiter: ticks the action, but forces FAILURE once [code]decorator.seconds[/code] elapses without it finishing.[br]
-## [code]decorator.on_timeout[/code]: 0 Abort also sets [member dirty] - the one deliberate, one-way write this feature makes outside its own [code]_dec_*[/code] state - forcing the action to be fully reinitialized the next time it runs; 1 Let Run leaves [member dirty] untouched, so the action's own in-progress state (e.g. a running [Tween]) survives to pick back up from where it was if this node runs again later.
+## [code]decorator.on_timeout[/code]: 0 Abort forces the action to be fully reinitialized the next time it runs; 1 Let Run leaves the action's own in-progress state (e.g. a running [Tween]) survives to pick back up from where it was if this node runs again later.
 func _decorator_time_limit(delta: float) -> Status:
 	_dec_elapsed += delta
 	var limit : float = decorator.get("seconds", 0.0) as float
 
 	if limit > 0.0 and _dec_elapsed >= limit:
-		if int(decorator.get("on_timeout", 0)) == 0:
-			dirty = true
 		return Status.FAILURE
 
 	return tick(delta)
@@ -500,11 +474,19 @@ func do_tick(delta: float) -> Status:
 		ticked.emit(muted_status)
 		return muted_status
 	
-	if last_status != Status.RUNNING: # Node is not in RUNNING state during previous frame
+	# Node is not in RUNNING state during previous frame
+	if last_status != Status.RUNNING:
 		last_status = -1
 		_connect_blackboard_signals()
 		_reset_decorator_state()
 		on_start()
+		
+		if last_status == Status.ERROR:
+			last_tick_time = Time.get_ticks_msec()
+			on_end(Status.ERROR)
+			_disconnect_blackboard_signals()
+			ticked.emit(Status.ERROR)
+			return Status.ERROR
 
 	var status: Status = _tick_with_decorator(delta)
 
@@ -514,7 +496,7 @@ func do_tick(delta: float) -> Status:
 	# because it needs to report the successor's *real* status instead of a fixed one.
 	if status == Status.SUCCESS and output and not allows_multiple_outputs and conditions.is_empty() and not _manual_successor_propagation():
 		tick_next(delta)
-
+	
 	last_status = status
 	last_tick_time = Time.get_ticks_msec()
 
@@ -524,6 +506,21 @@ func do_tick(delta: float) -> Status:
 
 	ticked.emit(status)
 	return status
+
+## Routes [method tick] through [member decorator] (when this is an [code]action_node[/code] with a decorator set); returns the decorated [enum Status]. Called by [method do_tick] instead of [method tick] directly.
+func _tick_with_decorator(delta: float) -> Status:
+	if !supports_decorator():
+		return tick(delta)
+
+	match String(decorator.get("type", "none")):
+		"inverter": return _decorator_inverter(delta)
+		"force": return _decorator_force(delta)
+		"repeater": return _decorator_repeater(delta)
+		"time_limit": return _decorator_time_limit(delta)
+		"cooldown": return _decorator_cooldown(delta)
+		"delay": return _decorator_delay(delta)
+		"condition": return _decorator_condition(delta)
+		_: return tick(delta) # "none", or an unrecognized type
 
 ## Adds [param n] as a successor of this node. If [member output] is [code]true[/code] (no [member conditions] set), [param n] is appended to [member _next_ref] (unless already present); [param from_port] is unused in this case. Otherwise, [param n] becomes the successor of the condition at index [param from_port], replacing any previous one.
 func add_next(n : BehaviorNode, from_port : int) -> void:
@@ -574,7 +571,18 @@ func tick_condition(delta:float,index:int = 0) -> Status:
 		return Status.FAILURE
 	push_error("BehaviorNode %s has less than %s conditions" % [self, index+1])
 	return Status.FAILURE
-
+## Resolves a property value. If [code]resolve node[/code] is set to [code]true[/code] and the given property value is a nodepath, returnes the resolved nodepath via [method _resolve_node]. Returns the blackboard value if bound, otherwise returns the fallback local variable.
+func eval(property_name: StringName,resolve_node:bool=false, fallback_value: Variant = null) -> Variant:
+	if fallback_value == null:
+		fallback_value = get(property_name)
+		
+	var key: StringName = _blackboard_bindings.get(property_name, &"")
+	if key != &"":
+		var graph: BehaviorGraph = get_graph()
+		if graph != null:
+			var value: Variant = graph.get_blackboard_value(key, fallback_value)
+			return _resolve_node(value) if (resolve_node and value is NodePath) else value
+	return fallback_value
 ## Accepts either an absolute or relative [NodePath] (resolved through the owning [BehaviorAgent]'s [member BehaviorAgent.actor]) or a direct reference to a [Node] (useful if [param value] is connected to a blackboard variable containing the node).
 func _resolve_node(value: Variant) -> Node:
 	if Engine.is_editor_hint():
@@ -593,17 +601,7 @@ func _resolve_node(value: Variant) -> Node:
 		return resolved
 	return value as Node
 
-## Resolves a property value. Returns the blackboard value if bound, otherwise returns the fallback local variable.
-func eval(property_name: StringName, fallback_value: Variant = null) -> Variant:
-	if fallback_value == null:
-		fallback_value = get(property_name)
-		
-	var key: StringName = _blackboard_bindings.get(property_name, &"")
-	if key != &"":
-		var graph: BehaviorGraph = get_graph()
-		if graph != null:
-			return graph.get_blackboard_value(key, fallback_value)
-	return fallback_value
+
 
 ## Serializable form of node, for debug purposes.
 func to_debug_info() -> Dictionary:

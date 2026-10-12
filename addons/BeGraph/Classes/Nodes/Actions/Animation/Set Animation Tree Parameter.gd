@@ -9,7 +9,7 @@ const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
 @export_custom(BG.HINT_NONE, BG.PROPERTY, PROPERTY_USAGE_NIL_IS_VARIANT) var value : Variant = null
 
 func tick(delta: float) -> Status:
-	var target := _resolve_node(eval(&"node")) as AnimationTree
+	var target := eval(&"node",true) as AnimationTree
 	if target == null:
 		return abort("couldn't resolve AnimationTree")
 		

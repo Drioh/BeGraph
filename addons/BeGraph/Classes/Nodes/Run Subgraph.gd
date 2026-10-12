@@ -12,6 +12,7 @@ const DEPTH_META : StringName = &"begraph_subgraph_depth"
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var access_point : StringName = &""
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var share_blackboard : bool = true
 
+var _cache_key : Array = [] # [subgraph_resource, access_point_wanted]
 var _runtime_graph : BehaviorGraph = null
 var _entry : BehaviorNode = null
 
@@ -41,26 +42,39 @@ func _build_runtime_graph() -> bool:
 	var agent : Node = get_agent()
 	if agent == null:
 		return false
-		
+
 	var source : BehaviorGraph = eval(&"subgraph") as BehaviorGraph
 	if source == null:
 		return false
-		
+
 	var depth : int = int(parent.get_meta(DEPTH_META, 0)) + 1
 	if depth > MAX_DEPTH:
 		return false
-		
-	var runtime : BehaviorGraph = source.duplicate_deep(Resource.DEEP_DUPLICATE_ALL) as BehaviorGraph
+
+	var wanted : String = String(eval(&"access_point"))
+	var key : Array = [source, wanted]
+
+	var runtime : BehaviorGraph
+	if _cache_key == key and _cached_runtime != null:
+		runtime = _cached_runtime
+		# ripristina lo stato dei nodi come se fosse la prima esecuzione
+		for n : BehaviorNode in runtime.nodes.values():
+			n.last_status = -1
+	else:
+		runtime = source.duplicate_deep(Resource.DEEP_DUPLICATE_ALL) as BehaviorGraph
+		runtime.setup_runtime(agent)
+		_cached_runtime = runtime
+		_cache_key = key
+
 	runtime.set_meta(DEPTH_META, depth)
-	runtime.setup_runtime(agent)
-	
-	var entry : BehaviorNode = _find_entry(runtime, String(eval(&"access_point")))
+
+	var entry : BehaviorNode = _find_entry(runtime, wanted)
 	if entry == null:
 		return false
-		
+
 	if eval(&"share_blackboard") == true:
 		_share_blackboard(parent, runtime)
-		
+
 	_runtime_graph = runtime
 	_entry = entry
 	return true
@@ -68,6 +82,7 @@ func _build_runtime_graph() -> bool:
 func _release_runtime_graph() -> void:
 	_runtime_graph = null
 	_entry = null
+	# _cached_runtime NON va azzerato: resta per il prossimo ciclo
 
 func _find_entry(graph : BehaviorGraph, wanted : String) -> BehaviorNode:
 	for n in graph.get_nodes_by_category("access_point_node"):

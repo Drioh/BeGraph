@@ -11,7 +11,7 @@ enum Mode { MODULATE, SELF_MODULATE }
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var color : Color = Color.WHITE
 
 func tick(delta: float) -> Status:
-	var target := _resolve_node(eval(&"node")) as CanvasItem
+	var target := eval(&"node",true) as CanvasItem
 	if target == null:
 		return abort("couldn't resolve CanvasItem")
 		

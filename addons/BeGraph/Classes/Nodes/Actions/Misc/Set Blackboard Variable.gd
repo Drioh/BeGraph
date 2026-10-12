@@ -1,7 +1,7 @@
 @tool
 extends BehaviorNode
 
-const DISPLAY_NAME : String = "Set Variable"
+const DISPLAY_NAME : String = "Set Blackboard Variable"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
 const DISPLAY_INFO : String = "Writes {value} into the blackboard entry named {variable_name}."
 

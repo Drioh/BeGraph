@@ -28,14 +28,14 @@ var _elapsed : float = 0.0
 
 func on_start() -> void:
 	_elapsed = 0.0
-	_node_ref = _resolve_node(eval(&"node"))
+	_node_ref = eval(&"node",true)
 	if _node_ref == null:
 		abort("couldn't resolve node to rotate")
 		return
 		
 	_is_3d = _node_ref is Node3D
 	if (eval(&"mode") as Mode) == Mode.TOWARDS_NODE:
-		_target_node_ref = _resolve_node(eval(&"target_node"))
+		_target_node_ref = eval(&"target_node",true)
 		if _target_node_ref == null:
 			abort("couldn't resolve target node to face")
 			return

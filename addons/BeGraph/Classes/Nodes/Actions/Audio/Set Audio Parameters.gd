@@ -9,7 +9,7 @@ const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var pitch_scale : float = 1.0
 
 func tick(delta: float) -> Status:
-	var target := _resolve_node(eval(&"node"))
+	var target := eval(&"node",true)
 	if target == null or not (target is AudioStreamPlayer or target is AudioStreamPlayer2D or target is AudioStreamPlayer3D):
 		return abort("couldn't resolve an audio player")
 		

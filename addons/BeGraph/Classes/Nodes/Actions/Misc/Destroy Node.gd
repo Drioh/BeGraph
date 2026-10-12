@@ -8,7 +8,7 @@ const DISPLAY_INFO : String = "Queues {node} for deletion via queue_free()."
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var node : NodePath = NodePath("")
 
 func tick(delta: float) -> Status:
-	var target : Node = _resolve_node(eval(&"node"))
+	var target : Node = eval(&"node",true)
 	if target == null:
 		return abort("cannot resolve node to destroy")
 		

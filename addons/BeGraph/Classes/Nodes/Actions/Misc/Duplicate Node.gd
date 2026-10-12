@@ -9,8 +9,8 @@ const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var variable_name : StringName = &""
 
 func tick(delta: float) -> Status:
-	var target := _resolve_node(eval(&"node"))
-	var parent_node := _resolve_node(eval(&"parent"))
+	var target := eval(&"node",true)
+	var parent_node := eval(&"parent",true)
 	
 	if target == null or parent_node == null:
 		return abort("couldn't resolve node or parent")

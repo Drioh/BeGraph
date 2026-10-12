@@ -19,41 +19,59 @@ const DECORATOR_ROWS: Array[Dictionary] = [
 	{
 		"type": "inverter",
 		"label": "Inverter",
-		"tooltip": "Ticks the node's own action and swaps its outcome: SUCCESS becomes FAILURE and FAILURE becomes SUCCESS. RUNNING and ERROR are returned unchanged."
+		"tooltip": "Ticks the node's own action and swaps its outcome:\n
+		SUCCESS becomes FAILURE and FAILURE becomes SUCCESS.\n
+		RUNNING and ERROR are returned unchanged."
 	},
 	{
 		"type": "force",
 		"label": "Force",
 		"variant_options": "Success,Failure",
-		"tooltip": "Ticks the action as usual, but once it stops RUNNING, replaces its real outcome with the fixed result chosen in the Value column. ERROR is left untouched, since it signals a genuine abort rather than a normal outcome.",
-		"variant_tooltip": "Which fixed result to report once the action finishes. Success: always reports SUCCESS. Failure: always reports FAILURE. Has no effect while the action is RUNNING or if it returns ERROR."
+		"tooltip": "Repleaces this node real outcome with the fixed result chosen in the Value column.\n
+		ERROR is left untouched, since it signals a genuine abort rather than a normal outcome.",
+		"variant_tooltip": "Which fixed result to report once the action finishes.\n
+		Success: always reports SUCCESS. \n
+		Failure: always reports FAILURE. \n
+		Has no effect while the action is RUNNING or if it returns ERROR."
 	},
 	{
 		"type": "repeater",
 		"label": "Repeater",
 		"variant_options": "Times,Until Success,Until Failure",
-		"tooltip": "Reruns the action attempt after attempt instead of ticking it only once. Use the child rows below to control how many attempts are made (or for how long it keeps retrying) and how long to wait between attempts.\n\nNote: a node using this decorator should have no outgoing connection of its own, since the action's own successor (if it calls tick_next itself) fires on every single attempt.",
-		"variant_tooltip": "Times: repeats a fixed number of attempts, read from \"Count / Timeout\" below (0 = unlimited). Until Success: keeps retrying until the action returns SUCCESS, or gives up as FAILURE once the optional timeout elapses. Until Failure: keeps retrying until the action returns FAILURE, or gives up as FAILURE once the optional timeout elapses."
+		"tooltip": "Reruns the action attempt after attempt instead of ticking it only once.\n
+		Use the child rows below to control how many attempts are made (or for how long it keeps retrying) and how long to wait between attempts.\n\n
+		Note: a node using this decorator should have no outgoing connection of its own, since the action's own successor fires on every single attempt.",
+		"variant_tooltip": "Times: repeats a fixed number of attempts, read from \"Count / Timeout\" below (0 = unlimited).\n
+		Until Success: keeps retrying until the action returns SUCCESS, or gives up as FAILURE once the optional timeout elapses.\n
+		Until Failure: keeps retrying until the action returns FAILURE, or gives up as FAILURE once the optional timeout elapses."
 	},
 	{
 		"type": "time_limit",
 		"label": "Time Limiter",
-		"tooltip": "Ticks the action normally, but forces FAILURE if it is still RUNNING once the number of seconds in the Value column has elapsed."
+		"tooltip": "Forces FAILURE outcome if this node is still RUNNING\n
+		once the number of seconds in the Value column has elapsed."
 	},
 	{
 		"type": "cooldown",
 		"label": "Cooldown",
-		"tooltip": "Once the action finishes, makes this node return FAILURE immediately - without even ticking the action - for the number of seconds set in the Value column."
+		"tooltip": "Once the action finishes, makes this node return FAILURE immediately - without even \n
+		ticking the action - for the number of seconds set in the Value column."
 	},
 	{
 		"type": "delay",
 		"label": "Delay",
-		"tooltip": "Adds a pause of the duration set in the Value column, either before the action starts ticking for the first time, or after it finishes but before its result is actually reported (see the \"When\" row below)."
+		"tooltip": "Adds a pause of the duration set in the Value column, \n
+		either before the action starts ticking for the first time, \n
+		or after it finishes but before its result is actually reported (see the \"When\" row below)."
 	},
 	{
 		"type": "condition",
 		"label": "Condition",
-		"tooltip": "Gates the action behind a boolean Blackboard variable. Drag a boolean variable from the blackboard panel onto the Value column to bind it: while bound and true, the action ticks normally; while bound and false, this node returns FAILURE immediately without ticking it. Unbound, the action always ticks normally."
+		"tooltip": "Gates the action behind a boolean Blackboard variable. \n
+		Drag a boolean variable from the blackboard panel onto the Value column to bind it:\n
+		while bound and true, the action ticks normally; \n
+		while bound and false, this node returns FAILURE immediately without ticking it. \n
+		Unbound, the action always ticks normally."
 	},
 ]
 

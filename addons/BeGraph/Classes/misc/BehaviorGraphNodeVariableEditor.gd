@@ -5,201 +5,7 @@ extends PanelContainer
 
 ## Property usage flags used when instantiating the inline [EditorProperty].
 const EDITOR_USAGES = PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_STORAGE
-## Maps each [enum Variant.Type] to the list of [enum Variant.Type] values that are considered compatible with it.
-const CONVERSION_DICT: Dictionary = {
-	TYPE_NIL: [
-		TYPE_NIL,
-	],
 
-	TYPE_BOOL: [
-		TYPE_BOOL,
-		TYPE_INT,
-		TYPE_FLOAT,
-	],
-
-	TYPE_INT: [
-		TYPE_INT,
-		TYPE_FLOAT,
-		TYPE_BOOL,
-		TYPE_STRING,
-	],
-
-	TYPE_FLOAT: [
-		TYPE_FLOAT,
-		TYPE_INT,
-		TYPE_BOOL,
-		TYPE_STRING,
-	],
-
-	TYPE_STRING: [
-		TYPE_STRING,
-		TYPE_STRING_NAME,
-		TYPE_NODE_PATH,
-	],
-
-	TYPE_VECTOR2: [
-		TYPE_VECTOR2,
-		TYPE_VECTOR2I,
-	],
-
-	TYPE_VECTOR2I: [
-		TYPE_VECTOR2I,
-		TYPE_VECTOR2,
-	],
-
-	TYPE_RECT2: [
-		TYPE_RECT2,
-		TYPE_RECT2I,
-	],
-
-	TYPE_RECT2I: [
-		TYPE_RECT2I,
-		TYPE_RECT2,
-	],
-
-	TYPE_VECTOR3: [
-		TYPE_VECTOR3,
-		TYPE_VECTOR3I,
-	],
-
-	TYPE_VECTOR3I: [
-		TYPE_VECTOR3I,
-		TYPE_VECTOR3,
-	],
-
-	TYPE_TRANSFORM2D: [
-		TYPE_TRANSFORM2D,
-	],
-
-	TYPE_VECTOR4: [
-		TYPE_VECTOR4,
-		TYPE_VECTOR4I,
-	],
-
-	TYPE_VECTOR4I: [
-		TYPE_VECTOR4I,
-		TYPE_VECTOR4,
-	],
-
-	TYPE_PLANE: [
-		TYPE_PLANE,
-		TYPE_VECTOR3,
-	],
-
-	TYPE_QUATERNION: [
-		TYPE_QUATERNION,
-		TYPE_BASIS,
-	],
-
-	TYPE_AABB: [
-		TYPE_AABB,
-	],
-
-	TYPE_BASIS: [
-		TYPE_BASIS,
-		TYPE_QUATERNION,
-	],
-
-	TYPE_TRANSFORM3D: [
-		TYPE_TRANSFORM3D,
-		TYPE_PROJECTION,
-	],
-
-	TYPE_PROJECTION: [
-		TYPE_PROJECTION,
-		TYPE_TRANSFORM3D,
-	],
-
-	TYPE_COLOR: [
-		TYPE_COLOR,
-		TYPE_STRING,
-	],
-
-	TYPE_STRING_NAME: [
-		TYPE_STRING_NAME,
-		TYPE_STRING,
-	],
-
-	TYPE_NODE_PATH: [
-		TYPE_NODE_PATH,
-		TYPE_STRING,
-	],
-
-	TYPE_RID: [
-		TYPE_RID,
-	],
-
-	TYPE_OBJECT: [
-		TYPE_OBJECT,
-		TYPE_NIL,
-	],
-
-	TYPE_CALLABLE: [
-		TYPE_CALLABLE,
-	],
-
-	TYPE_SIGNAL: [
-		TYPE_SIGNAL,
-	],
-
-	TYPE_DICTIONARY: [
-		TYPE_DICTIONARY,
-	],
-
-	TYPE_ARRAY: [
-		TYPE_ARRAY,
-	],
-
-	TYPE_PACKED_BYTE_ARRAY: [
-		TYPE_PACKED_BYTE_ARRAY,
-		TYPE_ARRAY,
-	],
-
-	TYPE_PACKED_INT32_ARRAY: [
-		TYPE_PACKED_INT32_ARRAY,
-		TYPE_ARRAY,
-	],
-
-	TYPE_PACKED_INT64_ARRAY: [
-		TYPE_PACKED_INT64_ARRAY,
-		TYPE_ARRAY,
-	],
-
-	TYPE_PACKED_FLOAT32_ARRAY: [
-		TYPE_PACKED_FLOAT32_ARRAY,
-		TYPE_ARRAY,
-	],
-
-	TYPE_PACKED_FLOAT64_ARRAY: [
-		TYPE_PACKED_FLOAT64_ARRAY,
-		TYPE_ARRAY,
-	],
-
-	TYPE_PACKED_STRING_ARRAY: [
-		TYPE_PACKED_STRING_ARRAY,
-		TYPE_ARRAY,
-	],
-
-	TYPE_PACKED_VECTOR2_ARRAY: [
-		TYPE_PACKED_VECTOR2_ARRAY,
-		TYPE_ARRAY,
-	],
-
-	TYPE_PACKED_VECTOR3_ARRAY: [
-		TYPE_PACKED_VECTOR3_ARRAY,
-		TYPE_ARRAY,
-	],
-
-	TYPE_PACKED_COLOR_ARRAY: [
-		TYPE_PACKED_COLOR_ARRAY,
-		TYPE_ARRAY,
-	],
-
-	TYPE_PACKED_VECTOR4_ARRAY: [
-		TYPE_PACKED_VECTOR4_ARRAY,
-		TYPE_ARRAY,
-	],
-}
 ## Container holding, in order: the blackboard-link/unlink UI and the inline [EditorProperty] (or blackboard reference label).
 @onready var h_box_container: HBoxContainer = %HBoxContainer
 ## Icon representing the variable's [enum Variant.Type].
@@ -397,7 +203,7 @@ func _populate_popup() -> void:
 	var theme := EditorInterface.get_editor_theme()
 	for blackboard_property in node._graph_ref.get_ref().blackboard:
 		var t: int = typeof(blackboard_property.value)
-		if t not in CONVERSION_DICT[type]:
+		if t not in BG.CONVERSION_DICT[type]:
 			continue
 		popup.add_item(blackboard_property.name)
 		popup.set_item_icon(-1, theme.get_icon(type_string(t), "EditorIcons"))
@@ -424,7 +230,7 @@ func _can_drop_data(at_position, data):
 		return false
 
 	var global_pos = get_global_transform() * at_position
-	var cond_1:bool=_get_slot_at(self,global_pos)!=null and typeof(data["resource"].value) in CONVERSION_DICT[type]
+	var cond_1:bool=_get_slot_at(self,global_pos)!=null and typeof(data["resource"].value) in BG.CONVERSION_DICT[type]
 	var cond_2 : bool = typeof(data["resource"].value) == TYPE_NIL
 	return cond_1 or cond_2
 
@@ -442,7 +248,7 @@ func update_bb_name(n:StringName)->void:
 
 ## Callback for [signal BlackboardVariable.value_changed] on [member linked_property]: if the new value's type is no longer compatible with [member type], unbinds the property and switches back to the plain value editor.
 func update_bb_value(v:Variant)->void:
-	if not typeof(v) in CONVERSION_DICT[type]:
+	if not typeof(v) in BG.CONVERSION_DICT[type]:
 		node.set_node_property_blackboard_key(key)
 		linked=false
 
@@ -473,7 +279,7 @@ func _notification(what: int) -> void:
 		if not drag_data.has("resource"):
 			return
 		
-		var cond_1 : bool = typeof(drag_data["resource"].value) in CONVERSION_DICT[type]
+		var cond_1 : bool = typeof(drag_data["resource"].value) in BG.CONVERSION_DICT[type]
 		var cond_2 : bool = typeof(drag_data["resource"].value) == TYPE_NIL
 
 		var prefix : String = "" if (cond_1 or cond_2) else "not_"
