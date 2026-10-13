@@ -7,31 +7,31 @@
 [ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="4_7nfy3"]
 [ext_resource type="Script" uid="uid://c82q06qm6p887" path="res://addons/BeGraph/Classes/Nodes/Actions/Print/Print String.gd" id="5_7nfy3"]
 
-[sub_resource type="Resource" id="Resource_mp8hq"]
+[sub_resource type="Resource" id="Resource_7nxv6"]
 script = ExtResource("1_srmox")
 name = &"Self"
 export_variable = true
 value = NodePath("")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
-[sub_resource type="Resource" id="Resource_s8rxi"]
+[sub_resource type="Resource" id="Resource_cmila"]
 script = ExtResource("1_srmox")
 name = &"Points"
 export_variable = true
-value = []
+value = [NodePath(""), NodePath(""), NodePath("")]
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
-[sub_resource type="Resource" id="Resource_qqxeh"]
+[sub_resource type="Resource" id="Resource_7nfy3"]
 script = ExtResource("1_srmox")
-name = &"Loop"
+name = &"loop"
 export_variable = true
-value = false
+value = 0
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
-[sub_resource type="Resource" id="Resource_cmila"]
-resource_name = "AccessPointGraphNode"
+[sub_resource type="Resource" id="Resource_srmox"]
+resource_name = "_GraphNode_34644"
 script = ExtResource("3_6ad3o")
-label = "Starting Point"
+label = "Start"
 node_category = "access_point_node"
 output = true
 is_starting_node = true
@@ -41,34 +41,34 @@ _next_ref = Array[StringName]([&"BehaviorGraphNode"])
 breakpointable = true
 mutable = true
 
-[sub_resource type="Resource" id="Resource_btw7s"]
+[sub_resource type="Resource" id="Resource_6ad3o"]
 resource_name = "BehaviorGraphNode"
 script = ExtResource("4_6ad3o")
 instruction = "Patrol {node} ({mode}, speed {speed})"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(627.7184, -68.14474)
+position_in_graph = Vector2(540.67645, -58.08)
 _graph_ref = Object(WeakRef,"script":null)
 
-_next_ref = Array[StringName]([&"_GraphNode_38745"])
+_next_ref = Array[StringName]([&"_GraphNode_47810"])
 _blackboard_bindings = Dictionary[StringName, StringName]({
-&"mode": &"Loop",
+&"mode": &"loop",
 &"node": &"Self",
 &"waypoints": &"Points"
 })
 breakpointable = true
 mutable = true
 
-[sub_resource type="Resource" id="Resource_d7jy5"]
-resource_name = "_GraphNode_38745"
+[sub_resource type="Resource" id="Resource_mp8hq"]
+resource_name = "_GraphNode_47810"
 script = ExtResource("5_7nfy3")
 text = "ARRIVATO"
 instruction = "Print {text}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1342.8285, -106.86474)
+position_in_graph = Vector2(1172.2965, -38.72)
 _graph_ref = Object(WeakRef,"script":null)
 
 breakpointable = true
@@ -76,21 +76,21 @@ mutable = true
 
 [resource]
 script = ExtResource("4_7nfy3")
-blackboard = Array[ExtResource("1_srmox")]([SubResource("Resource_mp8hq"), SubResource("Resource_s8rxi"), SubResource("Resource_qqxeh")])
+blackboard = Array[ExtResource("1_srmox")]([SubResource("Resource_7nxv6"), SubResource("Resource_cmila"), SubResource("Resource_7nfy3")])
 nodes = Dictionary[StringName, ExtResource("2_7nxv6")]({
-&"": SubResource("Resource_cmila"),
-&"BehaviorGraphNode": SubResource("Resource_btw7s"),
-&"_GraphNode_38745": SubResource("Resource_d7jy5")
+&"BehaviorGraphNode": SubResource("Resource_6ad3o"),
+&"_GraphNode_34644": SubResource("Resource_srmox"),
+&"_GraphNode_47810": SubResource("Resource_mp8hq")
 })
 connections = Array[Dictionary]([{
-"from_node": &"AccessPointGraphNode",
+"from_node": &"_GraphNode_34644",
 "from_port": 0,
 "to_node": &"BehaviorGraphNode",
 "to_port": 0
 }, {
 "from_node": &"BehaviorGraphNode",
 "from_port": 0,
-"to_node": &"_GraphNode_38745",
+"to_node": &"_GraphNode_47810",
 "to_port": 0
 }])
 _agent_ref = Object(WeakRef,"script":null)

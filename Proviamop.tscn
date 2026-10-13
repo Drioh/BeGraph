@@ -46,7 +46,7 @@ script = SubResource("GDScript_bcbru")
 behavior_agent = NodePath("BehaviorAgent")
 overridable_blackboard_properties/Self = NodePath(".")
 overridable_blackboard_properties/Points = null
-overridable_blackboard_properties/Loop = null
+overridable_blackboard_properties/loop = null
 
 [node name="BehaviorAgent" type="Node" parent="." unique_id=954077962 node_paths=PackedStringArray("actor")]
 script = ExtResource("1_1yirt")
@@ -55,5 +55,5 @@ behavior_graph = ExtResource("2_83gc7")
 starting_point = 0
 overridable_blackboard_properties/Self = NodePath(".")
 overridable_blackboard_properties/Points = null
-overridable_blackboard_properties/Loop = null
+overridable_blackboard_properties/loop = null
 metadata/_custom_type_script = "uid://cj0fv54i6ere"

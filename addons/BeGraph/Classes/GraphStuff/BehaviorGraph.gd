@@ -33,6 +33,7 @@ var _agent_ref : WeakRef = weakref(null)
 func _init() -> void:
 	if nodes.is_empty():
 		var first_node = AccessPointNode.new()
+		first_node.resource_name = StringName("_GraphNode_%d" % randi_range(10000, 99999))
 		add_node(first_node)
 
 
@@ -44,7 +45,6 @@ func add_node(node: BehaviorNode) -> void:
 		return
 	node._graph_ref = weakref(self)
 	nodes[StringName(node.resource_name)] = node
-	print(nodes)
 
 ## Removes [param node] from [member nodes].
 func remove_node(node: BehaviorNode) -> void:
