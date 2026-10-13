@@ -83,17 +83,16 @@ func setup_variable_editor(n : BehaviorNode,property:Dictionary,bb:Array[Blackbo
 	popup.index_pressed.connect(_on_popup_index_pressed)
 	popup.clear()
 	
-	if property.has("blackboard_key"):
-		var saved_key: StringName = property["blackboard_key"]
-		if saved_key == &"":
-			return true
-	
-		for v in bb:
-			if v.name!=saved_key:
-				continue
-			linked_property=v
-			bb_reference.text=saved_key
-			linked=true
+	var saved_key: StringName = node.get_blackboard_key(key)
+	if saved_key == &"":
+		return true
+
+	for v in bb:
+		if v.name != saved_key:
+			continue
+		linked_property = v
+		bb_reference.text = saved_key
+		linked = true
 	return true
 
 ## Rebuilds [member var_property_editor] from scratch using the [param property] info dictionary.[br]

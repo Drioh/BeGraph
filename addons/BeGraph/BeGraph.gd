@@ -55,9 +55,11 @@ func _enter_tree():
 	_confirm_dialog = ConfirmationDialog.new()
 	_confirm_dialog.dialog_text = "Abandon current Behavior Graph without saving changes?"
 	_confirm_dialog.ok_button_text = "Save changes and open a new graph"
-	_confirm_dialog.cancel_button_text = "Cancel edit"
+	_confirm_dialog.cancel_button_text = "Do not save changes and open a new graph"
+	_confirm_dialog.add_button("Cancel")
 	_confirm_dialog.confirmed.connect(_on_abandon_confirmed)
 	_confirm_dialog.canceled.connect(_on_abandon_canceled)
+	
 	EditorInterface.get_base_control().add_child(_confirm_dialog)
 	
 	var fs_dock = get_editor_interface().get_file_system_dock()
