@@ -78,6 +78,7 @@ output = true
 position_in_graph = Vector2(1300, -60)
 _graph_ref = Object(WeakRef,"script":null)
 
+_next_ref = Array[StringName]([&"_GraphNode_30920"])
 breakpointable = true
 mutable = true
 
