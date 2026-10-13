@@ -3,7 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Check Bool State"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon.svg"
-const DISPLAY_INFO : String = "Reads a boolean property or a zero-argument boolean method, by name, on {node} and branches on it. {invert} flips the read value before branching - useful when the underlying name reads backwards relative to the condition you want (e.g. property 'disabled' to ask 'is it enabled?')."
+const DISPLAY_INFO : String = "Reads a boolean property or zero-argument boolean method on {node} and branches accordingly. {invert} flips the read value."
 
 enum Source { PROPERTY, METHOD }
 
@@ -15,11 +15,11 @@ enum Source { PROPERTY, METHOD }
 var _target : Node = null
 
 func on_start() -> void:
-	_target = _resolve_node(eval(&"node"))
+	_target = eval(&"node", true)
 
 func on_blackboard_property_changed(key: StringName) -> void:
 	if key == get_blackboard_key(&"node"):
-		_target = _resolve_node(eval(&"node"))
+		_target = eval(&"node", true)
 
 func tick(delta: float) -> Status:
 	if _target == null or not is_instance_valid(_target):
@@ -43,8 +43,10 @@ func tick(delta: float) -> Status:
 	if eval(&"invert"):
 		result = not result
 
-	tick_condition(delta, 0 if result else 1)
-	return Status.RUNNING
+	return tick_condition(delta, 0 if result else 1)
+
+func on_end(_status: Status) -> void:
+	_target = null
 
 func set_instruction() -> String: return "Check {node}'s {member_name} ({source})"
 func set_node_category() -> String: return "control_flow_node"

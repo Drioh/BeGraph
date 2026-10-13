@@ -12,7 +12,7 @@ const DISPLAY_INFO : String = "Plays {player} (AudioStreamPlayer) at the given {
 var _audio_player : AudioStreamPlayer
 
 func on_start() -> void:
-	_audio_player = _resolve_node(eval(&"player")) as AudioStreamPlayer
+	_audio_player = eval(&"player", true) as AudioStreamPlayer
 	if _audio_player == null:
 		abort("couldn't resolve AudioStreamPlayer")
 		return
@@ -21,15 +21,17 @@ func on_start() -> void:
 	_audio_player.pitch_scale = eval(&"pitch_scale") as float
 	_audio_player.play()
 
-func tick(delta: float) -> Status:
+func tick(_delta: float) -> Status:
+	if _audio_player == null or not is_instance_valid(_audio_player):
+		return Status.FAILURE
 	if _audio_player.playing:
 		return Status.RUNNING
-	return tick_next(delta)
-
+	return Status.SUCCESS
 
 func on_end(status: Status) -> void:
-	if status != Status.SUCCESS and _audio_player != null and _audio_player.playing:
+	if status != Status.SUCCESS and _audio_player != null and is_instance_valid(_audio_player) and _audio_player.playing:
 		_audio_player.stop()
+	_audio_player = null
 
 func set_instruction() -> String: return "Play sound on {player} (vol {volume_db} db, pitch {pitch_scale})"
 func set_node_category() -> String: return "action_node"

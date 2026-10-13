@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Timer Wait"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Starts an existing Timer node and waits until it times out."
 
 @export_custom(BG.HINT_NONE, BG.PROPERTY+"Timer") var timer : NodePath = NodePath("")
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var wait_time : float = 1.0
@@ -12,7 +13,7 @@ var _fired : bool = false
 
 func on_start() -> void:
 	_fired = false
-	_timer_ref = _resolve_node(eval(&"timer")) as Timer
+	_timer_ref = eval(&"timer", true) as Timer
 	if _timer_ref == null:
 		abort("couldn't resolve Timer node")
 		return
@@ -24,9 +25,9 @@ func on_start() -> void:
 	_timer_ref.one_shot = true
 	_timer_ref.start()
 
-func tick(delta: float) -> Status:
+func tick(_delta: float) -> Status:
 	if _fired:
-		return tick_next(delta)
+		return Status.SUCCESS
 	return Status.RUNNING
 
 func _on_timeout() -> void:
@@ -37,6 +38,7 @@ func on_end(_status: Status) -> void:
 		if _timer_ref.timeout.is_connected(_on_timeout):
 			_timer_ref.timeout.disconnect(_on_timeout)
 		_timer_ref.stop()
+	_timer_ref = null
 
 func set_instruction() -> String: return "Wait for {timer} ({wait_time}s)"
 func set_node_category() -> String: return "action_node"

@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Wander"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Moves a node randomly around an origin or its current position within a radius, optionally pausing between points."
 
 @export_custom(PROPERTY_HINT_NODE_TYPE, BG.PROPERTY+ "Node2D,Node3D") var node : NodePath = NodePath("")
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var radius : float = 200.0
@@ -20,7 +21,7 @@ var _wait_left : float = 0.0
 var _visited : int = 0
 
 func on_start() -> void:
-	_node_ref = _resolve_node(eval(&"node"))
+	_node_ref = eval(&"node", true)
 	if _node_ref == null:
 		abort("couldn't resolve node to wander")
 		return
@@ -31,6 +32,9 @@ func on_start() -> void:
 	_visited = 0
 
 func tick(delta: float) -> Status:
+	if _node_ref == null or not is_instance_valid(_node_ref):
+		return Status.FAILURE
+
 	if _waiting:
 		_wait_left -= delta
 		if _wait_left > 0.0:
@@ -49,11 +53,17 @@ func tick(delta: float) -> Status:
 	_visited += 1
 	var limit : int = eval(&"points_to_visit") as int
 	if limit > 0 and _visited >= limit:
-		return tick_next(delta)
+		return Status.SUCCESS
 		
 	_wait_left = eval(&"wait_time") as float
 	_waiting = _wait_left > 0.0
 	return Status.RUNNING
+
+func on_end(_status: Status) -> void:
+	_node_ref = null
+	_has_dest = false
+	_waiting = false
+	_visited = 0
 
 func _pick_destination() -> Vector3:
 	var center : Vector3 = _origin if eval(&"around_start") else _get_position(_node_ref)

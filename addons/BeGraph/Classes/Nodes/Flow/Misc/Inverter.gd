@@ -5,6 +5,9 @@ const DISPLAY_NAME : String = "Inverter"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon.svg"
 const DISPLAY_INFO : String = "Ticks its successor and inverts the outcome: SUCCESS becomes FAILURE and vice versa."
 
+func _manual_successor_propagation() -> bool:
+	return true
+
 func tick(delta: float) -> Status:
 	if _next_ref.size() == 0:
 		return Status.FAILURE

@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Check Velocity"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon.svg"
+const DISPLAY_INFO : String = "Checks whether the linear speed of a CharacterBody or RigidBody exceeds a threshold along the selected axis."
 
 enum Axis { TOTAL, HORIZONTAL, VERTICAL }
 
@@ -13,11 +14,11 @@ enum Axis { TOTAL, HORIZONTAL, VERTICAL }
 var _target : Node = null
 
 func on_start() -> void:
-	_target = _resolve_node(eval(&"node"))
+	_target = eval(&"node", true)
 
 func on_blackboard_property_changed(key: StringName) -> void:
 	if key == get_blackboard_key(&"node"):
-		_target = _resolve_node(eval(&"node"))
+		_target = eval(&"node", true)
 
 func tick(delta: float) -> Status:
 	if _target == null or not is_instance_valid(_target):
@@ -27,8 +28,10 @@ func tick(delta: float) -> Status:
 	if speed < 0.0:
 		return abort("unsupported body type")
 		
-	tick_condition(delta, 0 if speed > (eval(&"threshold") as float) else 1)
-	return Status.RUNNING
+	return tick_condition(delta, 0 if speed > (eval(&"threshold") as float) else 1)
+
+func on_end(_status: Status) -> void:
+	_target = null
 
 func _speed_of(n : Node) -> float:
 	var v : Variant

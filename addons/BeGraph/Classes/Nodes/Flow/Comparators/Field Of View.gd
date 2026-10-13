@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Field Of View"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon.svg"
+const DISPLAY_INFO : String = "Checks if target is within node's field of view angle and optional maximum distance."
 
 enum Forward { POS_X, NEG_X, POS_Y, NEG_Y, POS_Z, NEG_Z }
 
@@ -16,16 +17,16 @@ var _node_ref : Node
 var _target_ref : Node
 
 func on_start() -> void:
-	_node_ref = _resolve_node(eval(&"node"))
-	_target_ref = _resolve_node(eval(&"target"))
+	_node_ref = eval(&"node", true)
+	_target_ref = eval(&"target", true)
 	if _node_ref == null:
 		abort("couldn't resolve source node")
 
 func on_blackboard_property_changed(key: StringName) -> void:
 	if key == get_blackboard_key(&"node"):
-		_node_ref = _resolve_node(eval(&"node"))
+		_node_ref = eval(&"node", true)
 	if key == get_blackboard_key(&"target"):
-		_target_ref = _resolve_node(eval(&"target"))
+		_target_ref = eval(&"target", true)
 
 func tick(delta: float) -> Status:
 	if _node_ref == null or not is_instance_valid(_node_ref):
@@ -44,8 +45,11 @@ func tick(delta: float) -> Status:
 		var half_angle : float = deg_to_rad(eval(&"angle") as float) * 0.5
 		in_view = _forward_vector().angle_to(to_target) <= half_angle
 		
-	tick_condition(delta, 0 if in_view else 1)
-	return Status.RUNNING
+	return tick_condition(delta, 0 if in_view else 1)
+
+func on_end(_status: Status) -> void:
+	_node_ref = null
+	_target_ref = null
 
 func _forward_vector() -> Vector3:
 	var local : Vector3

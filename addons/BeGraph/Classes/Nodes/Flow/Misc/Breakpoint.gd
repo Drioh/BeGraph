@@ -3,18 +3,15 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Breakpoint"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon.svg"
+const DISPLAY_INFO : String = "Triggers an engine breakpoint in debug mode if enabled and condition evaluates to true, then continues execution."
 
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var enabled : bool = true
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var condition : bool = true
 
-func tick(delta: float) -> Status:
-	if _next_ref.size() == 0:
-		return Status.FAILURE
-		
+func tick(_delta: float) -> Status:
 	if bool(eval(&"enabled")) and bool(eval(&"condition")):
 		breakpoint
-		
-	return tick_next(delta)
+	return Status.SUCCESS
 
 func set_instruction() -> String: return "Breakpoint (enabled: {enabled}, if: {condition})"
 func set_node_category() -> String: return "control_flow_node"

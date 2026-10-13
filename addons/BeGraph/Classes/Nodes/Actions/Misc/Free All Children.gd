@@ -3,18 +3,19 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Free All Children"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Calls queue_free() on all children of a target node."
 
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var node : NodePath = NodePath("")
 
-func tick(delta: float) -> Status:
-	var target := _resolve_node(eval(&"node"))
+func tick(_delta: float) -> Status:
+	var target := eval(&"node", true)
 	if target == null:
-		return abort("couldn't resolve target node")
+		return abort("couldn't resolve node")
 		
 	for child in target.get_children():
 		child.queue_free()
 		
-	return tick_next(delta)
+	return Status.SUCCESS
 
 func set_instruction() -> String: return "Free all children of {node}"
 func set_node_category() -> String: return "action_node"

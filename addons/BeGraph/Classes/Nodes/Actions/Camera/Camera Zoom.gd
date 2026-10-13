@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Camera Zoom"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Smoothly zooms a Camera2D (via zoom) or Camera3D (via FOV) over duration seconds."
 
 const BASE_FOV_META : StringName = &"begraph_base_fov"
 
@@ -13,7 +14,7 @@ const BASE_FOV_META : StringName = &"begraph_base_fov"
 var _tween : Tween = null
 
 func on_start() -> void:
-	var camera := _resolve_node(eval(&"node"))
+	var camera := eval(&"node", true)
 	if not (camera is Camera2D or camera is Camera3D):
 		abort("couldn't resolve a camera")
 		return
@@ -39,14 +40,15 @@ func on_start() -> void:
 		_tween = camera.create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		_tween.tween_property(camera, "fov", final_fov, dur)
 
-func tick(delta: float) -> Status:
+func tick(_delta: float) -> Status:
 	if _tween != null and _tween.is_running():
 		return Status.RUNNING
-	return tick_next(delta)
+	return Status.SUCCESS
 
 func on_end(_status: Status) -> void:
 	if _tween != null and _tween.is_valid() and _tween.is_running():
 		_tween.kill()
+	_tween = null
 
 func set_instruction() -> String: return "Zoom {node} to {zoom} over {duration}s"
 func set_node_category() -> String: return "action_node"

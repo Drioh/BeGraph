@@ -25,6 +25,7 @@ func on_end(status: Status) -> void: pass
 func abort(error_msg: String = "") -> Status:
 	if not error_msg.is_empty():
 		push_error("BehaviorNode '%s' (%s): %s" % [resource_name, get_script().resource_path.get_file(), error_msg])
+	last_status = Status.ERROR
 	return Status.ERROR
 
 ## The line displayed in the node. use [code]{}[/code] annotation to declare variables.
@@ -95,8 +96,10 @@ var regex :RegEx= RegEx.create_from_string(r"\{([^{}]+)\}")
 var _blackboard_bindings: Dictionary[StringName, StringName] = {}
 
 @export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE) var breakpoint_enabled : bool = false
+@export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE) var breakpointable : bool = false
 
 @export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE) var mute_enabled : bool = false
+@export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE) var mutable : bool = false
 
 ## Emitted whenever a property's blackboard binding is enabled or disabled via [method set_node_property_blackboard_key].
 signal blackboard_key_set(property:StringName,blackboard_key:StringName)
@@ -361,8 +364,8 @@ func _init() -> void:
 	node_category = set_node_category()
 	input = set_input()
 	output=set_output()
-	mute_enabled = set_mutable()
-	breakpoint_enabled=set_breakpointable()
+	mutable = set_mutable()
+	breakpointable=set_breakpointable()
 	build_conditions()
 	instruction = set_instruction()
 	allows_multiple_outputs = set_allows_multiple_outputs()
@@ -578,17 +581,19 @@ func tick_condition(delta:float,index:int = 0) -> Status:
 	push_error("BehaviorNode %s has less than %s conditions" % [self, index+1])
 	return Status.FAILURE
 ## Resolves a property value. If [code]resolve node[/code] is set to [code]true[/code] and the given property value is a nodepath, returnes the resolved nodepath via [method _resolve_node]. Returns the blackboard value if bound, otherwise returns the fallback local variable.
-func eval(property_name: StringName,resolve_node:bool=false, fallback_value: Variant = null) -> Variant:
+func eval(property_name: StringName, resolve_node: bool = false, fallback_value: Variant = null) -> Variant:
 	if fallback_value == null:
 		fallback_value = get(property_name)
 		
+	var val: Variant = fallback_value
 	var key: StringName = _blackboard_bindings.get(property_name, &"")
 	if key != &"":
 		var graph: BehaviorGraph = get_graph()
 		if graph != null:
-			var value: Variant = graph.get_blackboard_value(key, fallback_value)
-			return _resolve_node(value) if (resolve_node and value is NodePath) else value
-	return fallback_value
+			val = graph.get_blackboard_value(key, fallback_value)
+	if resolve_node:
+		return _resolve_node(val)
+	return val
 ## Accepts either an absolute or relative [NodePath] (resolved through the owning [BehaviorAgent]'s [member BehaviorAgent.actor]) or a direct reference to a [Node] (useful if [param value] is connected to a blackboard variable containing the node).
 func _resolve_node(value: Variant) -> Node:
 	if Engine.is_editor_hint():

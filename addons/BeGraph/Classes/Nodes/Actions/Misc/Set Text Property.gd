@@ -12,8 +12,8 @@ enum Mode { REPLACE, APPEND }
 @export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+"Replace,Append") var mode : Mode = Mode.REPLACE
 @export_custom(BG.HINT_NONE, BG.PROPERTY, PROPERTY_USAGE_NIL_IS_VARIANT) var value : Variant = null
 
-func tick(delta: float) -> Status:
-	var target := _resolve_node(eval(&"node"))
+func tick(_delta: float) -> Status:
+	var target := eval(&"node", true)
 	if target == null:
 		return abort("couldn't resolve node")
 
@@ -26,7 +26,7 @@ func tick(delta: float) -> Status:
 		new_txt = str(target.get(prop_name)) + new_txt
 
 	target.set(prop_name, new_txt)
-	return tick_next(delta)
+	return Status.SUCCESS
 
 func set_instruction() -> String: return "Set {node}'s {property}: {value} ({mode})"
 func set_node_category() -> String: return "action_node"

@@ -19,8 +19,11 @@ func on_start() -> void:
 func tick(delta: float) -> Status:
 	_elapsed += delta
 	if _elapsed >= _target:
-		return tick_next(delta)
+		return Status.SUCCESS
 	return Status.RUNNING
+
+func on_end(_status: Status) -> void:
+	_elapsed = 0.0
 
 func set_instruction() -> String: return "Wait {seconds}s"
 func set_node_category() -> String: return "action_node"

@@ -21,24 +21,22 @@ var _cached_target_pos : Variant = null
 func on_start() -> void:
 	_update_target_cache()
 
-# Firma corretta allineata alla classe base BehaviorNode
 func on_blackboard_property_changed(key: StringName) -> void:
 	var current_target_key = eval(&"target")
-	# Se il target inserito corrisponde alla variabile Blackboard appena modificata, aggiorniamo la cache
 	if (current_target_key is StringName or current_target_key is String) and StringName(current_target_key) == key:
 		_update_target_cache()
 
-func tick(delta: float) -> Status:
+func tick(_delta: float) -> Status:
 	var path : String = eval(&"scene_path")
 	var scene := load(path) as PackedScene
 	if scene == null:
 		return abort("couldn't load scene '%s'" % path)
 		
-	var parent_node := _resolve_node(eval(&"parent"))
+	var parent_node := eval(&"parent", true)
 	if parent_node == null:
 		return abort("couldn't resolve parent node")
 		
-	var origin_node : Node = _resolve_node(eval(&"origin"))
+	var origin_node : Node = eval(&"origin", true)
 	if origin_node == null:
 		var agent := get_agent()
 		if agent != null and "actor" in agent:
@@ -54,7 +52,7 @@ func tick(delta: float) -> Status:
 	var spd : float = eval(&"speed") as float
 	var rel : bool = eval(&"relative_to_origin") as bool
 	
-	# Risoluzione Posizione Origine
+	# Origin position resolution
 	var origin_pos_3d : Vector3 = Vector3.ZERO
 	if origin_node is Node2D:
 		origin_pos_3d = Vector3(origin_node.global_position.x, origin_node.global_position.y, 0.0)
@@ -63,14 +61,12 @@ func tick(delta: float) -> Status:
 
 	var spawn_pos_3d : Vector3 = origin_pos_3d + off
 
-	# Calcolo Direzione Finale
+	# Direction computation
 	var final_dir_3d : Vector3 = Vector3.ZERO
 
 	if _cached_target_pos != null:
-		# Punta verso il target memorizzato in cache
 		final_dir_3d = (_cached_target_pos - spawn_pos_3d).normalized()
 	else:
-		# Fallback: usiamo la direzione fissa
 		var dir_val : Vector3 = eval(&"direction") as Vector3
 		final_dir_3d = dir_val.normalized()
 		if rel:
@@ -81,7 +77,6 @@ func tick(delta: float) -> Status:
 			elif origin_node is Node3D:
 				final_dir_3d = (origin_node.global_transform.basis * final_dir_3d).normalized()
 
-	# Posizionamento e Velocità
 	var velocity : Variant = null
 
 	if instance is Node2D:
@@ -114,10 +109,9 @@ func tick(delta: float) -> Status:
 		if graph != null:
 			graph.set_blackboard_value(var_name, instance)
 
-	return tick_next(delta)
+	return Status.SUCCESS
 
-# Firma corretta allineata alla classe base BehaviorNode
-func on_end(status: Status) -> void:
+func on_end(_status: Status) -> void:
 	_cached_target_pos = null
 
 func _update_target_cache() -> void:

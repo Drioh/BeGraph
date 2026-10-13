@@ -5,9 +5,6 @@
 [ext_resource type="Resource" uid="uid://b00pat2p0pkar" path="res://Variabile di test.tres" id="2_gad0g"]
 [ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="4_0y5uo"]
 [ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="4_k7ocg"]
-[ext_resource type="Script" uid="uid://be01k3jh4ckwt" path="res://addons/BeGraph/Classes/Nodes/Actions/Print/Print.gd" id="6_byvd5"]
-[ext_resource type="Script" uid="uid://3hx7e04r6a4t" path="res://addons/BeGraph/Classes/Nodes/Flow/Misc/EnumSelector.gd" id="6_k7ocg"]
-[ext_resource type="Script" uid="uid://c82q06qm6p887" path="res://addons/BeGraph/Classes/Nodes/Actions/Print/Print String.gd" id="7_byvd5"]
 
 [sub_resource type="Resource" id="Resource_0y5uo"]
 resource_local_to_scene = true
@@ -45,88 +42,15 @@ output = true
 is_starting_node = true
 _graph_ref = Object(WeakRef,"script":null)
 
-breakpoint_enabled = true
-mute_enabled = true
-
-[sub_resource type="Resource" id="Resource_orwkh"]
-resource_name = "BehaviorGraphNode"
-script = ExtResource("6_byvd5")
-value = null
-instruction = "Prints {value}"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(580, -220)
-_graph_ref = Object(WeakRef,"script":null)
-
-breakpoint_enabled = true
-mute_enabled = true
-decorator = {
-"blackboard_key": &"",
-"type": "condition"
-}
-
-[sub_resource type="Resource" id="Resource_buygw"]
-resource_name = "_GraphNode_27401"
-script = ExtResource("6_k7ocg")
-enum_values = PackedStringArray("Primo enumeratore", "Secondo Enum", "new enum value")
-value = 1
-instruction = "Enum Selector: {value}"
-conditions = Array[Dictionary]([{
-"next": null,
-"text": "Primo enumeratore"
-}, {
-"next": null,
-"text": "Secondo Enum"
-}, {
-"next": null,
-"text": "new enum value"
-}])
-node_category = "control_flow_node"
-input = true
-position_in_graph = Vector2(1240, -20)
-_graph_ref = Object(WeakRef,"script":null)
-
-breakpoint_enabled = true
-mute_enabled = true
-
-[sub_resource type="Resource" id="Resource_byvd5"]
-resource_name = "_GraphNode_42805"
-script = ExtResource("6_byvd5")
-value = null
-instruction = "Prints {value}"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(682, 294)
-_graph_ref = Object(WeakRef,"script":null)
-
-breakpoint_enabled = true
-mute_enabled = true
-
-[sub_resource type="Resource" id="Resource_6a8nf"]
-resource_name = "_GraphNode_68324"
-script = ExtResource("7_byvd5")
-instruction = "Prints {value}"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(2072.0034, -37.26512)
-_graph_ref = Object(WeakRef,"script":null)
-
-breakpoint_enabled = true
-mute_enabled = true
+breakpointable = true
+mutable = true
 
 [resource]
 resource_name = "Trogolo"
 script = ExtResource("4_k7ocg")
 blackboard = Array[ExtResource("1_sguni")]([SubResource("Resource_0y5uo"), SubResource("Resource_k7ocg"), ExtResource("2_gad0g"), SubResource("Resource_gj27o"), SubResource("Resource_bbj7d")])
 nodes = Dictionary[StringName, ExtResource("2_0y5uo")]({
-&"": SubResource("Resource_gad0g"),
-&"BehaviorGraphNode": SubResource("Resource_orwkh"),
-&"_GraphNode_27401": SubResource("Resource_buygw"),
-&"_GraphNode_42805": SubResource("Resource_byvd5"),
-&"_GraphNode_68324": SubResource("Resource_6a8nf")
+&"": SubResource("Resource_gad0g")
 })
 connections = Array[Dictionary]([{
 "from_node": &"start_node",

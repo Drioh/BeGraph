@@ -3,16 +3,17 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Stop Sound"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Stops playback on an audio player node."
 
 @export_custom(PROPERTY_HINT_NODE_TYPE, BG.PROPERTY+"AudioStreamPlayer,AudioStreamPlayer2D,AudioStreamPlayer3D") var node : NodePath = NodePath("")
 
-func tick(delta: float) -> Status:
-	var target := _resolve_node(eval(&"node"))
+func tick(_delta: float) -> Status:
+	var target := eval(&"node", true)
 	if target == null or not (target is AudioStreamPlayer or target is AudioStreamPlayer2D or target is AudioStreamPlayer3D):
 		return abort("couldn't resolve an audio player")
 		
 	target.stop()
-	return tick_next(delta)
+	return Status.SUCCESS
 
 func set_instruction() -> String: return "Stop sound on {node}"
 func set_node_category() -> String: return "action_node"

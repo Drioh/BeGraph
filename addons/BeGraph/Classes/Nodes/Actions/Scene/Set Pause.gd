@@ -3,12 +3,13 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Set Pause"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Pauses, unpauses, or toggles the paused state of the SceneTree."
 
 enum Mode { ON, OFF, TOGGLE }
 
 @export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+ "On,Off,Toggle") var mode : Mode = Mode.ON
 
-func tick(delta: float) -> Status:
+func tick(_delta: float) -> Status:
 	var agent : Node = get_agent()
 	if agent == null:
 		return abort("owning behavior agent not found")
@@ -19,7 +20,7 @@ func tick(delta: float) -> Status:
 		Mode.OFF: tree.paused = false
 		Mode.TOGGLE: tree.paused = not tree.paused
 		
-	return tick_next(delta)
+	return Status.SUCCESS
 
 func set_instruction() -> String: return "Pause: {mode}"
 func set_node_category() -> String: return "action_node"

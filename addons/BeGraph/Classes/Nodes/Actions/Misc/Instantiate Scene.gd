@@ -3,31 +3,37 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Instantiate Scene"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Instantiates a PackedScene and adds it to parent, optionally storing the instance in a blackboard variable."
 
 @export_custom(PROPERTY_HINT_FILE, BG.PROPERTY+"*.tscn,*.scn") var scene_path : String = ""
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var parent : NodePath = NodePath("")
-@export_custom(BG.HINT_NONE, BG.PROPERTY) var position : Vector3 = Vector3.ZERO
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var return_blackboard_key : StringName = &""
 
-func tick(delta: float) -> Status:
+func tick(_delta: float) -> Status:
 	var path : String = eval(&"scene_path")
 	var scene := load(path) as PackedScene
 	if scene == null:
 		return abort("couldn't load scene '%s'" % path)
 		
-	var parent_node := _resolve_node(eval(&"parent"))
+	var parent_node := eval(&"parent", true)
+	if parent_node == null:
+		var agent := get_agent()
+		if agent != null and "actor" in agent:
+			parent_node = agent.actor
+			
 	if parent_node == null:
 		return abort("couldn't resolve parent node")
 		
-	var instance : Node = scene.instantiate()
-	parent_node.add_child(instance)
-	var pos : Vector3 = eval(&"position") as Vector3
+	var inst : Node = scene.instantiate()
+	parent_node.add_child(inst)
 	
-	if instance is Node2D:
-		instance.global_position = Vector2(pos.x, pos.y)
-	elif instance is Node3D:
-		instance.global_position = pos
-		
-	return tick_next(delta)
+	var ret_key : StringName = eval(&"return_blackboard_key")
+	if ret_key != &"":
+		var graph := get_graph()
+		if graph != null:
+			graph.set_blackboard_value(ret_key, inst)
+			
+	return Status.SUCCESS
 
 func set_instruction() -> String: return "Instantiate {scene_path} under {parent}"
 func set_node_category() -> String: return "action_node"

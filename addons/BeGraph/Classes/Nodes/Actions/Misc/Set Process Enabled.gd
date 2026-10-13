@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Set Process Enabled"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Enables, disables, or toggles idle or physics processing on a node."
 
 enum Mode { ON, OFF, TOGGLE }
 
@@ -11,8 +12,8 @@ enum Mode { ON, OFF, TOGGLE }
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var idle_process : bool = true
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var physics_process : bool = true
 
-func tick(delta: float) -> Status:
-	var target := _resolve_node(eval(&"node"))
+func tick(_delta: float) -> Status:
+	var target := eval(&"node", true)
 	if target == null:
 		return abort("couldn't resolve node")
 		
@@ -21,7 +22,7 @@ func tick(delta: float) -> Status:
 	if eval(&"physics_process"):
 		target.set_physics_process(_wanted(target.is_physics_processing()))
 		
-	return tick_next(delta)
+	return Status.SUCCESS
 
 func _wanted(current : bool) -> bool:
 	match eval(&"mode") as Mode:

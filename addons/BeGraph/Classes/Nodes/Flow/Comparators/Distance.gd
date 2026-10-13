@@ -13,14 +13,14 @@ var _node_a : Node = null
 var _node_b : Node = null
 
 func on_start() -> void:
-	_node_a = _resolve_node(eval(&"node_a"))
-	_node_b = _resolve_node(eval(&"node_b"))
+	_node_a = eval(&"node_a", true)
+	_node_b = eval(&"node_b", true)
 
 func on_blackboard_property_changed(key: StringName) -> void:
 	if key == get_blackboard_key(&"node_a"):
-		_node_a = _resolve_node(eval(&"node_a"))
+		_node_a = eval(&"node_a", true)
 	if key == get_blackboard_key(&"node_b"):
-		_node_b = _resolve_node(eval(&"node_b"))
+		_node_b = eval(&"node_b", true)
 
 func tick(delta: float) -> Status:
 	if _node_a == null or _node_b == null or not is_instance_valid(_node_a) or not is_instance_valid(_node_b):
@@ -30,13 +30,15 @@ func tick(delta: float) -> Status:
 	var th : float = eval(&"threshold") as float
 	
 	if dist > th:
-		tick_condition(delta, 0)
+		return tick_condition(delta, 0)
 	elif dist == th:
-		tick_condition(delta, 1)
+		return tick_condition(delta, 1)
 	else:
-		tick_condition(delta, 2)
-		
-	return Status.RUNNING
+		return tick_condition(delta, 2)
+
+func on_end(_status: Status) -> void:
+	_node_a = null
+	_node_b = null
 
 func _get_position(n : Node) -> Vector3:
 	if n is Node2D:

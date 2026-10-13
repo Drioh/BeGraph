@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Sets Light Energy"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Fades the energy of a Light2D or Light3D node over duration seconds."
 
 @export_custom(PROPERTY_HINT_NODE_TYPE, BG.PROPERTY+"Light2D,Light3D") var node : NodePath = NodePath("")
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var target_energy : float = 1.0
@@ -15,23 +16,30 @@ var _elapsed : float = 0.0
 
 func on_start() -> void:
 	_elapsed = 0.0
-	_prop_name = "energy" if _light_node is Light2D else "light_energy"
-	_start_energy = _light_node.get(_prop_name)
-	_light_node = eval(&"node",true)
+	_light_node = eval(&"node", true)
 	if _light_node == null or not (_light_node is Light2D or _light_node is Light3D):
 		abort("couldn't resolve light node")
+		return
+	_prop_name = "energy" if _light_node is Light2D else "light_energy"
+	_start_energy = _light_node.get(_prop_name) as float
 
 func tick(delta: float) -> Status:
+	if _light_node == null or not is_instance_valid(_light_node):
+		return Status.FAILURE
+		
 	_elapsed += delta
-	var dur : float = eval(&"duration",false) as float
-	var target_e : float = eval(&"target_energy",false) as float
+	var dur : float = eval(&"duration") as float
+	var target_e : float = eval(&"target_energy") as float
 	
 	if dur <= 0.0 or _elapsed >= dur:
 		_light_node.set(_prop_name, target_e)
-		return tick_next(delta)
+		return Status.SUCCESS
 		
 	_light_node.set(_prop_name, lerpf(_start_energy, target_e, _elapsed / dur))
 	return Status.RUNNING
+
+func on_end(_status: Status) -> void:
+	_light_node = null
 
 func set_instruction() -> String: return "Sets {node} to energy {target_energy}, fading over {duration}s"
 func set_node_category() -> String: return "action_node"

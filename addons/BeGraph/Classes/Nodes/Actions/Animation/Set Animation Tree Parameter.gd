@@ -3,18 +3,19 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Set Animation Tree Parameter"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Sets a parameter on an AnimationTree."
 
 @export_custom(PROPERTY_HINT_NODE_TYPE, BG.PROPERTY+"AnimationTree") var node : NodePath = NodePath("")
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var parameter : String = ""
 @export_custom(BG.HINT_NONE, BG.PROPERTY, PROPERTY_USAGE_NIL_IS_VARIANT) var value : Variant = null
 
-func tick(delta: float) -> Status:
-	var target := eval(&"node",true) as AnimationTree
+func tick(_delta: float) -> Status:
+	var target := eval(&"node", true) as AnimationTree
 	if target == null:
 		return abort("couldn't resolve AnimationTree")
 		
 	target.set(eval(&"parameter"), eval(&"value"))
-	return tick_next(delta)
+	return Status.SUCCESS
 
 func set_instruction() -> String: return "Set {node}'s {parameter} to {value}"
 func set_node_category() -> String: return "action_node"

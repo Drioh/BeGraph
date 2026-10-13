@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Set Shader Parameter"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Sets a parameter on a ShaderMaterial applied to a CanvasItem or GeometryInstance3D."
 
 const UNIQUE_META : StringName = &"begraph_unique_material"
 
@@ -11,8 +12,8 @@ const UNIQUE_META : StringName = &"begraph_unique_material"
 @export_custom(BG.HINT_NONE, BG.PROPERTY, PROPERTY_USAGE_NIL_IS_VARIANT) var value : Variant = null
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var unique_material : bool = false
 
-func tick(delta: float) -> Status:
-	var target := _resolve_node(eval(&"node"))
+func tick(_delta: float) -> Status:
+	var target := eval(&"node", true)
 	if target == null or not (target is CanvasItem or target is GeometryInstance3D):
 		return abort("couldn't resolve CanvasItem or GeometryInstance3D")
 		
@@ -27,7 +28,7 @@ func tick(delta: float) -> Status:
 		return abort("node does not have a valid ShaderMaterial")
 		
 	material.set_shader_parameter(eval(&"parameter"), eval(&"value"))
-	return tick_next(delta)
+	return Status.SUCCESS
 
 func set_instruction() -> String: return "Set {node}'s shader parameter {parameter} to {value}"
 func set_node_category() -> String: return "action_node"

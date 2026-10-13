@@ -3,10 +3,11 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Quit Game"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Quits the game application with an optional exit code."
 
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var exit_code : int = 0
 
-func tick(delta: float) -> Status:
+func tick(_delta: float) -> Status:
 	var agent := get_agent()
 	if agent == null:
 		return abort("owning behavior agent not found")

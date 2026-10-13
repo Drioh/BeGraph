@@ -3,13 +3,14 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Set Position"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Instantly teleports a Node2D or Node3D to a target position in global or local space."
 
 @export_custom(PROPERTY_HINT_NODE_TYPE, BG.PROPERTY+"Node2D,Node3D") var node : NodePath = NodePath("")
 @export_custom(BG.HINT_NONE, BG.PROPERTY, PROPERTY_USAGE_NIL_IS_VARIANT) var position : Variant = null
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var global_space : bool = true
 
-func tick(delta: float) -> Status:
-	var target := _resolve_node(eval(&"node"))
+func tick(_delta: float) -> Status:
+	var target := eval(&"node", true)
 	if target == null or not (target is Node2D or target is Node3D):
 		return abort("couldn't resolve Node2D/Node3D target")
 		
@@ -28,7 +29,7 @@ func tick(delta: float) -> Status:
 	else:
 		target.position = dest
 		
-	return tick_next(delta)
+	return Status.SUCCESS
 
 func _resolve_position(value: Variant) -> Variant:
 	if value is Vector3: return value

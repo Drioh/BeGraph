@@ -1,41 +1,43 @@
 @tool
 extends BehaviorNode
 
-const DISPLAY_NAME : String = "Rotate"
+const DISPLAY_NAME : String = "Rotate Node"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Rotates a 2D or 3D node towards a target angle, towards a target node, or continuously spins."
 
 enum Mode { TO_ANGLE, TOWARDS_NODE, CONTINUOUS_SPIN }
 enum SpeedMode { SPEED, DURATION }
-enum Direction { SHORTEST, CLOCKWISE, COUNTERCLOCKWISE }
+enum Direction { CLOCKWISE, COUNTERCLOCKWISE }
+enum Axis3D { Y, X, Z }
 
 @export_custom(PROPERTY_HINT_NODE_TYPE, BG.PROPERTY+"Node2D,Node3D") var node : NodePath = NodePath("")
 @export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+"ToAngle,TowardsNode,ContinuousSpin") var mode : Mode = Mode.TO_ANGLE
-@export_custom(BG.HINT_NONE, BG.PROPERTY) var target_angle : float = 0.0
-@export_custom(PROPERTY_HINT_NODE_TYPE, BG.PROPERTY+"Node2D,Node3D") var target_node : NodePath = NodePath("")
-@export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+"X,Y,Z") var axis_3d : int = 1
 @export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+"Speed,Duration") var speed_mode : SpeedMode = SpeedMode.SPEED
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var angular_speed : float = 90.0
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var duration : float = 1.0
-@export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+"Shortest,Clockwise,Counterclockwise") var direction : Direction = Direction.SHORTEST
-@export_custom(BG.HINT_NONE, BG.PROPERTY) var recalculate_target_each_frame : bool = false
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var target_angle : float = 0.0
+@export_custom(PROPERTY_HINT_NODE_TYPE, BG.PROPERTY+"Node2D,Node3D") var target_node : NodePath = NodePath("")
+@export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+"Clockwise,Counterclockwise") var direction : Direction = Direction.CLOCKWISE
+@export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+"Y (yaw/horizontal),X (pitch),Z (roll)") var axis_3d : Axis3D = Axis3D.Y
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var recalculate_target_each_frame : bool = true
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var loop : bool = false
 
-var _node_ref : Node = null
-var _target_node_ref : Node = null
-var _is_3d : bool = false
+var _node_ref : Node
+var _target_node_ref : Node
 var _target_rot : float = 0.0
 var _elapsed : float = 0.0
+var _is_3d : bool = false
 
 func on_start() -> void:
 	_elapsed = 0.0
-	_node_ref = eval(&"node",true)
+	_node_ref = eval(&"node", true)
 	if _node_ref == null:
 		abort("couldn't resolve node to rotate")
 		return
 		
 	_is_3d = _node_ref is Node3D
 	if (eval(&"mode") as Mode) == Mode.TOWARDS_NODE:
-		_target_node_ref = eval(&"target_node",true)
+		_target_node_ref = eval(&"target_node", true)
 		if _target_node_ref == null:
 			abort("couldn't resolve target node to face")
 			return
@@ -43,6 +45,8 @@ func on_start() -> void:
 	_target_rot = _calculate_target_rotation()
 
 func tick(delta: float) -> Status:
+	if _node_ref == null or not is_instance_valid(_node_ref):
+		return Status.FAILURE
 	if (eval(&"mode") as Mode) == Mode.CONTINUOUS_SPIN:
 		return _tick_spin(delta)
 	return _tick_towards(delta)
@@ -55,7 +59,7 @@ func _tick_spin(delta: float) -> Status:
 		_elapsed += delta
 		if _elapsed >= (eval(&"duration") as float) and not eval(&"loop"):
 			_elapsed = 0.0
-			return tick_next(delta)
+			return Status.SUCCESS
 			
 	return Status.RUNNING
 
@@ -69,7 +73,7 @@ func _tick_towards(delta: float) -> Status:
 	
 	if absf(diff) <= 0.0005:
 		_set_rotation(_target_rot)
-		return _finish(delta)
+		return _finish()
 		
 	var step : float = 0.0
 	if (eval(&"speed_mode") as SpeedMode) == SpeedMode.SPEED:
@@ -79,17 +83,22 @@ func _tick_towards(delta: float) -> Status:
 		var rem_t : float = (eval(&"duration") as float) - _elapsed
 		if rem_t <= 0.0:
 			_set_rotation(_target_rot)
-			return _finish(delta)
+			return _finish()
 		step = (diff / rem_t) * delta
 		
 	_set_rotation(current + step)
 	return Status.RUNNING
 
-func _finish(delta: float) -> Status:
+func _finish() -> Status:
 	_elapsed = 0.0
 	if eval(&"loop"):
 		return Status.RUNNING
-	return tick_next(delta)
+	return Status.SUCCESS
+
+func on_end(_status: Status) -> void:
+	_node_ref = null
+	_target_node_ref = null
+	_elapsed = 0.0
 
 func _calculate_target_rotation() -> float:
 	match eval(&"mode") as Mode:

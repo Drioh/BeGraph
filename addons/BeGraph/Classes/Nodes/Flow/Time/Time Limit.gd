@@ -9,7 +9,13 @@ const DISPLAY_INFO : String = "Ticks its successor, but forces FAILURE if it has
 
 var _elapsed : float = 0.0
 
+func _manual_successor_propagation() -> bool:
+	return true
+
 func on_start() -> void:
+	_elapsed = 0.0
+
+func on_end(_status: Status) -> void:
 	_elapsed = 0.0
 
 func tick(delta: float) -> Status:

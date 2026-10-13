@@ -39,7 +39,7 @@ func set_node(n: BehaviorNode) -> void:
 	free_from_frame_button.pressed.connect(func(): graph_edit.detach_node_from_frame(name))
 	tb.add_child(free_from_frame_button)
 	
-	if node.breakpoint_enabled:
+	if node.breakpointable:
 		breakpoint_button = Button.new()
 		breakpoint_button.flat = true
 		breakpoint_button.text = "B"
@@ -54,7 +54,7 @@ func set_node(n: BehaviorNode) -> void:
 		tb.add_child(breakpoint_button)
 		breakpoint_button.button_pressed=node.breakpoint_enabled
 	
-	if node.mute_enabled:
+	if node.mutable:
 		mute_button = Button.new()
 		mute_button.flat = true
 		mute_button.text = "M"

@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Random Selector"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/control_flow_node_icon.svg"
+const DISPLAY_INFO : String = "Ticks its successors in a randomized order, stopping at the first that returns SUCCESS or RUNNING."
 
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var memory : bool = false
 
@@ -10,6 +11,10 @@ var _order : Array[int] = []
 var _position : int = 0
 
 func on_start() -> void:
+	if not eval(&"memory"):
+		_reset()
+
+func on_end(_status: Status) -> void:
 	if not eval(&"memory"):
 		_reset()
 

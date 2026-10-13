@@ -29,12 +29,10 @@ func tick(delta: float) -> Status:
 	if status == Status.RUNNING:
 		return Status.RUNNING
 		
+	return status
+
+func on_end(_status: Status) -> void:
 	_release_runtime_graph()
-	if status == Status.SUCCESS:
-		tick_next(delta)
-		return Status.SUCCESS
-		
-	return Status.FAILURE
 
 func _build_runtime_graph() -> bool:
 	var parent : BehaviorGraph = get_graph()
@@ -58,7 +56,7 @@ func _build_runtime_graph() -> bool:
 	var runtime : BehaviorGraph
 	if _cache_key == key and _cached_runtime != null:
 		runtime = _cached_runtime
-		# ripristina lo stato dei nodi come se fosse la prima esecuzione
+		# Reset node states as if it was the first execution
 		for n : BehaviorNode in runtime.nodes.values():
 			n.last_status = -1
 	else:
@@ -83,7 +81,7 @@ func _build_runtime_graph() -> bool:
 func _release_runtime_graph() -> void:
 	_runtime_graph = null
 	_entry = null
-	# _cached_runtime NON va azzerato: resta per il prossimo ciclo
+	# _cached_runtime is retained for subsequent cycles
 
 func _find_entry(graph : BehaviorGraph, wanted : String) -> BehaviorNode:
 	for n in graph.get_nodes_by_category("access_point_node"):

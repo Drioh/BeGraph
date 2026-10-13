@@ -9,8 +9,8 @@ const DISPLAY_INFO : String = "Sets an arbitrary property by name on {node} to {
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var property : String = ""
 @export_custom(BG.HINT_NONE, BG.PROPERTY, PROPERTY_USAGE_NIL_IS_VARIANT) var value : Variant = null
 
-func tick(delta: float) -> Status:
-	var target := _resolve_node(eval(&"node"))
+func tick(_delta: float) -> Status:
+	var target := eval(&"node", true)
 	if target == null:
 		return abort("couldn't resolve node")
 
@@ -21,7 +21,7 @@ func tick(delta: float) -> Status:
 		return abort("node has no property '%s'" % prop_name)
 
 	target.set(prop_name, eval(&"value"))
-	return tick_next(delta)
+	return Status.SUCCESS
 
 func set_instruction() -> String: return "Set {node}'s {property} value: {value}"
 func set_node_category() -> String: return "action_node"

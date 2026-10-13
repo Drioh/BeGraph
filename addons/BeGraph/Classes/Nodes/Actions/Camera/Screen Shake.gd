@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Screen Shake"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Applies a screen shake effect to a Camera2D or Camera3D node for the given duration."
 
 @export_custom(PROPERTY_HINT_NODE_TYPE, BG.PROPERTY+"Camera2D,Camera3D") var node : NodePath = NodePath("")
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var strength : float = 10.0
@@ -13,7 +14,7 @@ var _tween : Tween = null
 var _base_offset : Vector2 = Vector2.ZERO
 
 func on_start() -> void:
-	_camera = _resolve_node(eval(&"node"))
+	_camera = eval(&"node", true)
 	if not (_camera is Camera2D or _camera is Camera3D):
 		abort("couldn't resolve a camera")
 		return
@@ -23,10 +24,10 @@ func on_start() -> void:
 	_tween.tween_method(_apply_shake, 1.0, 0.0, eval(&"duration") as float)
 	_tween.tween_callback(_restore)
 
-func tick(delta: float) -> Status:
+func tick(_delta: float) -> Status:
 	if _tween != null and _tween.is_running():
 		return Status.RUNNING
-	return tick_next(delta)
+	return Status.SUCCESS
 
 func _apply_shake(intensity : float) -> void:
 	if is_instance_valid(_camera):
@@ -40,7 +41,9 @@ func _restore() -> void:
 func on_end(_status: Status) -> void:
 	if _tween != null and _tween.is_valid() and _tween.is_running():
 		_tween.kill()
+	_tween = null
 	_restore()
+	_camera = null
 
 func _read_offset() -> Vector2:
 	return _camera.offset if _camera is Camera2D else Vector2(_camera.h_offset, _camera.v_offset)

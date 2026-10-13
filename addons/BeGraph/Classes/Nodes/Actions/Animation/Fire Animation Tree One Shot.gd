@@ -3,6 +3,7 @@ extends BehaviorNode
 
 const DISPLAY_NAME : String = "Fire Animation Tree One Shot"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
+const DISPLAY_INFO : String = "Requests a one-shot animation on an AnimationTree (Fire, Abort, or FadeOut)."
 
 enum Mode { FIRE, ABORT, FADE_OUT }
 
@@ -10,8 +11,8 @@ enum Mode { FIRE, ABORT, FADE_OUT }
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var one_shot : StringName = &""
 @export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+"Fire,Abort,FadeOut") var mode : Mode = Mode.FIRE
 
-func tick(delta: float) -> Status:
-	var target := _resolve_node(eval(&"node")) as AnimationTree
+func tick(_delta: float) -> Status:
+	var target := eval(&"node", true) as AnimationTree
 	if target == null:
 		return abort("couldn't resolve AnimationTree")
 		
@@ -22,7 +23,7 @@ func tick(delta: float) -> Status:
 		_: req = AnimationNodeOneShot.ONE_SHOT_REQUEST_FADE_OUT
 		
 	target.set("parameters/%s/request" % eval(&"one_shot"), req)
-	return tick_next(delta)
+	return Status.SUCCESS
 
 func set_instruction() -> String: return "{mode} one shot {one_shot} on {node}"
 func set_node_category() -> String: return "action_node"

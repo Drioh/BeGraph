@@ -28,11 +28,12 @@ const SETTINGS : Dictionary[String,Variant]={
 	"BeGraph/colors/node_colors/comment_node/border":Color(0.79, 0.564, 0.269, 1.0),
 	"BeGraph/colors/node_colors/run_subgraph_node/background": Color(0.176, 0.118, 0.118, 1.0),
 	"BeGraph/colors/node_colors/run_subgraph_node/border": Color(0.58, 0.161, 0.169, 1.0),
-	"BeGraph/colors/node_colors/custom_categories": [] as PackedStringArray,
 	"BeGraph/colors/graph_editor/allowed_variable/background":Color(0.149, 0.176, 0.145, 1.0),
 	"BeGraph/colors/graph_editor/allowed_variable/border":Color(0.267, 0.475, 0.239, 1.0),
 	"BeGraph/colors/graph_editor/not_allowed_variable/background":Color(0.176, 0.118, 0.118, 1.0),
-	"BeGraph/colors/graph_editor/not_allowed_variable/border":Color(0.58, 0.161, 0.169, 1.0)
+	"BeGraph/colors/graph_editor/not_allowed_variable/border":Color(0.58, 0.161, 0.169, 1.0),
+	"BeGraph/general_settings/custom_categories": [] as PackedStringArray,
+	"BeGraph/general_settings/custom_nodes_paths":[] as PackedStringArray
 }
 
 const NODE_COLORS_PREFIX :String= "BeGraph/colors/node_colors"
@@ -253,7 +254,7 @@ func _sync_settings() -> void:
 	for key in SETTINGS:
 		_write_setting(key, SETTINGS[key])
 	
-	for key in ProjectSettings.get_setting("BeGraph/colors/node_colors/custom_categories"):
+	for key in ProjectSettings.get_setting("BeGraph/general_settings/custom_categories"):
 		if !ProjectSettings.has_setting(key):
 			_write_setting(NODE_COLORS_PREFIX+"/"+key+"/background",Color(1.0, 1.0, 1.0, 1.0))
 			_write_setting(NODE_COLORS_PREFIX+"/"+key+"/border",Color(0.0, 0.0, 0.0, 1.0))

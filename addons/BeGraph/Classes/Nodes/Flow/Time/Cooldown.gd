@@ -9,6 +9,9 @@ const DISPLAY_INFO : String = "Ticks its successor normally, but returns FAILURE
 
 var _cooldown_remaining : float = -1.0
 
+func _manual_successor_propagation() -> bool:
+	return true
+
 func tick(delta: float) -> Status:
 	if _next_ref.size() == 0:
 		return Status.FAILURE

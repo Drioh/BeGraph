@@ -13,6 +13,10 @@ func on_start() -> void:
 	if not eval(&"memory"):
 		_position = 0
 
+func on_end(_status: Status) -> void:
+	if not eval(&"memory"):
+		_position = 0
+
 func tick(delta: float) -> Status:
 	var use_memory : bool = eval(&"memory") as bool
 	var count : int = _next_ref.size()

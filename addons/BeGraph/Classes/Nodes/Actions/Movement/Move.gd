@@ -35,21 +35,15 @@ func on_start() -> void:
 	_moving_target = eval(&"moving_target") as bool
 	_changing_speed = eval(&"changing_speed") as bool
 	
-	var raw_node = eval(&"node")
-	_node = _resolve_node(raw_node)
-	
-	
-	var raw_destination = eval(&"destination")
-	_destination = _resolve_destination_pos(raw_destination)
-	
+	_node = eval(&"node", true)
+	_destination = _resolve_destination_pos(eval(&"destination"))
 
 func tick(delta: float) -> Status:
-	if _node == null:
+	if _node == null or not is_instance_valid(_node):
 		return abort("couldn't resolve node to move")
 	
 	if _moving_target:
-		var raw_destination = eval(&"destination")
-		_destination = _resolve_destination_pos(raw_destination)
+		_destination = _resolve_destination_pos(eval(&"destination"))
 	if _destination == null:
 		return abort("couldn't resolve destination to move towards")
 	
@@ -58,22 +52,21 @@ func tick(delta: float) -> Status:
 	if not reached:
 		return Status.RUNNING
 
-	_elapsed = 0.0
-	tick_next(delta)
 	return Status.SUCCESS
 
+func on_end(_status: Status) -> void:
+	_node = null
+	_elapsed = 0.0
 
 func on_blackboard_property_changed(key: StringName) -> void:
 	if key == get_blackboard_key(&"destination"):
-		var raw_destination = eval(&"destination")
-		_destination = _resolve_destination_pos(raw_destination)
+		_destination = _resolve_destination_pos(eval(&"destination"))
 
 func _resolve_destination_pos(raw_dest: Variant) -> Variant:
 	var resolved = _resolve_node(raw_dest)
 	if resolved is Node2D or resolved is Node3D:
 		return resolved.global_position
 	return raw_dest
-
 
 func _move_towards_destination(delta: float) -> bool:
 	var dest_pos : Variant = _destination
@@ -86,7 +79,6 @@ func _move_towards_destination(delta: float) -> bool:
 		return true
 	
 	var move_amount : float
-	
 	if _mode == Mode.SPEED:
 		if _changing_speed:
 			_speed = eval(&"speed") as float
@@ -100,7 +92,6 @@ func _move_towards_destination(delta: float) -> bool:
 	
 	_node.global_position = _node.global_position.move_toward(dest_pos, move_amount)
 	return _node.global_position.distance_to(dest_pos) <= 0.001
-
 
 func set_instruction() -> String:
 	return "Move {node} to {destination} ({mode})"
