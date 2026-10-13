@@ -10,7 +10,7 @@ const DISPLAY_INFO : String = "Sets volume_db and pitch_scale on an audio player
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var pitch_scale : float = 1.0
 
 func tick(_delta: float) -> Status:
-	var target := eval(&"node", true)
+	var target :Node= eval(&"node", true)
 	if target == null or not (target is AudioStreamPlayer or target is AudioStreamPlayer2D or target is AudioStreamPlayer3D):
 		return abort("couldn't resolve an audio player")
 		

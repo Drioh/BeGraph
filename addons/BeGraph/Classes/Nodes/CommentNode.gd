@@ -21,4 +21,6 @@ func set_instruction() -> String: return "{comment}"
 func set_node_category() -> String: return "comment_node"
 func set_input() -> bool: return false
 func set_output() -> bool: return false
+func set_breakpointable()->bool:return false
+func set_mutable()->bool : return false
 func set_allows_multiple_outputs() -> bool: return false

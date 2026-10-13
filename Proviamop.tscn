@@ -1,8 +1,7 @@
 [gd_scene format=3 uid="uid://cl45e2arjx5nt"]
 
 [ext_resource type="Script" uid="uid://cj0fv54i6ere" path="res://addons/BeGraph/Classes/misc/BehaviorAgent.gd" id="1_1yirt"]
-[ext_resource type="Script" uid="uid://b08uxws8eod1l" path="res://proviamop.gd" id="1_5e6ol"]
-[ext_resource type="Resource" uid="uid://c6acbrbtbdgl6" path="res://Prova.tres" id="3_bcbru"]
+[ext_resource type="Resource" uid="uid://dv8bt8x5nbmqr" path="res://NewGraph.tres" id="2_83gc7"]
 
 [sub_resource type="Gradient" id="Gradient_7tmfp"]
 interpolation_mode = 1
@@ -16,18 +15,45 @@ fill_from = Vector2(0.5, 0.5)
 fill_to = Vector2(0.5, 0)
 metadata/_snap_enabled = true
 
+[sub_resource type="GDScript" id="GDScript_bcbru"]
+script/source = "@tool
+extends Sprite2D
+
+@export var behavior_agent : BehaviorAgent
+
+func _get_property_list() -> Array[Dictionary]:
+	if behavior_agent:
+		return behavior_agent.get_overridable_property_list()
+	return []
+
+func _get(property: StringName) -> Variant:
+	if behavior_agent and behavior_agent.is_overridable_blackboard_property(property):
+		return behavior_agent.get_overridable_blackboard_property(property)
+	return 
+
+func _set(property: StringName, value: Variant) -> bool:
+	if behavior_agent and behavior_agent.is_overridable_blackboard_property(property):
+		return behavior_agent.set_overridable_blackboard_property(property,value,self)
+	return false
+
+func _ready() -> void:
+	behavior_agent.actor=self
+"
+
 [node name="Sprite2D" type="Sprite2D" unique_id=811252767 node_paths=PackedStringArray("behavior_agent")]
 texture = SubResource("GradientTexture2D_hdwr6")
-script = ExtResource("1_5e6ol")
+script = SubResource("GDScript_bcbru")
 behavior_agent = NodePath("BehaviorAgent")
-overridable_blackboard_properties/Positions = [NodePath(""), NodePath(""), NodePath("")]
 overridable_blackboard_properties/Self = NodePath(".")
+overridable_blackboard_properties/Points = null
+overridable_blackboard_properties/Loop = null
 
 [node name="BehaviorAgent" type="Node" parent="." unique_id=954077962 node_paths=PackedStringArray("actor")]
 script = ExtResource("1_1yirt")
 actor = NodePath("..")
-behavior_graph = ExtResource("3_bcbru")
+behavior_graph = ExtResource("2_83gc7")
 starting_point = 0
-overridable_blackboard_properties/Positions = [NodePath(""), NodePath(""), NodePath("")]
 overridable_blackboard_properties/Self = NodePath(".")
+overridable_blackboard_properties/Points = null
+overridable_blackboard_properties/Loop = null
 metadata/_custom_type_script = "uid://cj0fv54i6ere"

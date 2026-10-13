@@ -12,7 +12,7 @@ enum Mode { SET, MULTIPLY }
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var scale : Vector3 = Vector3.ONE
 
 func tick(_delta: float) -> Status:
-	var target := eval(&"node", true)
+	var target :Node= eval(&"node", true)
 	if target == null or not ("scale" in target):
 		return abort("couldn't resolve node with a scale property")
 		

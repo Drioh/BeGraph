@@ -12,7 +12,7 @@ enum Mode { SET, ADD }
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var z_index : int = 0
 
 func tick(_delta: float) -> Status:
-	var target := eval(&"node", true) as CanvasItem
+	var target :CanvasItem= eval(&"node", true) as CanvasItem
 	if target == null:
 		return abort("couldn't resolve CanvasItem")
 		

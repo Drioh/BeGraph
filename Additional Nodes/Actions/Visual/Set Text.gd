@@ -12,7 +12,7 @@ enum Mode { REPLACE, APPEND }
 @export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+"Replace,Append") var mode : Mode = Mode.REPLACE
 
 func tick(_delta: float) -> Status:
-	var target := eval(&"node", true)
+	var target :Node= eval(&"node", true)
 	if target == null or not ("text" in target):
 		return abort("couldn't resolve node with a text property")
 		

@@ -8,7 +8,7 @@ const DISPLAY_INFO : String = "Sets a Camera2D or Camera3D node as the current a
 @export_custom(PROPERTY_HINT_NODE_TYPE, BG.PROPERTY+"Camera2D,Camera3D") var node : NodePath = NodePath("")
 
 func tick(_delta: float) -> Status:
-	var target := eval(&"node", true)
+	var target :Node= eval(&"node", true)
 	if target == null or not (target is Camera2D or target is Camera3D):
 		return abort("couldn't resolve camera node")
 		

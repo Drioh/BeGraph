@@ -74,12 +74,13 @@ graph_offset = Vector2(-48, -324)
 [node name="Sprite2D" parent="." unique_id=811252767 instance=ExtResource("1_00g8v")]
 position = Vector2(118, 119)
 texture = SubResource("GradientTexture2D_7tmfp")
-overridable_blackboard_properties/Positions = [NodePath("../Point1"), NodePath("../Point2"), NodePath("../Point3")]
+overridable_blackboard_properties/Points = [NodePath("../Point1"), NodePath("../Point2"), NodePath("../Point3")]
+overridable_blackboard_properties/Loop = true
 
 [node name="Sprite2D2" parent="." unique_id=420164419 instance=ExtResource("1_00g8v")]
 position = Vector2(149, 312)
 texture = SubResource("GradientTexture2D_map4d")
-overridable_blackboard_properties/Positions = [NodePath("../Point4"), NodePath("../Point5"), NodePath("../Point6")]
+overridable_blackboard_properties/Points = [NodePath("../Point4"), NodePath("../Point5"), NodePath("../Point6")]
 
 [node name="Point1" type="Node2D" parent="." unique_id=1626982480]
 position = Vector2(699, 330)

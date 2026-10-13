@@ -44,6 +44,7 @@ func add_node(node: BehaviorNode) -> void:
 		return
 	node._graph_ref = weakref(self)
 	nodes[StringName(node.resource_name)] = node
+	print(nodes)
 
 ## Removes [param node] from [member nodes].
 func remove_node(node: BehaviorNode) -> void:
@@ -61,6 +62,7 @@ func remove_connection(connection:Dictionary):
 ## Returns the [BehaviorNode] in [member nodes] whose [member Resource.resource_name] matches [param name], or [code]null[/code] (logging an error) if none is found.
 func get_node(name:StringName)->BehaviorNode:
 	var n = nodes.get(name, null)
+	print(nodes)
 	if n == null:
 		push_error("BehaviorGraph: Node '%s' not found" % name)
 	return n

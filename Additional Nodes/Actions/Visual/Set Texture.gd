@@ -9,7 +9,7 @@ const DISPLAY_INFO : String = "Loads and assigns a texture to a target node's te
 @export_custom(PROPERTY_HINT_FILE, BG.PROPERTY+"*.png,*.jpg,*.jpeg,*.webp,*.svg,*.tres,*.res") var texture_path : String = ""
 
 func tick(_delta: float) -> Status:
-	var target := eval(&"node", true)
+	var target :Node= eval(&"node", true)
 	if target == null:
 		return abort("couldn't resolve target node")
 		

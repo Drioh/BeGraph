@@ -8,6 +8,9 @@ extends GraphEdit
 ## Root directory scanned for node scripts to populate the creation popup. Subdirectories become submenus.
 const NODE_PATH = "res://addons/BeGraph/Classes/Nodes/"
 
+## ProjectSettings key holding additional node directories (PackedStringArray) to scan.
+const CUSTOM_NODES_PATHS_SETTING = "BeGraph/general_settings/custom_nodes_paths"
+
 ## Scene instantiated for each new [BehaviorGraphNode].
 const NODE = preload("res://addons/BeGraph/UI/BehaviorGraphNode.tscn")
 
@@ -272,6 +275,13 @@ func _on_popup_request(at_position: Vector2) -> void:
 
 func _show_node_creation_popup() -> void:
 	_node_popup = _build_node_popup(NODE_PATH)
+	if _node_popup == null:
+		_node_popup = PopupMenu.new()
+		_node_popup.allow_search = true
+		_node_popup.search_bar_enabled = true
+		_node_popup.id_pressed.connect(_on_node_popup_id_pressed.bind(_node_popup))
+
+	_append_custom_node_paths(_node_popup)
 	add_child(_node_popup)
 
 	_node_popup.popup_hide.connect(_on_node_popup_closed.bind(_node_popup), CONNECT_ONE_SHOT | CONNECT_DEFERRED)
@@ -283,26 +293,76 @@ func _on_node_popup_closed(popup: PopupMenu) -> void:
 	_pending_connection_from = {}
 	if is_instance_valid(popup):
 		popup.queue_free()
+
+## Appends custom node paths defined in ProjectSettings ([constant CUSTOM_NODES_PATHS_SETTING])
+## as top-level macro-items named after each pointed folder.
+func _append_custom_node_paths(root_popup: PopupMenu) -> void:
+	if not ProjectSettings.has_setting(CUSTOM_NODES_PATHS_SETTING):
+		return
+	var setting_val: Variant = ProjectSettings.get_setting(CUSTOM_NODES_PATHS_SETTING)
+	var paths: PackedStringArray = []
+	if setting_val is PackedStringArray:
+		paths = setting_val
+	elif setting_val is Array:
+		for p in setting_val:
+			if p is String:
+				paths.append(p)
+	elif setting_val is String and not setting_val.is_empty():
+		paths.append(setting_val)
+
+	for custom_path in paths:
+		var trimmed := custom_path.strip_edges()
+		if trimmed.is_empty():
+			continue
+		if not DirAccess.dir_exists_absolute(trimmed):
+			push_warning("Custom node path does not exist: %s" % trimmed)
+			continue
+
+		var folder_name := trimmed.trim_suffix("/").get_file()
+		if folder_name.is_empty():
+			folder_name = trimmed
+
+		var custom_sub := _build_node_popup(trimmed)
+		if custom_sub == null:
+			continue
+		if custom_sub.item_count == 0:
+			custom_sub.queue_free()
+			continue
+
+		custom_sub.name = folder_name
+		root_popup.add_submenu_node_item(folder_name, custom_sub)
+		var item_idx := root_popup.item_count - 1
+		if Engine.is_editor_hint():
+			var theme := EditorInterface.get_editor_theme()
+			if theme and theme.has_icon("Folder", "EditorIcons"):
+				root_popup.set_item_icon(item_idx, theme.get_icon("Folder", "EditorIcons"))
+
 ## Recursively mirrors [param path]'s folder structure into a [PopupMenu]: subfolders become submenus (dropped if empty), [code].gd[/code] files become items labeled via [method _script_metadata]. Returns [code]null[/code] if [param path] doesn't exist.
 func _build_node_popup(path: String) -> PopupMenu:
 	if not DirAccess.dir_exists_absolute(path):
 		push_error("Path not valid: %s" % path)
 		return null
 	var popup := PopupMenu.new()
-	popup.allow_search=true
-	popup.search_bar_enabled=true
+	popup.allow_search = true
+	popup.search_bar_enabled = true
 
 	var dirs := DirAccess.get_directories_at(path)
 	dirs.sort()
 	for dir_name in dirs:
-		var sub :PopupMenu= _build_node_popup(path.path_join(dir_name))
+		var sub: PopupMenu = _build_node_popup(path.path_join(dir_name))
+		if sub == null:
+			continue
 		if sub.item_count == 0:
 			sub.queue_free()
 			continue
 		sub.name = dir_name
 
 		popup.add_submenu_node_item(dir_name, sub)
-		popup.set_item_icon(-1, EditorInterface.get_editor_theme().get_icon("Folder", "EditorIcons"))
+		var item_idx := popup.item_count - 1
+		if Engine.is_editor_hint():
+			var theme := EditorInterface.get_editor_theme()
+			if theme and theme.has_icon("Folder", "EditorIcons"):
+				popup.set_item_icon(item_idx, theme.get_icon("Folder", "EditorIcons"))
 
 	var files : PackedStringArray = DirAccess.get_files_at(path)
 	files.sort()

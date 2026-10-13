@@ -11,7 +11,7 @@ enum Mode { ON, OFF, TOGGLE }
 @export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+"On,Off,Toggle") var mode : Mode = Mode.ON
 
 func tick(_delta: float) -> Status:
-	var target := eval(&"node", true)
+	var target :Node= eval(&"node", true)
 	if target == null or not (target is CanvasItem or target is Node3D):
 		return abort("couldn't resolve visual node")
 		

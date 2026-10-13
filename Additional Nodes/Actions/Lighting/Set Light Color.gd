@@ -9,7 +9,7 @@ const DISPLAY_INFO : String = "Sets the color of a Light2D or Light3D node."
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var color : Color = Color.WHITE
 
 func tick(_delta: float) -> Status:
-	var target := eval(&"node", true)
+	var target :Node= eval(&"node", true)
 	if target == null or not (target is Light2D or target is Light3D):
 		return abort("couldn't resolve light node")
 		
