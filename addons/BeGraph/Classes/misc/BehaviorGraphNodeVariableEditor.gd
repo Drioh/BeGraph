@@ -154,7 +154,6 @@ func refresh_editor(property: Dictionary) -> void:
 
 ## Callback for [signal EditorProperty.property_changed], forwarded from [member var_property_editor]: applies the new value to [member node].
 func change_property(property: StringName, new_value: Variant, field: StringName, changing: bool) -> void:
-	print("trigger di change property")
 	if !node._set(property, new_value):
 		if type==TYPE_PACKED_STRING_ARRAY and node.get_node_property_info(property,"hint_string").begins_with(BG.CONDITION):
 			var old_value:Variant = node.get(property)
