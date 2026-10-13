@@ -91,14 +91,14 @@ nodes = Dictionary[StringName, ExtResource("2_7nxv6")]({
 &"_GraphNode_47810": SubResource("Resource_mp8hq")
 })
 connections = Array[Dictionary]([{
-"from_node": &"BehaviorGraphNode",
-"from_port": 0,
-"to_node": &"_GraphNode_47810",
-"to_port": 0
-}, {
 "from_node": &"_GraphNode_34644",
 "from_port": 0,
 "to_node": &"BehaviorGraphNode",
+"to_port": 0
+}, {
+"from_node": &"BehaviorGraphNode",
+"from_port": 0,
+"to_node": &"_GraphNode_47810",
 "to_port": 0
 }])
 _agent_ref = Object(WeakRef,"script":null)

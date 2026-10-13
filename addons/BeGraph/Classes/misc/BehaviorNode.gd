@@ -627,6 +627,9 @@ func to_debug_info() -> Dictionary:
 		"conditions": conditions.map(func(c): return String(c["text"])),
 		"instruction": instruction,
 		"behavior_properties": serialize_properties(),
+		"breakpoint_enabled": breakpoint_enabled,
+		"mute_enabled": mute_enabled,
+		"decorator": decorator.duplicate(),
 	}
 
 ## Current values of behavior properties.

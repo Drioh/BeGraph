@@ -89,11 +89,41 @@ modulate = Color(1, 1, 1, 0.7)
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 
+[node name="FlagsRow" type="HBoxContainer" parent="MainRow" unique_id=900000001]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BreakpointLabel" type="Label" parent="MainRow/FlagsRow" unique_id=900000002]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
+text = "● BREAKPOINT"
+
+[node name="MuteLabel" type="Label" parent="MainRow/FlagsRow" unique_id=900000003]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+text = "● MUTED"
+
 [node name="InstructionLabel" type="Label" parent="MainRow" unique_id=722739716]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 15
 autowrap_mode = 2
+
+[node name="DecoratorLabel" type="Label" parent="MainRow" unique_id=900000004]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+modulate = Color(1, 1, 1, 0.75)
+autowrap_mode = 2
+text = ""
 
 [node name="StatusRow" type="HBoxContainer" parent="." unique_id=653668128]
 unique_name_in_owner = true

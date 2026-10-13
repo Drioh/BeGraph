@@ -23,6 +23,13 @@ const LINKED_ICON: Texture2D = preload("res://addons/BeGraph/Icons/link_icon.svg
 @onready var properties_toggle: Button
 @onready var properties_tree: Tree = %PropertiesTree
 
+## Row holding BreakpointLabel/MuteLabel; hidden state badges shown next to the subtitle.
+@onready var flags_row: HBoxContainer = %FlagsRow
+@onready var breakpoint_label: Label = %BreakpointLabel
+@onready var mute_label: Label = %MuteLabel
+## Short human-readable summary of the node's active decorator (see [member BehaviorNode.decorator]); hidden when the decorator is "none".
+@onready var decorator_label: Label = %DecoratorLabel
+
 func _ready() -> void:
 	properties_toggle = Button.new()
 	properties_toggle.toggle_mode=true
@@ -44,6 +51,10 @@ func setup(info: Dictionary) -> void:
 	var instruction: String = info.get("instruction", "")
 	instruction_label.visible = instruction != ""
 	instruction_label.text = instruction
+
+	breakpoint_label.visible = info.get("breakpoint_enabled", false)
+	mute_label.visible = info.get("mute_enabled", false)
+	_set_decorator_info(info.get("decorator", {}))
 
 	set_slot_enabled_left(0, info.get("input", false))
 	var conditions: Array = info.get("conditions", [])
@@ -112,4 +123,50 @@ func update_property_values(properties: Array) -> void:
 			item.set_text(1,str(properties[i].get("value")))
 		item = item.get_next()
 
-			
+## Shows a short human-readable summary of [param decorator] in [member decorator_label], or hides it when no decorator is active.
+func _set_decorator_info(decorator: Dictionary) -> void:
+	var text : String = _decorator_summary(decorator)
+	decorator_label.visible = text != ""
+	decorator_label.text = text
+	decorator_label.tooltip_text = text
+	reset_size.call_deferred()
+
+## Builds the summary text for [param decorator]. Field meanings mirror [member BehaviorNode.decorator]'s own doc.
+func _decorator_summary(decorator: Dictionary) -> String:
+	match String(decorator.get("type", "none")):
+		"none", "":
+			return ""
+		"inverter":
+			return "Decorator: Inverter"
+		"force":
+			var variant : int = int(decorator.get("variant", 0))
+			return "Decorator: Force %s" % ("Success" if variant == 0 else "Failure")
+		"repeater":
+			var variant : int = int(decorator.get("variant", 0))
+			var between : float = decorator.get("between_delay", 0.0)
+			var detail : String
+			match variant:
+				0:
+					var count : int = int(decorator.get("count", 3))
+					detail = "Times (%s)" % (str(count) if count > 0 else "infinite")
+				1:
+					var timeout : float = decorator.get("timeout", 0.0)
+					detail = "Until Success (timeout %ss)" % (str(timeout) if timeout > 0.0 else "none")
+				_:
+					var timeout2 : float = decorator.get("timeout", 0.0)
+					detail = "Until Failure (timeout %ss)" % (str(timeout2) if timeout2 > 0.0 else "none")
+			return "Decorator: Repeater - %s, delay %ss" % [detail, str(between)]
+		"time_limit":
+			var on_timeout : int = int(decorator.get("on_timeout", 0))
+			return "Decorator: Time Limit %ss (on timeout: %s)" % [str(decorator.get("seconds", 5.0)), "Abort" if on_timeout == 0 else "Let Run"]
+		"cooldown":
+			var mode : int = int(decorator.get("cooldown_mode", 0))
+			return "Decorator: Cooldown %ss (%s)" % [str(decorator.get("seconds", 2.0)), "Always" if mode == 0 else "On Success"]
+		"delay":
+			var delay_mode : int = int(decorator.get("delay_mode", 0))
+			return "Decorator: Delay %ss (%s)" % [str(decorator.get("seconds", 1.0)), "Before" if delay_mode == 0 else "After"]
+		"condition":
+			var key : String = String(decorator.get("blackboard_key", &""))
+			return "Decorator: Condition - %s" % (key if key != "" else "(unbound)")
+		_:
+			return ""
