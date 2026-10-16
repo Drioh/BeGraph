@@ -187,6 +187,7 @@ func _add_label(segment: String, container: HFlowContainer, is_null: bool = fals
 func _add_inline_control(key: String, value: Variant, container: HFlowContainer) -> void:
 	var control: BehaviorGraphNodeVariableEditor = BEHAVIOR_GRAPH_NODE_VARIABLE.instantiate()
 	container.add_child(control)
+	control.graph_edit = graph_edit
 	var associated_property: Dictionary = node.get_node_property_info(key)
 
 	if not control.setup_variable_editor(node, associated_property, graph_edit.current_graph.blackboard):
@@ -338,6 +339,7 @@ func _on_decorator_item_edited() -> void:
 
 	var item: TreeItem = decorator_tree.get_edited()
 	var column: int = decorator_tree.get_edited_column()
+	var before : Dictionary = node.decorator.duplicate()
 
 	if column == 0: 
 		var type: String = str(item.get_metadata(0))
@@ -345,6 +347,7 @@ func _on_decorator_item_edited() -> void:
 			node.set_decorator_type(type)
 		elif str(node.decorator.get("type", "none")) == type:
 			node.set_decorator_type("none")
+		_commit_decorator_change(before, "Set Decorator: %s" % type)
 		_refresh_decorator_tree()
 		return
 
@@ -355,9 +358,27 @@ func _on_decorator_item_edited() -> void:
 			field_name = &"count" if variant == 0 else &"timeout"
 			
 		node.set_decorator_field(field_name, item.get_range(column))
+		_commit_decorator_change(before, "Edit Decorator: %s" % field_name)
 		_refresh_decorator_tree()
 
+## Registers an undo/redo step for a decorator change that has already happened (node.decorator
+## already holds the "after" state at call time): captures "after" here, then records do/undo
+## methods that replace the whole dictionary via BehaviorNode.apply_decorator_snapshot(). No-ops
+## (nothing actually changed, e.g. clicking an already-inactive checkbox) are silently skipped.
+## Shares graph_edit.undo_redo / graph_edit.current_graph with every other undoable mutation, so
+## this lands in the same Ctrl+Z/Ctrl+Y history as connections, moves, deletes, etc.
+func _commit_decorator_change(before: Dictionary, action_name: String) -> void:
+	if graph_edit == null or graph_edit.undo_redo == null:
+		return
+	var after : Dictionary = node.decorator.duplicate()
+	if after == before:
+		return
 
+	var target : BehaviorNode = node
+	graph_edit.undo_redo.create_action(action_name, UndoRedo.MERGE_DISABLE, graph_edit.current_graph)
+	graph_edit.undo_redo.add_do_method(target, &"apply_decorator_snapshot", after)
+	graph_edit.undo_redo.add_undo_method(target, &"apply_decorator_snapshot", before)
+	graph_edit.undo_redo.commit_action(false) # already applied above; this only records it
 
 func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 	if not decorator_tree.visible or str(node.decorator.get("type", "none")) != "condition":

@@ -36,6 +36,19 @@ var var_property_editor: EditorProperty
 
 var _editor_signature: Array = []
 
+## The owning BehaviorGraphEdit, used to record undo/redo actions for property edits and
+## blackboard (un)links. Set by whoever instantiates this control - BehaviorGraphNode (via its own
+## already-exported graph_edit) or BehaviorNodeInfoPanel (via its own graph_edit, set once by
+## BeGraphDock). Left null, this control still works, it simply won't record undo/redo steps.
+var graph_edit : BehaviorGraphEdit = null
+
+## True while a multi-step edit (e.g. dragging a slider) is in progress: set on the first
+## property_changed call of a sequence, cleared once it's committed (changing == false).
+var _editing : bool = false
+## "Before" snapshot captured at the start of the current edit sequence (see
+## BehaviorNode.capture_property_snapshot/apply_property_snapshot).
+var _edit_before_snapshot : Dictionary = {}
+
 ## The [BlackboardVariable] currently bound to this control, [code]null[/code] if the variable isn't bound to a blackboard entry.
 var linked_property : BlackboardVariable = null:
 	set(v):
@@ -78,7 +91,7 @@ func setup_variable_editor(n : BehaviorNode,property:Dictionary,bb:Array[Blackbo
 	node.conditions_changed.connect(refresh_editor.bind(property),CONNECT_DEFERRED)
 	
 	bb_link_button.about_to_popup.connect(_populate_popup,CONNECT_DEFERRED)
-	bb_unlink_button.pressed.connect(node.set_node_property_blackboard_key.bind(key))
+	bb_unlink_button.pressed.connect(_on_unlink_pressed)
 	
 	popup.index_pressed.connect(_on_popup_index_pressed)
 	popup.clear()
@@ -88,16 +101,19 @@ func setup_variable_editor(n : BehaviorNode,property:Dictionary,bb:Array[Blackbo
 		return true
 
 	for v in bb:
-		if v.name != saved_key:
+		if v.name!=saved_key:
 			continue
-		linked_property = v
-		bb_reference.text = saved_key
-		linked = true
+		linked_property=v
+		bb_reference.text=saved_key
+		linked=true
 	return true
 
 ## Rebuilds [member var_property_editor] from scratch using the [param property] info dictionary.[br]
 ## Used when the underlying property's type/hint changes dynamically, e.g. after [signal BehaviorNode.conditions_changed] fires for an enum-backed value.
 func refresh_editor(property: Dictionary) -> void:
+	_editing = false
+	_edit_before_snapshot = {}
+
 	type = property["type"]
 	key = property["name"]
 	
@@ -149,11 +165,12 @@ func refresh_editor(property: Dictionary) -> void:
 	var_property_editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var_property_editor.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	
-	editor.property_changed.connect(change_property,CONNECT_DEFERRED)
+	editor.property_changed.connect(_on_property_changed,CONNECT_DEFERRED)
 	editor.update_property()
 
 ## Callback for [signal EditorProperty.property_changed], forwarded from [member var_property_editor]: applies the new value to [member node].
 func change_property(property: StringName, new_value: Variant, field: StringName, changing: bool) -> void:
+	print("trigger di change property")
 	if !node._set(property, new_value):
 		if type==TYPE_PACKED_STRING_ARRAY and node.get_node_property_info(property,"hint_string").begins_with(BG.CONDITION):
 			var old_value:Variant = node.get(property)
@@ -186,6 +203,40 @@ func change_property(property: StringName, new_value: Variant, field: StringName
 		node.set(property, new_value)
 		node.emit_changed()
 
+## Wraps change_property(): captures a full property snapshot at the start of an edit sequence
+## (the first call, whether or not it is later followed by more "changing=true" calls, e.g. a
+## slider drag), lets change_property() do its usual job unchanged, and commits a single undo/redo
+## step only once the sequence finishes (changing == false). This mirrors how Godot's own inspector
+## avoids recording one undo step per dragged frame.
+func _on_property_changed(property: StringName, new_value: Variant, field: StringName, changing: bool) -> void:
+	if not _editing:
+		_edit_before_snapshot = node.capture_property_snapshot(property)
+		_editing = true
+
+	change_property(property, new_value, field, changing)
+
+	if not changing:
+		_commit_property_change(property)
+
+## Commits the undo/redo step for the edit sequence that just finished on [param property].
+## No-ops if nothing actually changed (e.g. a click that didn't move a slider).
+func _commit_property_change(property: StringName) -> void:
+	_editing = false
+	var before : Dictionary = _edit_before_snapshot
+	_edit_before_snapshot = {}
+
+	if graph_edit == null or graph_edit.undo_redo == null:
+		return
+	var after : Dictionary = node.capture_property_snapshot(property)
+	if after == before:
+		return
+
+	var target_node : BehaviorNode = node
+	graph_edit.undo_redo.create_action("Edit %s" % property, UndoRedo.MERGE_DISABLE, graph_edit.current_graph)
+	graph_edit.undo_redo.add_do_method(target_node, &"apply_property_snapshot", property, after)
+	graph_edit.undo_redo.add_undo_method(target_node, &"apply_property_snapshot", property, before)
+	graph_edit.undo_redo.commit_action(false)
+
 ## Callback for [signal BehaviorNode.blackboard_key_set]: if the changed property matches [member key], updates [member linked] to reflect whether a blackboard key is now bound ([param bb_key] non-empty) or not.
 func sync_blackboard_keys(k : StringName = &"",bb_key : StringName = &""):
 	if key == k:
@@ -194,6 +245,12 @@ func sync_blackboard_keys(k : StringName = &"",bb_key : StringName = &""):
 		elif var_property_editor.visible: 
 			linked = true
 			bb_reference.text = String(bb_key)
+			var graph : BehaviorGraph = node.get_graph()
+			if graph != null:
+				for v in graph.blackboard:
+					if v.name == bb_key:
+						linked_property = v
+						break
 
 ## Callback for [signal MenuButton.about_to_popup] on [member bb_link_button]. Repopulates [member popup] with every variable from the owning graph's blackboard whose type is compatible with [member type] (per [constant CONVERSION_DICT]), each with its type icon; shows a disabled placeholder item if none is compatible.
 func _populate_popup() -> void:
@@ -212,13 +269,25 @@ func _populate_popup() -> void:
 
 ## Callback fired when an item is selected from [member popup]. Switches the display to the blackboard reference label, binds [member node]'s property to the selected key via [method BehaviorNode.set_node_property_blackboard_key], and stores the matching [BlackboardVariable] in [member linked_property].
 func _on_popup_index_pressed(index : int) -> void:
-	linked = true
 	var property_name :String = popup.get_item_text(index)
+	var new_key := StringName(property_name)
+	var before_key : StringName = node.get_blackboard_key(key)
+
+	linked = true
 	for property in node._graph_ref.get_ref().blackboard:
-		if property.name == property_name:
+		if property.name == new_key:
 			linked_property=property
 	bb_reference.text = property_name
-	node.set_node_property_blackboard_key(key, property_name)
+	node.set_node_property_blackboard_key(key, new_key)
+
+	_commit_blackboard_binding(before_key, new_key)
+
+## Replaces the direct node.set_node_property_blackboard_key.bind(key) connection used previously,
+## so an unlink click also records undo/redo.
+func _on_unlink_pressed() -> void:
+	var before_key : StringName = node.get_blackboard_key(key)
+	node.set_node_property_blackboard_key(key)
+	_commit_blackboard_binding(before_key, &"")
 
 ## Returns [code]true[/code] if [param data] represents a blackboard variable resource with a value type compatible with [member type].
 func _can_drop_data(at_position, data):
@@ -235,9 +304,35 @@ func _can_drop_data(at_position, data):
 ## Handles a successful drop of a blackboard variable resource: binds [member node]'s property to the dropped variable's name via [method BehaviorNode.set_node_property_blackboard_key] and updates [member linked_property]/[member bb_reference] accordingly.
 func _drop_data(at_position, data):
 	var k : StringName = data["resource"].name
+	var before_key : StringName = node.get_blackboard_key(key)
+
 	bb_reference.text = String(k)
 	linked_property=data["resource"]
 	node.set_node_property_blackboard_key(key, k)
+
+	_commit_blackboard_binding(before_key, k)
+
+## Shared undo/redo primitive for every way of linking or unlinking a property (popup, drag&drop,
+## unlink button): both do and undo call only node.set_node_property_blackboard_key(), never touch
+## this control directly. This is deliberate - the resource (node) survives a delete+undo cycle
+## unchanged, but this very control instance does not (a recreated node gets a brand new editor),
+## so capturing "self" here would leave stale references in the undo history. Whichever control
+## instance is alive when do/undo runs resyncs itself automatically via sync_blackboard_keys(),
+## already connected to node.blackboard_key_set in setup_variable_editor().
+func _commit_blackboard_binding(before_key: StringName, after_key: StringName) -> void:
+	if before_key == after_key:
+		return
+	if graph_edit == null or graph_edit.undo_redo == null:
+		return
+
+	var target_node : BehaviorNode = node
+	var target_key : StringName = key
+	var action_name : String = ("Link %s" % key) if after_key != &"" else ("Unlink %s" % key)
+
+	graph_edit.undo_redo.create_action(action_name, UndoRedo.MERGE_DISABLE, graph_edit.current_graph)
+	graph_edit.undo_redo.add_do_method(target_node, &"set_node_property_blackboard_key", target_key, after_key)
+	graph_edit.undo_redo.add_undo_method(target_node, &"set_node_property_blackboard_key", target_key, before_key)
+	graph_edit.undo_redo.commit_action(false)
 
 ## Callback for [signal BlackboardVariable.name_changed] on [member linked_property]: updates [member bb_reference] and re-binds [member node]'s property to the new name.
 func update_bb_name(n:StringName)->void:

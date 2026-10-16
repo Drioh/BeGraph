@@ -1,7 +1,7 @@
 @tool
 ## Visual [GraphNode] used by [BehaviorGraphDebugView] to render one [BehaviorNode]'s live debugging state.[br]
 ## Unlike the rest of [BehaviorGraphDebugView] (which builds its [GraphNode]s entirely in code, since it also has to run outside the editor for the in-game debug overlay), this node is defined in its own scene ([code]BehaviorGraphDebugNode.tscn[/code]) so its look can be tweaked directly in the editor; only the parts that depend on how many conditions/properties a node has (condition rows, property rows) are still built at runtime, from the [param info] dictionary passed to [method setup].[br]
-## Shows the node's category/status (as before) plus its instruction text and, toggled via [member properties_toggle], a read-only list of its behavior properties - each row showing its current value and, via a link icon, whether that value is fixed or comes from the graph's blackboard.
+## Shows the node's category/status (as before) plus its instruction text, its breakpoint/mute flags, a summary of its active decorator (if any) and, toggled via [member properties_toggle], a read-only list of its behavior properties - each row showing its current value and, via a link icon, whether that value is fixed or comes from the graph's blackboard.
 class_name BehaviorGraphDebugNode
 extends GraphNode
 
@@ -15,6 +15,15 @@ const LINKED_ICON: Texture2D = preload("res://addons/BeGraph/Icons/link_icon.svg
 ## The node's raw instruction text (with [code]{placeholder}[/code] tokens as authored, not resolved).
 @onready var instruction_label: Label = %InstructionLabel
 
+## Row holding [member breakpoint_label]/[member mute_label]; hidden state badges shown next to the subtitle.
+@onready var flags_row: HBoxContainer = %FlagsRow
+## Shown when the node's [member BehaviorNode.breakpoint_enabled] is true.
+@onready var breakpoint_label: Label = %BreakpointLabel
+## Shown when the node's [member BehaviorNode.mute_enabled] is true.
+@onready var mute_label: Label = %MuteLabel
+## Short human-readable summary of the node's active decorator (see [member BehaviorNode.decorator]); hidden when the decorator is "none".
+@onready var decorator_label: Label = %DecoratorLabel
+
 ## Row containing [member status_label] and [member properties_toggle]. Occupies slot row 1, for the same reason as [member main_row].
 @onready var status_row: HBoxContainer = %StatusRow
 ## Live status text ("idle"/"SUCCESS"/"FAILURE"/"RUNNING"), refreshed by [BehaviorGraphDebugView].
@@ -22,13 +31,6 @@ const LINKED_ICON: Texture2D = preload("res://addons/BeGraph/Icons/link_icon.svg
 ## Shows/hides [member properties_container]. Hidden entirely when the node has no behavior properties.
 @onready var properties_toggle: Button
 @onready var properties_tree: Tree = %PropertiesTree
-
-## Row holding BreakpointLabel/MuteLabel; hidden state badges shown next to the subtitle.
-@onready var flags_row: HBoxContainer = %FlagsRow
-@onready var breakpoint_label: Label = %BreakpointLabel
-@onready var mute_label: Label = %MuteLabel
-## Short human-readable summary of the node's active decorator (see [member BehaviorNode.decorator]); hidden when the decorator is "none".
-@onready var decorator_label: Label = %DecoratorLabel
 
 func _ready() -> void:
 	properties_toggle = Button.new()
@@ -42,7 +44,7 @@ func _ready() -> void:
 		)
 	
 
-## Configures every part of this node from [param info] (the same dictionary shape built by [method BehaviorGraphDebugView._info_from_node] / sent by [method BehaviorGraphDebugBridge._send_graph_structure]): title, subtitle, instruction, input/output/condition slots, and the (initially hidden) properties list.
+## Configures every part of this node from [param info] (the same dictionary shape built by [method BehaviorGraphDebugView._info_from_node] / sent by [method BehaviorGraphDebugBridge._send_graph_structure]): title, subtitle, instruction, breakpoint/mute flags, decorator summary, input/output/condition slots, and the (initially hidden) properties list.
 func setup(info: Dictionary) -> void:
 	name = info["name"]
 	title = info["name"]
@@ -74,53 +76,6 @@ func setup(info: Dictionary) -> void:
 	var properties: Array = info.get("behavior_properties", [])
 	properties_toggle.visible = not properties.is_empty()
 	_build_properties(properties)
-	
-## Rebuilds [member properties_container] from scratch using [param properties] (an Array of [code]{"name","value","blackboard_key"}[/code] dictionaries).
-func _build_properties(properties: Array) -> void:
-	properties_tree.clear()
-	properties_tree.column_titles_visible = true
-	properties_tree.set_column_title(0, "Key")
-	properties_tree.set_column_title(1, "Value")
-	properties_tree.set_column_expand(0, true)
-	properties_tree.set_column_expand(1, true)
-	properties_tree.set_column_expand_ratio(0,1)
-	properties_tree.set_column_expand_ratio(1,3)
-	properties_tree.set_column_custom_minimum_width(0, 28)
-	properties_tree.create_item()
-	properties_tree.hide()
-	for property in properties:
-		_add_property_row(property)
-	
-## Appends one row for [param property] to [member properties_container]: a link icon (visible only when the property is bound to a blackboard entry), its name, and its current value.
-func _add_property_row(property: Dictionary) -> void:
-	var linked: bool = String(property.get("blackboard_key", "")) != ""
-	var item : TreeItem = properties_tree.create_item(properties_tree.get_root())
-	item.set_text(0,property["name"])
-	item.set_icon(0, EditorInterface.get_editor_theme().get_icon(type_string(property["type"]), "EditorIcons"))
-	
-	if !linked:
-		item.set_text(1,str(property.get("value")))
-	else:
-		item.set_text(1,property["blackboard_key"])
-		item.set_icon(1,load("res://addons/BeGraph/Icons/link_icon.svg"))
-	reset_size.call_deferred()
-
-## Sets [member status_label]'s text (color is handled separately by [BehaviorGraphDebugView], via this node's slot colors).
-func update_status_text(text: String) -> void:
-	status_label.text = text
-
-## Refreshes only the displayed values (not the link icon/name) of an already-built properties list, in the same order [method setup] built them in. Used whenever fresher values come in (a node ticking, or a blackboard entry it reads from changing) without rebuilding the whole row set.
-func update_property_values(properties: Array) -> void:
-	var item = properties_tree.get_root()
-	for i in min(properties_tree.get_child_count(), properties.size()):
-		if item == null:
-			continue
-		if String(properties[i].get("blackboard_key", "")) != "":
-			item.set_text(1,properties[i]["blackboard_key"])
-			item.set_icon(1,load("res://addons/BeGraph/Icons/link_icon.svg"))
-		else:
-			item.set_text(1,str(properties[i].get("value")))
-		item = item.get_next()
 
 ## Shows a short human-readable summary of [param decorator] in [member decorator_label], or hides it when no decorator is active.
 func _set_decorator_info(decorator: Dictionary) -> void:
@@ -169,3 +124,50 @@ func _decorator_summary(decorator: Dictionary) -> String:
 			return "Decorator: Condition - %s" % (key if key != "" else "(unbound)")
 		_:
 			return ""
+
+## Rebuilds [member properties_container] from scratch using [param properties] (an Array of [code]{"name","value","blackboard_key"}[/code] dictionaries).
+func _build_properties(properties: Array) -> void:
+	properties_tree.clear()
+	properties_tree.column_titles_visible = true
+	properties_tree.set_column_title(0, "Key")
+	properties_tree.set_column_title(1, "Value")
+	properties_tree.set_column_expand(0, true)
+	properties_tree.set_column_expand(1, true)
+	properties_tree.set_column_expand_ratio(0,1)
+	properties_tree.set_column_expand_ratio(1,3)
+	properties_tree.set_column_custom_minimum_width(0, 28)
+	properties_tree.create_item()
+	properties_tree.hide()
+	for property in properties:
+		_add_property_row(property)
+	
+## Appends one row for [param property] to [member properties_container]: a link icon (visible only when the property is bound to a blackboard entry), its name, and its current value.
+func _add_property_row(property: Dictionary) -> void:
+	var linked: bool = String(property.get("blackboard_key", "")) != ""
+	var item : TreeItem = properties_tree.create_item(properties_tree.get_root())
+	item.set_text(0,property["name"])
+	item.set_icon(0, EditorInterface.get_editor_theme().get_icon(type_string(property["type"]), "EditorIcons"))
+	
+	if !linked:
+		item.set_text(1,str(property.get("value")))
+	else:
+		item.set_text(1,property["blackboard_key"])
+		item.set_icon(1,load("res://addons/BeGraph/Icons/link_icon.svg"))
+	reset_size.call_deferred()
+
+## Sets [member status_label]'s text (color is handled separately by [BehaviorGraphDebugView], via this node's slot colors).
+func update_status_text(text: String) -> void:
+	status_label.text = text
+
+## Refreshes only the displayed values (not the link icon/name) of an already-built properties list, in the same order [method setup] built them in. Used whenever fresher values come in (a node ticking, or a blackboard entry it reads from changing) without rebuilding the whole row set.
+func update_property_values(properties: Array) -> void:
+	var item = properties_tree.get_root()
+	for i in min(properties_tree.get_child_count(), properties.size()):
+		if item == null:
+			continue
+		if String(properties[i].get("blackboard_key", "")) != "":
+			item.set_text(1,properties[i]["blackboard_key"])
+			item.set_icon(1,load("res://addons/BeGraph/Icons/link_icon.svg"))
+		else:
+			item.set_text(1,str(properties[i].get("value")))
+		item = item.get_next()

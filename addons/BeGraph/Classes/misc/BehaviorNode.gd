@@ -207,6 +207,19 @@ func set_decorator_field(field: StringName, value: Variant) -> void:
 	decorator_changed.emit()
 	emit_changed()
 
+## Replaces the whole [member decorator] dictionary with [param snapshot] (stored as a copy),
+## resets per-cycle decorator runtime state and emits the same signals
+## set_decorator_type()/set_decorator_field() do. This is the shared undo/redo primitive for
+## decorator edits: by always restoring the *entire* dictionary rather than a single field, one
+## method covers both a type switch (set_decorator_type) and a single-field edit
+## (set_decorator_field) uniformly, and can be reused by any future decorator editor outside
+## BehaviorGraphNode's own Tree UI.
+func apply_decorator_snapshot(snapshot: Dictionary) -> void:
+	decorator = snapshot.duplicate()
+	_reset_decorator_state()
+	decorator_changed.emit()
+	emit_changed()
+
 
 
 ## Inverter: ticks the action and swaps SUCCESS/FAILURE; RUNNING (and ERROR) pass through unchanged.
@@ -413,7 +426,29 @@ func is_blackboard_reference_enabled_for_key(key: StringName) -> bool:
 
 func get_blackboard_key(property: StringName) -> StringName:
 	return _blackboard_bindings.get(property, &"")
-	
+
+## Snapshot of everything change_property() may touch for a single property edit: the property's
+## own (possibly blackboard-bound) value, node.conditions, and node.output. Used as the undo/redo
+## primitive for BehaviorGraphNodeVariableEditor's edits, including its special
+## PackedStringArray/"conditions" growth-or-shrink path for enum-backed properties, which also
+## mutates conditions/output alongside the property itself.
+func capture_property_snapshot(property: StringName) -> Dictionary:
+	return {
+		"value": get(property),
+		"conditions": conditions.duplicate(true),
+		"output": output,
+	}
+
+## Restores a snapshot captured by [method capture_property_snapshot]: puts conditions/output back
+## first (so any editor listening to conditions_changed rebuilds against the right array), then the
+## property's own value, then notifies like a normal edit would.
+func apply_property_snapshot(property: StringName, snapshot: Dictionary) -> void:
+	conditions = (snapshot["conditions"] as Array).duplicate(true)
+	output = snapshot["output"]
+	set(property, snapshot["value"])
+	conditions_changed.emit()
+	emit_changed()
+
 func _get(property: StringName) -> Variant:
 	var key : StringName = _blackboard_bindings.get(property, &"")
 	if key == &"":

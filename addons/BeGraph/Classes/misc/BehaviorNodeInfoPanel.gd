@@ -14,6 +14,11 @@ var no_node_text: String = "No node selected."
 ## Suffix shown on a condition row whose successor slot isn't connected.
 var not_connected_text: String = "(not connected)"
 
+## Set once by BeGraphDock right after instancing this panel, so inline property editors built
+## here (exactly like BehaviorGraphNode's own) can record undo/redo for property edits and
+## blackboard (un)links in the same graph history.
+var graph_edit : BehaviorGraphEdit = null
+
 @onready var empty_label: Label = %EmptyLabel
 @onready var scroll: ScrollContainer = %ScrollContainer
 @onready var content: VBoxContainer = %Content
@@ -187,6 +192,7 @@ func _add_property_row(node: BehaviorNode, property: Dictionary) -> void:
 
 	var editor: BehaviorGraphNodeVariableEditor = BEHAVIOR_GRAPH_NODE_VARIABLE.instantiate()
 	row.add_child(editor)
+	editor.graph_edit = graph_edit
 	editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	editor.size_flags_stretch_ratio=2
 

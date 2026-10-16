@@ -60,6 +60,8 @@ func _ready() -> void:
 	
 	graph_elements_linked_to_frame_request.connect(_on_elements_linked_to_frame)
 	end_node_move.connect(_sync_frame_attachments)
+	begin_node_move.connect(_on_begin_node_move)
+	end_node_move.connect(_on_end_node_move)
 	if Engine.is_editor_hint():
 		undo_redo = EditorInterface.get_editor_undo_redo()
 #endregion
@@ -123,19 +125,46 @@ func add_node(script_path: String = "") -> BehaviorGraphNodeBase:
 		push_error("Script path not valid")
 		return null
 
-	var behavior_node: BehaviorNode = load(script_path).new()
+	var position : Vector2 = (get_local_mouse_position() + scroll_offset) / zoom
+	var node_name : StringName = _generate_unique_node_name()
+	var node : BehaviorGraphNodeBase = _instantiate_node(load(script_path).new(), position, node_name)
 
+	undo_redo.create_action("Create %s" % node_name, UndoRedo.MERGE_DISABLE, current_graph)
+	undo_redo.add_do_method(self, &"_do_create_node", script_path, node_name, position)
+	undo_redo.add_undo_method(self, &"_do_remove_node", node_name, node.node)
+	undo_redo.commit_action(false) # already performed above; this only records it
+
+	return node
+
+## Shared instantiation step: builds the visual node for [param behavior_node] at [param position],
+## optionally forcing its name to [param forced_name] (used so redo recreates the exact same name).
+func _instantiate_node(behavior_node: BehaviorNode, position: Vector2, forced_name: StringName = &"") -> BehaviorGraphNodeBase:
 	var node: BehaviorGraphNodeBase = _scene_for(behavior_node).instantiate()
 	add_child(node)
+	if forced_name != &"":
+		node.name = forced_name
 
 	node.graph_edit = self
-	node.position_offset = (get_local_mouse_position() + scroll_offset) / zoom
-	behavior_node.position_in_graph = node.position_offset
-	node.set_node(behavior_node)
-	node.delete_request.connect(_on_delete_nodes_request)
+	node.position_offset = position
+	behavior_node.position_in_graph = position
+	node.set_node(behavior_node) # reads self.name -> writes behavior_node.resource_name
 
 	current_graph.add_node(behavior_node)
 	return node
+
+## Redo half of [method add_node].
+func _do_create_node(script_path: String, node_name: StringName, position: Vector2) -> void:
+	if current_graph.nodes.has(node_name) or has_node(NodePath(node_name)):
+		return
+	_instantiate_node(load(script_path).new(), position, node_name)
+
+## Undo half of [method add_node] (also reused by delete/paste/embed to remove a single node).
+func _do_remove_node(node_name: StringName, behavior_node: BehaviorNode) -> void:
+	current_graph.remove_node(behavior_node)
+	var el := get_node_or_null(NodePath(node_name))
+	if el:
+		remove_child(el)
+		el.queue_free()
 
 ## Disconnects any outgoing connection from [param graph_node] whose port no longer exists after its condition count changed.
 func prune_invalid_connections_from(graph_node: BehaviorGraphNodeBase) -> void:
@@ -145,12 +174,17 @@ func prune_invalid_connections_from(graph_node: BehaviorGraphNodeBase) -> void:
 		if c["from_port"] > max_valid_port:
 			disconnect_nodes(c["from_node"], c["from_port"], c["to_node"], c["to_port"])
 
-## Deletes the given nodes, refusing to delete a graph's last remaining starting point; also removes their connections - both outgoing and incoming (properly updating the surviving neighbor's [BehaviorNode] via [method BehaviorNode.remove_next], so a condition/[member BehaviorNode._next_ref] entry pointing at a deleted node never lingers) - and hands the inspector back to [member current_graph] if needed.[br]
+## Deletes the given nodes/frames as a single undoable action: refuses to delete a graph's last
+## remaining starting point, severs every connection touching a deleted node (both directions, and
+## only once even if both endpoints are deleted together), and - for a frame - detaches whatever it
+## still has attached before removing it. Undo restores everything: the resources themselves are
+## kept alive by the arguments below (never duplicated), so identity/data is exact.
 func _on_delete_nodes_request(nodes: Array[StringName]) -> void:
+	var to_delete : Array[StringName] = []
 	for n in nodes:
 		var element := get_node_or_null(NodePath(n))
 		if element is BehaviorGraphFrame:
-			_delete_frame(element)
+			to_delete.append(n)
 			continue
 
 		var nod := element as BehaviorGraphNodeBase
@@ -161,15 +195,97 @@ func _on_delete_nodes_request(nodes: Array[StringName]) -> void:
 			push_error("Node %s cannot be deleted. There must be at least one access point" % n)
 			continue
 
-		for c in get_connection_list():
-			if c["from_node"] == n or c["to_node"] == n:
-				disconnect_nodes(c["from_node"], c["from_port"], c["to_node"], c["to_port"])
+		to_delete.append(n)
 
-		current_graph.remove_node(nod.node)
-		remove_child(nod)
-		nod.queue_free()
-	_sync_frame_attachments()
+	if to_delete.is_empty():
+		return
+
+	var deleted_set : Dictionary = {}
+	for n in to_delete:
+		deleted_set[n] = true
+
+	# Every connection touching at least one deleted (non-frame) node, collected once so a
+	# connection between two co-deleted nodes is severed/restored exactly one time.
+	var touched_connections : Array[Dictionary] = []
+	for c in get_connection_list():
+		if deleted_set.has(c["from_node"]) or deleted_set.has(c["to_node"]):
+			if c not in touched_connections:
+				touched_connections.append(c)
+
+	var frame_snapshots : Dictionary = {} # frame name -> snapshot dict, built below
+
+	var action_name : String = "Delete Node" if to_delete.size() == 1 else "Delete %d Nodes" % to_delete.size()
+	undo_redo.create_action(action_name, UndoRedo.MERGE_DISABLE, current_graph)
+
+	undo_redo.add_do_method(self, &"_do_disconnect_many", touched_connections)
+
+	for n in to_delete:
+		var element := get_node_or_null(NodePath(n))
+		if element is BehaviorGraphFrame:
+			var frame := element as BehaviorGraphFrame
+			var snapshot : Dictionary = {
+				"name": n,
+				"resource": frame.frame,
+				"title": frame.frame.frame_title,
+				"tint_color": frame.frame.tint_color,
+				"position": frame.frame.position_in_graph,
+				"size": frame.frame.frame_size,
+				"autoshrink": frame.frame.autoshrink,
+				"attached": get_attached_nodes_of_frame(n).duplicate(),
+			}
+			frame_snapshots[n] = snapshot
+			undo_redo.add_do_method(self, &"_do_remove_frame", snapshot)
+		else:
+			undo_redo.add_do_method(self, &"_do_remove_node", n, (element as BehaviorGraphNodeBase).node)
+
+	undo_redo.add_do_method(self, &"_sync_frame_attachments")
+	undo_redo.add_do_method(self, &"_emit_no_selection")
+
+	# Undo order: a node/frame must exist again before any connection touching it is restored.
+	for n in to_delete:
+		if frame_snapshots.has(n):
+			undo_redo.add_undo_method(self, &"_do_recreate_frame", frame_snapshots[n])
+		else:
+			var element := get_node_or_null(NodePath(n))
+			undo_redo.add_undo_method(self, &"_do_recreate_node", n, (element as BehaviorGraphNodeBase).node)
+	undo_redo.add_undo_method(self, &"_do_connect_many", touched_connections)
+	undo_redo.add_undo_method(self, &"_sync_frame_attachments")
+	undo_redo.add_undo_method(self, &"_emit_no_selection")
+
+	undo_redo.commit_action()
+
+## Emits selected_node_changed(null): a real method (not a closure), required since
+## add_do_method/add_undo_method on EditorUndoRedoManager take (object, method_name), never a
+## Callable.
+func _emit_no_selection() -> void:
 	selected_node_changed.emit(null)
+
+func _do_recreate_node(n: StringName, behavior_node: BehaviorNode) -> void:
+	if has_node(NodePath(n)):
+		return
+	load_node(behavior_node, true)
+
+func _do_remove_frame(snapshot: Dictionary) -> void:
+	for element_name in get_attached_nodes_of_frame(snapshot["name"]).duplicate():
+		detach_graph_element_from_frame(element_name)
+	current_graph.remove_node(snapshot["resource"])
+	var el := get_node_or_null(NodePath(snapshot["name"]))
+	if el:
+		remove_child(el)
+		el.queue_free()
+
+func _do_recreate_frame(snapshot: Dictionary) -> void:
+	if has_node(NodePath(snapshot["name"])):
+		return
+	var frame_resource : BehaviorFrame = snapshot["resource"]
+	frame_resource.frame_title = snapshot["title"]
+	frame_resource.tint_color = snapshot["tint_color"]
+	frame_resource.position_in_graph = snapshot["position"]
+	frame_resource.frame_size = snapshot["size"]
+	frame_resource.autoshrink = snapshot["autoshrink"]
+	frame_resource.attached_nodes = (snapshot["attached"] as Array).duplicate()
+	current_graph.add_node(frame_resource)
+	load_frame(frame_resource)
 	
 ## Callback for [signal GraphEdit.node_selected]: forwards the selected node's [BehaviorNode].
 func _on_node_selected(node: Node) -> void:
@@ -211,28 +327,56 @@ func connect_nodes(from_node: StringName, from_port: int, to_node: StringName, t
 		"to_node": StringName(to_node.validate_node_name()),
 		"to_port": to_port
 	}
-	f_node.node.add_next(t_node.node, from_port)
-	if c not in current_graph.connections:
-		current_graph.add_connection(c)
 
-	connect_node(from_node, from_port, to_node, to_port)
+	undo_redo.create_action("Connect %s -> %s" % [from_node, to_node], UndoRedo.MERGE_DISABLE, current_graph)
+	undo_redo.add_do_method(self, &"_do_connect", c)
+	undo_redo.add_undo_method(self, &"_do_disconnect", c)
+	undo_redo.commit_action()
 
 ## Removes a connection: updates the source [BehaviorNode] via [method BehaviorNode.remove_next], [member BehaviorGraph.connections], and the visual connection.
 func disconnect_nodes(from_node: StringName, from_port: int, to_node: StringName, to_port: int) -> void:
-	var f_node: BehaviorGraphNodeBase = get_node(NodePath(from_node))
-	var t_node: BehaviorGraphNodeBase = get_node(NodePath(to_node))
-
 	var c: Dictionary = {
 		"from_node": from_node,
 		"from_port": from_port,
 		"to_node": to_node,
 		"to_port": to_port
 	}
+	undo_redo.create_action("Disconnect %s -> %s" % [from_node, to_node], UndoRedo.MERGE_DISABLE, current_graph)
+	undo_redo.add_do_method(self, &"_do_disconnect", c)
+	undo_redo.add_undo_method(self, &"_do_connect", c)
+	undo_redo.commit_action()
 
-	f_node.node.remove_next(t_node.node, from_port)
+## Shared do/undo primitive for a single connection. Reused by connect/disconnect themselves and
+## by delete/paste/embed, so there is one source of truth for what "connecting" actually means.
+func _do_connect(c: Dictionary) -> void:
+	var f_node: BehaviorGraphNodeBase = get_node_or_null(NodePath(c["from_node"]))
+	var t_node: BehaviorGraphNodeBase = get_node_or_null(NodePath(c["to_node"]))
+	if f_node == null or t_node == null:
+		return
+	f_node.node.add_next(t_node.node, c["from_port"])
+	if c not in current_graph.connections:
+		current_graph.add_connection(c)
+	connect_node(c["from_node"], c["from_port"], c["to_node"], c["to_port"])
+
+func _do_disconnect(c: Dictionary) -> void:
+	var f_node: BehaviorGraphNodeBase = get_node_or_null(NodePath(c["from_node"]))
+	var t_node: BehaviorGraphNodeBase = get_node_or_null(NodePath(c["to_node"]))
+	if f_node == null or t_node == null:
+		return
+	f_node.node.remove_next(t_node.node, c["from_port"])
 	current_graph.remove_connection(c)
+	disconnect_node(c["from_node"], c["from_port"], c["to_node"], c["to_port"])
 
-	disconnect_node(from_node, from_port, to_node, to_port)
+## Batched variants of _do_connect/_do_disconnect, used wherever several connections must be
+## (re)created or severed as part of the same undo/redo step (delete, paste, embed) - one
+## add_do_method/add_undo_method call instead of one per connection.
+func _do_connect_many(conns: Array[Dictionary]) -> void:
+	for c in conns:
+		_do_connect(c)
+
+func _do_disconnect_many(conns: Array[Dictionary]) -> void:
+	for c in conns:
+		_do_disconnect(c)
 
 ## Names of every node that is the source of at least one connection.
 func get_connection_starting_nodes() -> Array[StringName]:
@@ -456,7 +600,9 @@ func _capture_selection() -> Dictionary:
 			connections.append(c.duplicate())
 	return {"nodes": nodes, "connections": connections}
 
-## Recreates a snapshot inside [member current_graph]: every node gets a fresh unique name and is created through [method load_node]; connections between them are then rebuilt through [method connect_nodes]. The new nodes end up selected.
+## Recreates a snapshot inside [member current_graph], as a single undoable action: every node
+## gets a fresh unique name; connections between them are rebuilt from scratch. The new nodes end
+## up selected.
 func _paste_snapshot(snapshot : Dictionary, offset : Vector2) -> void:
 	var nodes : Array = snapshot.get("nodes", [])
 	if current_graph == null or nodes.is_empty():
@@ -465,7 +611,7 @@ func _paste_snapshot(snapshot : Dictionary, offset : Vector2) -> void:
 	_deselect_all()
 
 	var name_map : Dictionary = {} # old name -> new name
-	var created : Array[BehaviorGraphNodeBase] = []
+	var copies : Array[BehaviorNode] = []
 	for source : BehaviorNode in nodes:
 		var copy : BehaviorNode = _clone_behavior_node(source)
 		var new_name : StringName = _generate_unique_node_name()
@@ -473,15 +619,59 @@ func _paste_snapshot(snapshot : Dictionary, offset : Vector2) -> void:
 		copy.resource_name = new_name
 		copy.position_in_graph = source.position_in_graph + offset
 		_remove_missing_blackboard_bindings(copy)
-		created.append(load_node(copy, true))
+		copies.append(copy)
 
+	var new_connections : Array[Dictionary] = []
 	for c in snapshot["connections"]:
-		connect_nodes(
-			name_map[StringName(c["from_node"])], c["from_port"],
-			name_map[StringName(c["to_node"])], c["to_port"])
+		new_connections.append({
+			"from_node": name_map[StringName(c["from_node"])],
+			"from_port": c["from_port"],
+			"to_node": name_map[StringName(c["to_node"])],
+			"to_port": c["to_port"],
+		})
 
-	for graph_node in created:
-		graph_node.selected = true
+	var pasted_names : Array[StringName] = []
+	for copy in copies:
+		pasted_names.append(StringName(copy.resource_name))
+
+	var action_name : String = "Paste Node" if copies.size() == 1 else "Paste %d Nodes" % copies.size()
+	undo_redo.create_action(action_name, UndoRedo.MERGE_DISABLE, current_graph)
+
+	undo_redo.add_do_method(self, &"_do_load_nodes", copies)
+	undo_redo.add_do_method(self, &"_do_connect_many", new_connections)
+	undo_redo.add_do_method(self, &"_do_select_nodes", pasted_names)
+
+	undo_redo.add_undo_method(self, &"_do_disconnect_many", new_connections)
+	undo_redo.add_undo_method(self, &"_do_remove_nodes", copies)
+
+	undo_redo.commit_action()
+
+## Loads every not-yet-present node in [param copies] (shared by paste/duplicate's redo and by
+## embed_graph's redo: on first commit the nodes are already loaded live by the caller, so this
+## only matters on a later redo).
+func _do_load_nodes(copies: Array[BehaviorNode]) -> void:
+	for copy in copies:
+		if not has_node(NodePath(copy.resource_name)):
+			load_node(copy, true)
+
+## Undo counterpart of _do_load_nodes.
+func _do_remove_nodes(copies: Array[BehaviorNode]) -> void:
+	for copy in copies:
+		_do_remove_node(StringName(copy.resource_name), copy)
+
+## Selects every named element (used after a paste/duplicate so the result starts selected).
+func _do_select_nodes(names: Array[StringName]) -> void:
+	for n in names:
+		var el := get_node_or_null(NodePath(n))
+		if el:
+			el.selected = true
+
+## Recursively searches [param node]'s [Control] descendants for the one whose global rect contains [param global_pos], returning the first (deepest) match found, or [code]null[/code] if none does.
+func _generate_unique_node_name(prefix : String = "_GraphNode_") -> StringName:
+	var candidate := StringName("%s%d" % [prefix, randi_range(10000, 99999)])
+	while current_graph.nodes.has(candidate) or has_node(NodePath(candidate)):
+		candidate = StringName("%s%d" % [prefix, randi_range(10000, 99999)])
+	return candidate
 
 ## Deep-copies [param source] and strips everything tied to the graph it belonged to (successors), so the copy can be wired up from scratch.
 func _clone_behavior_node(source : BehaviorNode) -> BehaviorNode:
@@ -501,13 +691,6 @@ func _remove_missing_blackboard_bindings(node : BehaviorNode) -> void:
 		var key : StringName = node.behavior_properties[prop][&"blackboard_reference"]
 		if key != &"" and not keys.has(key):
 			node.behavior_properties[prop][&"blackboard_reference"] = &""
-
-## Returns a node name (same style as the auto-generated ones) not used by any node in the graph or any child of this GraphEdit.
-func _generate_unique_node_name(prefix : String = "_GraphNode_") -> StringName:
-	var candidate := StringName("%s%d" % [prefix, randi_range(10000, 99999)])
-	while current_graph.nodes.has(candidate) or has_node(NodePath(candidate)):
-		candidate = StringName("%s%d" % [prefix, randi_range(10000, 99999)])
-	return candidate
 
 ## Top-left corner (graph coordinates) of the bounding box of the snapshot's nodes.
 func _snapshot_origin(snapshot : Dictionary) -> Vector2:
@@ -538,7 +721,7 @@ func _deselect_all() -> void:
 ## Padding (graph coordinates) between the top-left corner of the embedded nodes and the frame.
 const FRAME_PADDING := Vector2(40, 60)
 
-## Copies every node of [param source] (and the connections between them) into [member current_graph], wrapped in a new frame titled after [param source]. [param source] is never modified.[br]
+## Copies every node of [param source] (and the connections between them) into [member current_graph], wrapped in a new frame titled after [param source], as a single undoable action. [param source] is never modified.[br]
 ## Properties bound to a blackboard variable are unbound and reset to the node's default value, since the blackboards of the two graphs are unrelated.[br]
 ## Access points are skipped unless [param include_access_points] is true, so the embedded flow can be wired to the host graph; frames nested in [param source] are flattened (their nodes are copied, their frames aren't).
 func embed_graph(source: BehaviorGraph, include_access_points: bool = false) -> BehaviorGraphFrame:
@@ -564,7 +747,7 @@ func embed_graph(source: BehaviorGraph, include_access_points: bool = false) -> 
 	var offset : Vector2 = (scroll_offset + size * 0.5) / zoom - bounds.get_center()
 
 	var name_map : Dictionary = {} # old name -> new name
-	var created : Array[BehaviorGraphNodeBase] = []
+	var copies : Array[BehaviorNode] = []
 	for src in sources:
 		var copy : BehaviorNode = _clone_behavior_node(src)
 		var new_name : StringName = _generate_unique_node_name()
@@ -572,23 +755,64 @@ func embed_graph(source: BehaviorGraph, include_access_points: bool = false) -> 
 		copy.resource_name = new_name
 		copy.position_in_graph = src.position_in_graph + offset
 		_strip_blackboard_bindings(copy)
-		created.append(load_node(copy, true))
+		copies.append(copy)
 
+	var new_connections : Array[Dictionary] = []
 	for c in source.connections:
 		var from_name := StringName(c["from_node"])
 		var to_name := StringName(c["to_node"])
 		if name_map.has(from_name) and name_map.has(to_name):
-			connect_nodes(name_map[from_name], c["from_port"], name_map[to_name], c["to_port"])
+			new_connections.append({
+				"from_node": name_map[from_name], "from_port": c["from_port"],
+				"to_node": name_map[to_name], "to_port": c["to_port"],
+			})
 
 	var frame_node := BehaviorFrame.new()
-	frame_node.resource_name = _generate_unique_node_name("_GraphFrame_")
+	var frame_name : StringName = _generate_unique_node_name("_GraphFrame_")
+	frame_node.resource_name = frame_name
 	frame_node.frame_title = _graph_display_name(source)
 	frame_node.position_in_graph = bounds.position + offset - FRAME_PADDING
 	frame_node.frame_size = bounds.size + Vector2(500, 300)
-	for graph_node in created:
-		frame_node.attached_nodes.append(graph_node.name)
+	for copy in copies:
+		frame_node.attached_nodes.append(copy.resource_name)
+
+	# Perform the embed directly (so the frame can be returned synchronously); the action below
+	# only records how to undo/redo it, reusing these exact same resource objects.
+	for copy in copies:
+		load_node(copy, true)
+	for c in new_connections:
+		_do_connect(c)
 	current_graph.add_node(frame_node)
-	return load_frame(frame_node)
+	var frame : BehaviorGraphFrame = load_frame(frame_node)
+
+	undo_redo.create_action("Embed %s" % _graph_display_name(source), UndoRedo.MERGE_DISABLE, current_graph)
+	undo_redo.add_do_method(self, &"_do_load_nodes", copies)
+	undo_redo.add_do_method(self, &"_do_connect_many", new_connections)
+	undo_redo.add_do_method(self, &"_do_add_frame_node", frame_node)
+
+	undo_redo.add_undo_method(self, &"_do_remove_frame_node", frame_node)
+	undo_redo.add_undo_method(self, &"_do_disconnect_many", new_connections)
+	undo_redo.add_undo_method(self, &"_do_remove_nodes", copies)
+	undo_redo.commit_action(false)
+
+	return frame
+
+## Redo half of embed_graph's frame creation: adds frame_node to the graph and creates its visual,
+## unless already present (first execution happened live, above).
+func _do_add_frame_node(frame_node: BehaviorFrame) -> void:
+	if has_node(NodePath(frame_node.resource_name)):
+		return
+	current_graph.add_node(frame_node)
+	load_frame(frame_node)
+
+## Undo half: removes frame_node and its visual (the embedded nodes themselves are removed
+## separately by _do_remove_nodes).
+func _do_remove_frame_node(frame_node: BehaviorFrame) -> void:
+	var fel := get_node_or_null(NodePath(frame_node.resource_name))
+	if fel:
+		current_graph.remove_node(frame_node)
+		remove_child(fel)
+		fel.queue_free()
 
 ## Creates the visual frame for [param frame_node] (already registered in [member current_graph]) and attaches the nodes it lists.
 func load_frame(frame_node: BehaviorFrame) -> BehaviorGraphFrame:
@@ -614,12 +838,58 @@ func _on_elements_linked_to_frame(elements: Array, frame_name: StringName) -> vo
 	var frame := get_node_or_null(NodePath(frame_name)) as BehaviorGraphFrame
 	if frame == null:
 		return
+
+	var previous_frame_of : Dictionary = {} # element name -> old frame name ("" if none)
+	var element_names : Array[StringName] = []
 	for element_name in elements:
 		var element := get_node_or_null(NodePath(element_name)) as BehaviorGraphNodeBase
 		if element == null:
 			continue
-		attach_graph_element_to_frame(element.name, frame_name)
+		var old_frame := get_element_frame(element.name) as BehaviorGraphFrame
+		previous_frame_of[StringName(element.name)] = StringName(old_frame.name) if old_frame != null else &""
+		element_names.append(StringName(element.name))
+
+	if element_names.is_empty():
+		return
+
+	_link_elements_to_frame(element_names, frame_name)
+
+	undo_redo.create_action("Attach to Frame", UndoRedo.MERGE_DISABLE, current_graph)
+	undo_redo.add_do_method(self, &"_link_elements_to_frame", element_names, frame_name)
+	undo_redo.add_undo_method(self, &"_unlink_elements_from_frame", element_names, previous_frame_of)
+	undo_redo.commit_action(false)
+
+func _link_elements_to_frame(element_names: Array[StringName], frame_name: StringName) -> void:
+	var frame := get_node_or_null(NodePath(frame_name)) as BehaviorGraphFrame
+	if frame == null:
+		return
+	for n in element_names:
+		var element := get_node_or_null(NodePath(n)) as GraphElement
+		if element == null:
+			continue
+		var current_frame := get_element_frame(n) as BehaviorGraphFrame
+		if current_frame != null and current_frame != frame:
+			detach_graph_element_from_frame(n)
+			current_frame.untrack(element)
+		attach_graph_element_to_frame(n, frame_name)
 		frame.track(element)
+	_sync_frame_attachments()
+
+func _unlink_elements_from_frame(element_names: Array[StringName], previous_frame_of: Dictionary) -> void:
+	for n in element_names:
+		var element := get_node_or_null(NodePath(n)) as GraphElement
+		if element == null:
+			continue
+		var current_frame := get_element_frame(n) as BehaviorGraphFrame
+		if current_frame != null:
+			detach_graph_element_from_frame(n)
+			current_frame.untrack(element)
+		var old_frame_name : StringName = previous_frame_of[n]
+		if old_frame_name != &"":
+			var old_frame := get_node_or_null(NodePath(old_frame_name)) as BehaviorGraphFrame
+			if old_frame != null:
+				attach_graph_element_to_frame(n, old_frame_name)
+				old_frame.track(element)
 	_sync_frame_attachments()
 
 ## Writes the live attachments of every frame back into its [BehaviorFrame], so they get saved with the graph.
@@ -633,14 +903,6 @@ func _sync_frame_attachments() -> void:
 			attached.append(element_name)
 		frame.frame.attached_nodes = attached
 	_refresh_frame_buttons()
-
-## Removes only the frame: its nodes stay in the graph.
-func _delete_frame(frame: BehaviorGraphFrame) -> void:
-	for element_name in get_attached_nodes_of_frame(frame.name):
-		detach_graph_element_from_frame(element_name)
-	current_graph.remove_node(frame.frame)
-	remove_child(frame)
-	frame.queue_free()
 
 ## Unbinds every blackboard-linked property of [param node], restoring the default value of the property (the stored one belongs to the old graph's context).
 func _strip_blackboard_bindings(node : BehaviorNode) -> void:
@@ -659,7 +921,9 @@ func _graph_display_name(graph: BehaviorGraph) -> String:
 		return graph.resource_path.get_file().get_basename()
 	return "Embedded Graph"
 
-## Creates a new frame around the currently selected nodes. Nodes that already belong to another frame are moved to the new one (an element can only be in one frame). Returns the new frame, or [code]null[/code] if nothing is selected.
+## Creates a new frame around the currently selected nodes, as a single undoable action. Nodes
+## that already belong to another frame are moved to the new one (an element can only be in one
+## frame). Returns the new frame, or [code]null[/code] if nothing is selected.
 func create_frame_from_selection(frame_title: String = "Frame") -> BehaviorGraphFrame:
 	if current_graph == null:
 		return null
@@ -674,48 +938,124 @@ func create_frame_from_selection(frame_title: String = "Frame") -> BehaviorGraph
 		bounds = bounds.merge(Rect2(graph_node.position_offset, graph_node.size))
 
 	var frame_node := BehaviorFrame.new()
-	frame_node.resource_name = _generate_unique_node_name("_GraphFrame_")
+	var frame_name : StringName = _generate_unique_node_name("_GraphFrame_")
+	frame_node.resource_name = frame_name
 	frame_node.frame_title = frame_title
 	frame_node.position_in_graph = bounds.position - FRAME_PADDING
 	frame_node.frame_size = bounds.size + FRAME_PADDING * 2.0
 
+	# Node (by name) -> the frame it is leaving ("" if none), so undo can put it back there.
+	var previous_frame_of : Dictionary = {}
+	var node_names : Array[StringName] = []
 	for graph_node in selected:
 		var old_frame := get_element_frame(graph_node.name) as BehaviorGraphFrame
-		if old_frame != null:
-			detach_graph_element_from_frame(graph_node.name)
-			old_frame.untrack(graph_node)
-		frame_node.attached_nodes.append(graph_node.name)
+		var n : StringName = StringName(graph_node.name)
+		previous_frame_of[n] = StringName(old_frame.name) if old_frame != null else &""
+		node_names.append(n)
+		frame_node.attached_nodes.append(n)
 
-	current_graph.add_node(frame_node)
-	var frame : BehaviorGraphFrame = load_frame(frame_node)
-	_sync_frame_attachments() # also updates the frames the nodes just left
-	frame.focus_title()
+	_attach_frame_selection(frame_node, node_names, previous_frame_of, true)
+	var frame : BehaviorGraphFrame = get_node(NodePath(frame_name))
+
+	undo_redo.create_action("Create Frame", UndoRedo.MERGE_DISABLE, current_graph)
+	undo_redo.add_do_method(self, &"_attach_frame_selection", frame_node, node_names, previous_frame_of, false)
+	undo_redo.add_undo_method(self, &"_detach_frame_selection", frame_name, frame_node, node_names, previous_frame_of)
+	undo_redo.commit_action(false)
+
 	return frame
 
-## Detaches every selected node from the frame it belongs to. The nodes stay where they are and the frame keeps its other nodes.
+## Shared do/redo step: detaches [param node_names] from whatever frame they were previously in
+## (per [param previous_frame_of]), then creates [param frame_node]'s visual (which attaches them,
+## since load_frame reads frame_node.attached_nodes - already populated once, up front).
+func _attach_frame_selection(frame_node: BehaviorFrame, node_names: Array[StringName], previous_frame_of: Dictionary, focus_title_on_create: bool) -> void:
+	if has_node(NodePath(frame_node.resource_name)):
+		return
+	for n in node_names:
+		var old_frame_name : StringName = previous_frame_of[n]
+		if old_frame_name != &"":
+			var old_frame := get_node_or_null(NodePath(old_frame_name)) as BehaviorGraphFrame
+			var el := get_node_or_null(NodePath(n)) as GraphElement
+			if old_frame != null and el != null:
+				detach_graph_element_from_frame(n)
+				old_frame.untrack(el)
+	current_graph.add_node(frame_node)
+	var frame := load_frame(frame_node)
+	_sync_frame_attachments()
+	if focus_title_on_create:
+		frame.focus_title()
+
+## Undo step: removes the frame and puts each node back into whatever frame (if any) it came from.
+func _detach_frame_selection(frame_name: StringName, frame_node: BehaviorFrame, node_names: Array[StringName], previous_frame_of: Dictionary) -> void:
+	var fel := get_node_or_null(NodePath(frame_name)) as BehaviorGraphFrame
+	if fel == null:
+		return
+	for element_name in get_attached_nodes_of_frame(frame_name).duplicate():
+		detach_graph_element_from_frame(element_name)
+	current_graph.remove_node(frame_node)
+	remove_child(fel)
+	fel.queue_free()
+
+	for n in node_names:
+		var old_frame_name : StringName = previous_frame_of[n]
+		if old_frame_name != &"":
+			var old_frame := get_node_or_null(NodePath(old_frame_name)) as BehaviorGraphFrame
+			var el := get_node_or_null(NodePath(n)) as GraphElement
+			if old_frame != null and el != null:
+				attach_graph_element_to_frame(n, old_frame_name)
+				old_frame.track(el)
+	_sync_frame_attachments()
+
+## Detaches every selected node from the frame it belongs to, as a single undoable action. The
+## nodes stay where they are and the frame keeps its other nodes.
 func detach_selected_nodes_from_frame() -> void:
 	if current_graph == null:
 		return
+	var names : Array[StringName] = []
 	for graph_node in _get_selected_nodes():
-		_detach_from_frame(graph_node.name)
-	_sync_frame_attachments()
+		names.append(StringName(graph_node.name))
+	_detach_names_from_frame(names)
 
 ## Detaches a single node from its frame (used by the node's own "free from frame" button).
 func detach_node_from_frame(element_name: StringName) -> void:
 	if current_graph == null:
 		return
-	_detach_from_frame(element_name)
+	_detach_names_from_frame([StringName(element_name)])
+
+## Shared by both entry points above: detaches every name in [param names] currently in a frame,
+## as a single undoable action.
+func _detach_names_from_frame(names: Array[StringName]) -> void:
+	var previous_frame_of : Dictionary = {} # element name -> old frame name
+	for n in names:
+		var frame := get_element_frame(n) as BehaviorGraphFrame
+		if frame != null:
+			previous_frame_of[n] = StringName(frame.name)
+	if previous_frame_of.is_empty():
+		return
+
+	_do_detach_names(previous_frame_of)
+
+	undo_redo.create_action("Detach From Frame", UndoRedo.MERGE_DISABLE, current_graph)
+	undo_redo.add_do_method(self, &"_do_detach_names", previous_frame_of)
+	undo_redo.add_undo_method(self, &"_do_reattach_names", previous_frame_of)
+	undo_redo.commit_action(false)
+
+func _do_detach_names(previous_frame_of: Dictionary) -> void:
+	for n in previous_frame_of:
+		var frame := get_node_or_null(NodePath(previous_frame_of[n])) as BehaviorGraphFrame
+		var element := get_node_or_null(NodePath(n)) as GraphElement
+		if frame != null and element != null and get_element_frame(n) == frame:
+			detach_graph_element_from_frame(n)
+			frame.untrack(element)
 	_sync_frame_attachments()
 
-## Detaches [param element_name] from its frame, if any, without syncing.
-func _detach_from_frame(element_name: StringName) -> void:
-	var frame := get_element_frame(element_name) as BehaviorGraphFrame
-	if frame == null:
-		return
-	detach_graph_element_from_frame(element_name)
-	var element := get_node_or_null(NodePath(element_name)) as GraphElement
-	if element != null:
-		frame.untrack(element)
+func _do_reattach_names(previous_frame_of: Dictionary) -> void:
+	for n in previous_frame_of:
+		var frame := get_node_or_null(NodePath(previous_frame_of[n])) as BehaviorGraphFrame
+		var element := get_node_or_null(NodePath(n)) as GraphElement
+		if frame != null and element != null:
+			attach_graph_element_to_frame(n, previous_frame_of[n])
+			frame.track(element)
+	_sync_frame_attachments()
 
 ## Shows the "free from frame" button only on the nodes that currently belong to a frame.
 func _refresh_frame_buttons() -> void:
@@ -723,5 +1063,53 @@ func _refresh_frame_buttons() -> void:
 		var graph_node := child as BehaviorGraphNodeBase
 		if graph_node != null:
 			graph_node.set_framed(get_element_frame(graph_node.name) != null)
+
+#endregion
+
+#region Move tracking
+
+## Positions of every selected element (name -> position_offset) captured at the start of a drag,
+## used by _on_end_node_move to build a single undoable "move" action.
+var _move_start_positions : Dictionary = {}
+
+func _on_begin_node_move() -> void:
+	_move_start_positions.clear()
+	for child in get_children():
+		var element := child as GraphElement
+		if element != null and element.selected:
+			_move_start_positions[StringName(element.name)] = element.position_offset
+
+func _on_end_node_move() -> void:
+	var start : Dictionary = _move_start_positions
+	_move_start_positions = {}
+	if start.is_empty():
+		return
+
+	var end : Dictionary = {}
+	var moved : bool = false
+	for n in start:
+		var element := get_node_or_null(NodePath(n)) as GraphElement
+		if element == null:
+			continue
+		end[n] = element.position_offset
+		if not (end[n] as Vector2).is_equal_approx(start[n]):
+			moved = true
+	if not moved:
+		return
+
+	undo_redo.create_action("Move", UndoRedo.MERGE_DISABLE, current_graph)
+	undo_redo.add_do_method(self, &"_apply_positions", end)
+	undo_redo.add_undo_method(self, &"_apply_positions", start)
+	undo_redo.commit_action(false) # the drag already moved them; this just records it
+
+## Applies a name -> position_offset map. Relies on position_offset_changed (already connected in
+## BehaviorGraphNodeBase/BehaviorGraphFrame) to keep node.position_in_graph / frame.position_in_graph
+## in sync - nothing else needs touching here.
+func _apply_positions(positions: Dictionary) -> void:
+	for n in positions:
+		var element := get_node_or_null(NodePath(n)) as GraphElement
+		if element == null:
+			continue
+		element.position_offset = positions[n]
 
 #endregion

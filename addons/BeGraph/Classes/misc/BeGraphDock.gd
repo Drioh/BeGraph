@@ -40,6 +40,7 @@ func _ready() -> void:
 	graph_edit.selected_node_changed.connect(_on_selected_node_changed)
 	frame_button.pressed.connect(func(): graph_edit.create_frame_from_selection())
 	free_frame_button.pressed.connect(graph_edit.detach_selected_nodes_from_frame)
+	info_panel.graph_edit = graph_edit
 	
 ## Opens [member loaded_graph] in the main editor's inspector/resource editor.
 func edit_graph()->void:
