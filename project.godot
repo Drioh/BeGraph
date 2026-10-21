@@ -10,7 +10,6 @@ config_version=5
 
 [BeGraph]
 
-colors/node_colors/custom_categories=PackedStringArray("Prova")
 general_settings/custom_nodes_paths=PackedStringArray("res://Additional Nodes/")
 
 [application]

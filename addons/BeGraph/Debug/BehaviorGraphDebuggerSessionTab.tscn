@@ -99,13 +99,6 @@ tooltip_text = "Show/Hide the blackboard panel"
 toggle_mode = true
 text = "Show Blackboard"
 
-[node name="Inspect Graph" type="Button" parent="Header" unique_id=156227401]
-unique_name_in_owner = true
-layout_mode = 2
-tooltip_text = "Show/Hide the blackboard panel"
-toggle_mode = true
-text = "Inspect Associated Graph"
-
 [node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=878485444]
 layout_mode = 2
 
