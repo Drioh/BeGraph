@@ -1,0 +1,98 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://addons/BeGraph/Debug/BehaviorGraphRuntimeOverlay.gd" id="1_script"]
+[ext_resource type="Script" path="res://addons/BeGraph/Debug/BehaviorGraphDebugGraph.gd" id="2_debugview"]
+
+[node name="BehaviorGraphRuntimeOverlay" type="CanvasLayer"]
+layer = 100
+script = ExtResource("1_script")
+
+[node name="RootPanel" type="Control" parent="."]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Background" type="ColorRect" parent="RootPanel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.05, 0.05, 0.05, 0.85)
+
+[node name="Content" type="VBoxContainer" parent="RootPanel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+theme_override_constants/separation = 8
+
+[node name="Header" type="HBoxContainer" parent="RootPanel/Content"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="RootPanel/Content/Header"]
+layout_mode = 2
+text = "Behavior Agents:"
+
+[node name="AgentOption" type="OptionButton" parent="RootPanel/Content/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="NoAgentLabel" type="Label" parent="RootPanel/Content/Header"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Nessun BehaviorAgent in esecuzione"
+
+[node name="ContentSplit" type="HSplitContainer" parent="RootPanel/Content"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="DebugView" type="GraphEdit" parent="RootPanel/Content/ContentSplit"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(600, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+grid_pattern = 1
+minimap_enabled = false
+show_menu = false
+show_zoom_buttons = false
+show_grid_buttons = false
+show_minimap_button = false
+show_arrange_button = false
+script = ExtResource("2_debugview")
+
+[node name="BlackboardPanel" type="PanelContainer" parent="RootPanel/Content/ContentSplit"]
+custom_minimum_size = Vector2(260, 0)
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="RootPanel/Content/ContentSplit/BlackboardPanel"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Label" type="Label" parent="RootPanel/Content/ContentSplit/BlackboardPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "BLACKBOARD"
+horizontal_alignment = 1
+
+[node name="BlackboardTree" type="Tree" parent="RootPanel/Content/ContentSplit/BlackboardPanel/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+columns = 2
+column_titles_visible = true
+hide_root = true
+select_mode = 1

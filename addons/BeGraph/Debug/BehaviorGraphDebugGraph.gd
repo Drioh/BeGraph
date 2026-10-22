@@ -84,7 +84,7 @@ func _process(_delta: float) -> void:
 			if n.last_tick_time != -1:
 				_node_state[key] = {"status": n.last_status, "since": n.last_tick_time}
 			var gn : BehaviorGraphDebugNode = _debug_nodes.get(key)
-			if gn and not n.behavior_properties.is_empty():
+			if gn and n.has_behavior_properties():
 				gn.update_property_values(n.serialize_properties())
 	for key : StringName in _debug_nodes.keys():
 		_update_status_visual(key)

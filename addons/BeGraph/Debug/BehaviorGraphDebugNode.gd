@@ -146,7 +146,8 @@ func _add_property_row(property: Dictionary) -> void:
 	var linked: bool = String(property.get("blackboard_key", "")) != ""
 	var item : TreeItem = properties_tree.create_item(properties_tree.get_root())
 	item.set_text(0,property["name"])
-	item.set_icon(0, EditorInterface.get_editor_theme().get_icon(type_string(property["type"]), "EditorIcons"))
+	if Engine.is_editor_hint():
+		item.set_icon(0, EditorInterface.get_editor_theme().get_icon(type_string(property["type"]), "EditorIcons"))
 	
 	if !linked:
 		item.set_text(1,str(property.get("value")))

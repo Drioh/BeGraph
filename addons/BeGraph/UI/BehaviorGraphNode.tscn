@@ -2,6 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://cyeufk6walgcc" path="res://addons/BeGraph/Icons/graph_slot_icon.svg" id="1_bbj7d"]
 [ext_resource type="Script" uid="uid://dygdjgndlk554" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraphNode.gd" id="1_y0ctl"]
+[ext_resource type="Script" uid="uid://d1e0wdtkqa3oe" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraphDecoratorTree.gd" id="3_wpsiu"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kmv4x"]
 resource_local_to_scene = true
@@ -125,3 +126,4 @@ hide_root = true
 select_mode = 1
 scroll_horizontal_enabled = false
 scroll_vertical_enabled = false
+script = ExtResource("3_wpsiu")
