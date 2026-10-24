@@ -1,65 +1,66 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://domaf123dmjb7"]
 
-[ext_resource type="Script" path="res://addons/BeGraph/Debug/BehaviorGraphRuntimeOverlay.gd" id="1_script"]
-[ext_resource type="Script" path="res://addons/BeGraph/Debug/BehaviorGraphDebugGraph.gd" id="2_debugview"]
+[ext_resource type="Script" uid="uid://e2831n04ssit" path="res://addons/BeGraph/Debug/BehaviorGraphRuntimeOverlay.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://bnxeuw7d74t5o" path="res://addons/BeGraph/Debug/BehaviorGraphDebugGraph.gd" id="2_debugview"]
 
-[node name="BehaviorGraphRuntimeOverlay" type="CanvasLayer"]
+[node name="BehaviorGraphRuntimeOverlay" type="CanvasLayer" unique_id=1360465774]
 layer = 100
 script = ExtResource("1_script")
 
-[node name="RootPanel" type="Control" parent="."]
+[node name="RootPanel" type="Control" parent="." unique_id=1148441280]
 unique_name_in_owner = true
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Background" type="ColorRect" parent="RootPanel"]
-anchors_preset = 15
+[node name="Background" type="ColorRect" parent="RootPanel" unique_id=1110427074]
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.05, 0.05, 0.05, 0.85)
 
-[node name="Content" type="VBoxContainer" parent="RootPanel"]
-anchors_preset = 15
+[node name="Content" type="VBoxContainer" parent="RootPanel" unique_id=1954483193]
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 offset_left = 16.0
 offset_top = 16.0
 offset_right = -16.0
 offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_constants/separation = 8
 
-[node name="Header" type="HBoxContainer" parent="RootPanel/Content"]
+[node name="Header" type="HBoxContainer" parent="RootPanel/Content" unique_id=952891191]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="RootPanel/Content/Header"]
+[node name="Label" type="Label" parent="RootPanel/Content/Header" unique_id=2127206500]
 layout_mode = 2
 text = "Behavior Agents:"
 
-[node name="AgentOption" type="OptionButton" parent="RootPanel/Content/Header"]
+[node name="AgentOption" type="OptionButton" parent="RootPanel/Content/Header" unique_id=1778158954]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(320, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="NoAgentLabel" type="Label" parent="RootPanel/Content/Header"]
+[node name="NoAgentLabel" type="Label" parent="RootPanel/Content/Header" unique_id=1247904750]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 text = "Nessun BehaviorAgent in esecuzione"
 
-[node name="ContentSplit" type="HSplitContainer" parent="RootPanel/Content"]
+[node name="ContentSplit" type="HSplitContainer" parent="RootPanel/Content" unique_id=397229479]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="DebugView" type="GraphEdit" parent="RootPanel/Content/ContentSplit"]
+[node name="DebugView" type="GraphEdit" parent="RootPanel/Content/ContentSplit" unique_id=1781892559]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(600, 0)
 layout_mode = 2
@@ -74,21 +75,21 @@ show_minimap_button = false
 show_arrange_button = false
 script = ExtResource("2_debugview")
 
-[node name="BlackboardPanel" type="PanelContainer" parent="RootPanel/Content/ContentSplit"]
+[node name="BlackboardPanel" type="PanelContainer" parent="RootPanel/Content/ContentSplit" unique_id=54850383]
 custom_minimum_size = Vector2(260, 0)
 layout_mode = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="RootPanel/Content/ContentSplit/BlackboardPanel"]
+[node name="VBoxContainer" type="VBoxContainer" parent="RootPanel/Content/ContentSplit/BlackboardPanel" unique_id=1244093504]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Label" type="Label" parent="RootPanel/Content/ContentSplit/BlackboardPanel/VBoxContainer"]
+[node name="Label" type="Label" parent="RootPanel/Content/ContentSplit/BlackboardPanel/VBoxContainer" unique_id=671918446]
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "BLACKBOARD"
 horizontal_alignment = 1
 
-[node name="BlackboardTree" type="Tree" parent="RootPanel/Content/ContentSplit/BlackboardPanel/VBoxContainer"]
+[node name="BlackboardTree" type="Tree" parent="RootPanel/Content/ContentSplit/BlackboardPanel/VBoxContainer" unique_id=1551776148]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3

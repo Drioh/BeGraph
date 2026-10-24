@@ -33,7 +33,9 @@ const SETTINGS : Dictionary[String,Variant]={
 	"BeGraph/colors/graph_editor/not_allowed_variable/background":Color(0.176, 0.118, 0.118, 1.0),
 	"BeGraph/colors/graph_editor/not_allowed_variable/border":Color(0.58, 0.161, 0.169, 1.0),
 	"BeGraph/general_settings/custom_categories": [] as PackedStringArray,
-	"BeGraph/general_settings/custom_nodes_paths":[] as PackedStringArray
+	"BeGraph/general_settings/custom_nodes_paths":[] as PackedStringArray,
+	"BeGraph/general_settings/runtime_debug_overlay_enabled": false,
+	"BeGraph/general_settings/runtime_debug_overlay_toggle_key": "F3"
 }
 
 const NODE_COLORS_PREFIX :String= "BeGraph/colors/node_colors"

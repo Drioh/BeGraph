@@ -670,14 +670,13 @@ func to_debug_info() -> Dictionary:
 ## Current values of behavior properties.
 func serialize_properties() -> Array:
 	return get_behavior_property_list().map(func(p: Dictionary):
+		var key : StringName = get_blackboard_key(p["name"])
 		var v : Variant = get(p["name"])
-		var cond:bool = is_blackboard_reference_enabled_for_key(p["name"])
-		var key : String = get_blackboard_key(p["name"]) if cond else ""
 		return {
 			"name": String(p["name"]),
 			"type": p["type"],
 			"value": v,
-			"blackboard_key": key,
+			"blackboard_key": String(key),
 		}
 	)
 

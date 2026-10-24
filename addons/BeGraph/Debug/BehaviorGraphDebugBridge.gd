@@ -6,6 +6,8 @@ class_name BehaviorGraphDebugBridge
 ## How often (seconds) agents are scanned and status/property/blackboard deltas are sent.
 @export var broadcast_interval : float = 0.5
 
+const RUNTIME_OVERLAY_SCENE : PackedScene = preload("res://addons/BeGraph/Debug/BehaviorGraphRuntimeOverlay.tscn")
+
 ## agent path (String) -> true once its graph structure has been sent this session.
 var _announced : Dictionary = {}
 ## agent path (String) -> {node name (StringName): last-broadcast BehaviorNode.last_tick_time}, used to detect which nodes ticked since the previous broadcast.
@@ -16,6 +18,7 @@ var _last_sent_properties : Dictionary = {}
 var _last_sent_blackboard : Dictionary = {}
 
 func _ready() -> void:
+	_maybe_add_runtime_overlay()
 	if not EngineDebugger.is_active():
 		# No debugger attached (e.g. a normal exported build) - nothing to stream, and no point
 		# paying the cost of scanning agents every frame.
@@ -27,6 +30,11 @@ func _ready() -> void:
 	timer.autostart = true
 	timer.timeout.connect(_broadcast)
 	add_child(timer)
+
+func _maybe_add_runtime_overlay() -> void:
+	if not ProjectSettings.get_setting("BeGraph/general_settings/runtime_debug_overlay_enabled", false):
+		return
+	add_child(RUNTIME_OVERLAY_SCENE.instantiate())
 
 func _broadcast() -> void:
 	var seen_paths : Dictionary = {}

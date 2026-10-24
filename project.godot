@@ -11,6 +11,7 @@ config_version=5
 [BeGraph]
 
 general_settings/custom_nodes_paths=PackedStringArray("res://Additional Nodes/")
+general_settings/runtime_debug_overlay_enabled=true
 
 [application]
 
@@ -21,7 +22,6 @@ config/icon="res://icon.svg"
 [autoload]
 
 BeGraphDebugBridge="*uid://dfticjtnj7mb6"
-BehaviorGraphRuntimeOverlay="*res://addons/BeGraph/Debug/BehaviorGraphRuntimeOverlay.tscn"
 
 [display]
 

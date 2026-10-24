@@ -63,7 +63,7 @@ func _ensure_toggle_action() -> void:
 		return
 	InputMap.add_action(toggle_action)
 	var ev := InputEventKey.new()
-	ev.keycode = KEY_F3
+	ev.keycode = _resolve_toggle_keycode()
 	InputMap.action_add_event(toggle_action, ev)
 
 func _setup_blackboard_tree() -> void:
@@ -150,3 +150,16 @@ func _refresh_blackboard() -> void:
 		var item := blackboard_tree.create_item(root)
 		item.set_text(0, String(variable.name))
 		item.set_text(1, str(variable.value))
+
+## Legge BeGraph/general_settings/runtime_overlay_toggle_key e la converte nel relativo Key
+## tramite OS.find_keycode_from_string(), con fallback silenzioso su F3 se il nome non è valido
+## o non riconosciuto (find_keycode_from_string restituisce KEY_NONE in quel caso).
+func _resolve_toggle_keycode() -> Key:
+	var key_name : String = ProjectSettings.get_setting("BeGraph/general_settings/runtime_overlay_toggle_key", "F3")
+	if key_name.is_empty():
+		return KEY_F3
+	var code := OS.find_keycode_from_string(key_name)
+	if code == KEY_NONE:
+		push_warning("BeGraph: \"%s\" non è un nome di tasto valido per runtime_overlay_toggle_key; uso F3." % key_name)
+		return KEY_F3
+	return code

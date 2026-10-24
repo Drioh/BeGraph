@@ -31,8 +31,8 @@ metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_s8rxi"]
 script = ExtResource("1_srmox")
-name = &"Dai"
-value = false
+name = &"UnconnectedProperty"
+value = Vector3i(0, 0, 0)
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_6ad3o"]
@@ -42,7 +42,7 @@ instruction = "Patrol {node} ({mode}, speed {speed})"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(580, -80)
+position_in_graph = Vector2(600, -140)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"_GraphNode_47810"])
@@ -81,6 +81,7 @@ script = ExtResource("3_6ad3o")
 label = "Start"
 node_category = "access_point_node"
 output = true
+position_in_graph = Vector2(-120, -80)
 is_starting_node = true
 _graph_ref = Object(WeakRef,"script":null)
 
@@ -91,12 +92,12 @@ mutable = true
 [sub_resource type="Resource" id="Resource_mp8hq"]
 resource_name = "_GraphNode_47810"
 script = ExtResource("5_7nfy3")
-text = "ARRIVATO"
+text = "Arrivato a destinazione!"
 instruction = "Print {text}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1300, -60)
+position_in_graph = Vector2(1240, -100)
 _graph_ref = Object(WeakRef,"script":null)
 
 breakpointable = true
@@ -112,14 +113,14 @@ nodes = Dictionary[StringName, ExtResource("2_7nxv6")]({
 &"_GraphNode_47810": SubResource("Resource_mp8hq")
 })
 connections = Array[Dictionary]([{
-"from_node": &"_GraphNode_34644",
-"from_port": 0,
-"to_node": &"BehaviorGraphNode",
-"to_port": 0
-}, {
 "from_node": &"BehaviorGraphNode",
 "from_port": 0,
 "to_node": &"_GraphNode_47810",
+"to_port": 0
+}, {
+"from_node": &"_GraphNode_34644",
+"from_port": 0,
+"to_node": &"BehaviorGraphNode",
 "to_port": 0
 }])
 _agent_ref = Object(WeakRef,"script":null)

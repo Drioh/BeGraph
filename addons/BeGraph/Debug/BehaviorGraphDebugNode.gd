@@ -145,15 +145,16 @@ func _build_properties(properties: Array) -> void:
 func _add_property_row(property: Dictionary) -> void:
 	var linked: bool = String(property.get("blackboard_key", "")) != ""
 	var item : TreeItem = properties_tree.create_item(properties_tree.get_root())
-	item.set_text(0,property["name"])
+	item.set_text(0, property["name"])
 	if Engine.is_editor_hint():
 		item.set_icon(0, EditorInterface.get_editor_theme().get_icon(type_string(property["type"]), "EditorIcons"))
-	
+
 	if !linked:
-		item.set_text(1,str(property.get("value")))
+		item.set_text(1, str(property.get("value")))
 	else:
-		item.set_text(1,property["blackboard_key"])
-		item.set_icon(1,load("res://addons/BeGraph/Icons/link_icon.svg"))
+		item.set_text(1, property["blackboard_key"])
+		item.set_tooltip_text(1, "Bound to blackboard variable \"%s\"\nCurrent value: %s" % [property["blackboard_key"], str(property.get("value"))])
+		item.set_icon(1, LINKED_ICON)
 	reset_size.call_deferred()
 
 ## Sets [member status_label]'s text (color is handled separately by [BehaviorGraphDebugView], via this node's slot colors).
@@ -162,13 +163,19 @@ func update_status_text(text: String) -> void:
 
 ## Refreshes only the displayed values (not the link icon/name) of an already-built properties list, in the same order [method setup] built them in. Used whenever fresher values come in (a node ticking, or a blackboard entry it reads from changing) without rebuilding the whole row set.
 func update_property_values(properties: Array) -> void:
-	var item = properties_tree.get_root()
-	for i in min(properties_tree.get_child_count(), properties.size()):
+	var root := properties_tree.get_root()
+	if root == null:
+		return
+	var item : TreeItem = root.get_child(0) if root.get_child_count() > 0 else null
+	for i in properties.size():
 		if item == null:
-			continue
+			break
 		if String(properties[i].get("blackboard_key", "")) != "":
-			item.set_text(1,properties[i]["blackboard_key"])
-			item.set_icon(1,load("res://addons/BeGraph/Icons/link_icon.svg"))
+			item.set_text(1, properties[i]["blackboard_key"])
+			item.set_tooltip_text(1, "Bound to blackboard variable \"%s\"\nCurrent value: %s" % [properties[i]["blackboard_key"], str(properties[i].get("value"))])
+			item.set_icon(1, LINKED_ICON)
 		else:
-			item.set_text(1,str(properties[i].get("value")))
+			item.set_text(1, str(properties[i].get("value")))
+			item.set_tooltip_text(1, "")
+			item.set_icon(1, null)
 		item = item.get_next()
