@@ -1,21 +1,21 @@
 extends CanvasLayer
-## Overlay di debug utilizzabile direttamente in game (fuori editor): permette di scegliere, tra
-## i BehaviorAgent attualmente in esecuzione (BehaviorAgent.DEBUG_GROUP), quale ispezionare, e ne
-## mostra il grafo live (via BehaviorGraphDebugGraph.set_graph(), modalità "same-process") più un
-## pannello della sua blackboard.[br]
-## Per usarlo: aggiungi questa scena alla scena principale (o registrala come autoload) e premi il
-## tasto di toggle (default F3, personalizzabile tramite toggle_action) per mostrarla.[br]
-## Nota: BehaviorAgent.DEBUG_GROUP viene popolato solo a gioco avviato (Engine.is_editor_hint()
-## è falso in quel branch di _ready()), quindi questo overlay non mostra nulla mentre si edita
-## nell'editor: va testato premendo Play.
+## Debug overlay usable directly in-game (outside the editor): allows choosing which of the
+## currently running BehaviorAgents (BehaviorAgent.DEBUG_GROUP) to inspect, and shows its
+## live graph (via BehaviorGraphDebugGraph.set_graph(), "same-process" mode) plus a
+## panel of its blackboard.[br]
+## To use it: add this scene to the main scene (or register it as an autoload) and press the
+## toggle key (default F3, customizable via toggle_action) to show it.[br]
+## Note: BehaviorAgent.DEBUG_GROUP is only populated when the game is running (Engine.is_editor_hint()
+## is false in that _ready() branch), so this overlay shows nothing while editing
+## in the editor: it must be tested by pressing Play.
 
-## Azione dell'Input Map usata per mostrare/nascondere l'overlay. Se l'azione non esiste ancora
-## nel progetto, viene creata automaticamente al primo _ready() con il tasto F3 come default.
+## Input Map action used to show/hide the overlay. If the action does not yet exist
+## in the project, it is created automatically at the first _ready() with the F3 key as default.
 @export var toggle_action : StringName = &"begraph_debug_toggle"
-## Intervallo, in secondi, con cui la lista degli agenti viene ricontrollata (per accorgersi di
-## agenti nuovi o distrutti, ad esempio un nemico che muore mentre lo si sta ispezionando).
+## Interval, in seconds, at which the agent list is rechecked (to notice
+## new or destroyed agents, for example an enemy dying while being inspected).
 @export var agent_refresh_interval : float = 1.0
-## Intervallo, in secondi, con cui la blackboard dell'agente selezionato viene ridisegnata.
+## Interval, in seconds, at which the selected agent's blackboard is redrawn.
 @export var blackboard_refresh_interval : float = 0.25
 
 @onready var root_panel : Control = %RootPanel
@@ -24,11 +24,11 @@ extends CanvasLayer
 @onready var debug_view : BehaviorGraphDebugGraph = %DebugView
 @onready var blackboard_tree : Tree = %BlackboardTree
 
-## L'agente attualmente ispezionato, o null se nessuno è selezionato/disponibile.
+## The currently inspected agent, or null if none is selected/available.
 var _current_agent : BehaviorAgent = null
 
 func _ready() -> void:
-	process_mode = Node.PROCESS_MODE_ALWAYS # resta utilizzabile anche a gioco in pausa
+	process_mode = Node.PROCESS_MODE_ALWAYS # stays usable even when the game is paused
 	root_panel.visible = false
 
 	_ensure_toggle_action()
@@ -56,8 +56,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			_refresh_agent_list()
 		get_viewport().set_input_as_handled()
 
-## Crea begraph_debug_toggle con F3 come default se il progetto non lo definisce già, così
-## l'overlay funziona "out of the box" senza configurazione manuale dell'Input Map.
+## Creates begraph_debug_toggle with F3 as default if the project doesn't already define it, so
+## the overlay works "out of the box" without manual configuration of the Input Map.
 func _ensure_toggle_action() -> void:
 	if InputMap.has_action(toggle_action):
 		return
@@ -74,10 +74,10 @@ func _setup_blackboard_tree() -> void:
 	blackboard_tree.set_column_title(1, "Value")
 	blackboard_tree.create_item()
 
-## Ricostruisce agent_option a partire da BehaviorAgent.DEBUG_GROUP, scartando le istanze non più
-## valide. Richiama _select_agent() (che ricostruisce l'intera vista del grafo) SOLO quando la
-## selezione cambia davvero, non ad ogni refresh periodico, per non perdere pan/zoom della vista
-## ogni secondo.
+## Rebuilds agent_option starting from BehaviorAgent.DEBUG_GROUP, discarding instances that are no longer
+## valid. Calls _select_agent() (which rebuilds the entire graph view) ONLY when the
+## selection actually changes, not at every periodic refresh, to avoid losing the view's pan/zoom
+## every second.
 func _refresh_agent_list() -> void:
 	if not root_panel.visible:
 		return
@@ -108,7 +108,7 @@ func _refresh_agent_list() -> void:
 			reselect_index = i
 
 	if reselect_index != -1:
-		agent_option.select(reselect_index) # non emette item_selected: nessun rebuild inutile
+		agent_option.select(reselect_index) # doesn't emit item_selected: no useless rebuild
 	else:
 		agent_option.select(0)
 		_select_agent(agents[0])
@@ -131,10 +131,10 @@ func _select_agent(agent: BehaviorAgent) -> void:
 	debug_view.set_graph(agent.get_debug_graph())
 	_refresh_blackboard()
 
-## Ridisegna da zero la blackboard dell'agente selezionato. A differenza della tab dell'editor
-## (che riceve solo delta via EngineDebugger, essendo in un processo separato dal gioco), qui
-## siamo nello stesso processo: possiamo permetterci di rileggere l'intero array ad ogni
-## intervallo senza alcun costo di serializzazione o rete.
+## Redraws the selected agent's blackboard from scratch. Unlike the editor tab
+## (which only receives deltas via EngineDebugger, being in a separate process from the game), here
+## we are in the same process: we can afford to re-read the entire array at every
+## interval without any serialization or network cost.
 func _refresh_blackboard() -> void:
 	if not root_panel.visible or _current_agent == null or not is_instance_valid(_current_agent):
 		return
@@ -151,15 +151,15 @@ func _refresh_blackboard() -> void:
 		item.set_text(0, String(variable.name))
 		item.set_text(1, str(variable.value))
 
-## Legge BeGraph/general_settings/runtime_overlay_toggle_key e la converte nel relativo Key
-## tramite OS.find_keycode_from_string(), con fallback silenzioso su F3 se il nome non è valido
-## o non riconosciuto (find_keycode_from_string restituisce KEY_NONE in quel caso).
+## Reads BeGraph/general_settings/runtime_overlay_toggle_key and converts it to the corresponding Key
+## via OS.find_keycode_from_string(), with a silent fallback to F3 if the name is invalid
+## or unrecognized (find_keycode_from_string returns KEY_NONE in that case).
 func _resolve_toggle_keycode() -> Key:
 	var key_name : String = ProjectSettings.get_setting("BeGraph/general_settings/runtime_overlay_toggle_key", "F3")
 	if key_name.is_empty():
 		return KEY_F3
 	var code := OS.find_keycode_from_string(key_name)
 	if code == KEY_NONE:
-		push_warning("BeGraph: \"%s\" non è un nome di tasto valido per runtime_overlay_toggle_key; uso F3." % key_name)
+		push_warning("BeGraph: \"%s\" is not a valid key name for runtime_overlay_toggle_key; using F3." % key_name)
 		return KEY_F3
 	return code

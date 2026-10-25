@@ -69,7 +69,6 @@ func _on_graph_message(s: Dictionary, agent_path: String, nodes_data: Array, con
 	s["graphs"][agent_path] = [nodes_data, connections_data]
 	s["blackboard"][agent_path] = blackboard
 	s["tab"].graph_label.text = graph_name
-	print("GRAFO: %s"%graph_name)
 
 	if not s["agents"].has(agent_path):
 		s["agents"].append(agent_path)

@@ -1,23 +1,23 @@
 @tool
-## Albero di configurazione dei decorator per un BehaviorNode: costruisce e sincronizza le righe
-## per ciascun tipo di decorator ([constant DECORATOR_ROWS]), applica le modifiche scelte
-## dall'utente al [BehaviorNode] assegnato (tramite [method BehaviorNode.set_decorator_type]/
-## [method BehaviorNode.set_decorator_field]) e accetta il trascinamento di una variabile
-## booleana di blackboard sulla riga "condition" per collegarla.[br]
-## Isolato in una classe dedicata (anziché vivere dentro [BehaviorGraphNode]) in modo che il
-## suo [member Control.mouse_filter] possa essere impostato a [constant Control.MOUSE_FILTER_STOP]
-## senza interferire con lo script che costruisce il corpo del nodo: con STOP, un click che la
-## Tree non gestisce esplicitamente (ad esempio la chiusura di un popup enum cliccando fuori)
-## viene assorbito qui e non risale più al GraphNode, che altrimenti potrebbe interpretarlo
-## come inizio/continuazione di un trascinamento del nodo stesso.
+## Configuration tree for a BehaviorNode's decorators: builds and syncs the rows
+## for each decorator type ([constant DECORATOR_ROWS]), applies the changes chosen
+## by the user to the assigned [BehaviorNode] (via [method BehaviorNode.set_decorator_type]/
+## [method BehaviorNode.set_decorator_field]) and accepts dropping a boolean
+## blackboard variable onto the "condition" row to bind it.[br]
+## Isolated in a dedicated class (instead of living inside [BehaviorGraphNode]) so that
+## its [member Control.mouse_filter] can be set to [constant Control.MOUSE_FILTER_STOP]
+## without interfering with the script that builds the node's body: with STOP, a click that the
+## Tree does not explicitly handle (e.g., closing an enum popup by clicking outside)
+## is absorbed here and doesn't bubble up to the GraphNode, which might otherwise interpret it
+## as the start/continuation of dragging the node itself.
 class_name BehaviorGraphDecoratorTree
 extends Tree
 
-## Una voce per ciascun tipo di decorator disponibile, nell'ordine in cui compaiono nell'albero.
-## [code]type[/code] è il valore salvato in [member BehaviorNode.decorator]["type"]; [code]label[/code]
-## il testo mostrato in colonna 1; [code]tooltip[/code]/[code]variant_tooltip[/code] le descrizioni
-## mostrate al passaggio del mouse; [code]variant_options[/code], quando presente, rende la
-## colonna 2 della riga principale un selettore enum invece di un semplice checkbox.
+## One entry for each available decorator type, in the order they appear in the tree.
+## [code]type[/code] is the value saved in [member BehaviorNode.decorator]["type"]; [code]label[/code]
+## is the text shown in column 1; [code]tooltip[/code]/[code]variant_tooltip[/code] are the descriptions
+## shown on mouse hover; [code]variant_options[/code], when present, turns the
+## 2nd column of the main row into an enum selector instead of a simple checkbox.
 const DECORATOR_ROWS: Array[Dictionary] = [
 	{
 		"type": "inverter",
@@ -78,22 +78,22 @@ const DECORATOR_ROWS: Array[Dictionary] = [
 	},
 ]
 
-## Il [BehaviorNode] attualmente configurato, assegnato tramite [method setup].
+## The currently configured [BehaviorNode], assigned via [method setup].
 var _node : BehaviorNode
-## Tipo di decorator (String) -> la riga di primo livello ([TreeItem]) che lo rappresenta.
+## Decorator type (String) -> the top-level row ([TreeItem]) representing it.
 var _decorator_rows: Dictionary = {}
-## [code]true[/code] mentre [method _refresh_decorator_tree] sta scrivendo nell'albero, per
-## evitare che [signal Tree.item_edited] (emesso anche da modifiche fatte in codice, non solo
-## dall'utente) venga interpretato come una modifica proveniente dall'utente.
+## [code]true[/code] while [method _refresh_decorator_tree] is writing to the tree, to
+## prevent [signal Tree.item_edited] (emitted even by changes made in code, not just
+## by the user) from being interpreted as a user-made change.
 var _decorator_syncing: bool = false
 
 func _ready() -> void:
 	if not item_edited.is_connected(_on_decorator_item_edited):
 		item_edited.connect(_on_decorator_item_edited)
 
-## Associa questa Tree a [param n] e (ri)costruisce l'intero albero dei decorator per lui.
-## Può essere richiamato più volte (ad esempio se lo stesso controllo venisse riutilizzato per
-## un nodo diverso): scollega il precedente [BehaviorNode], se presente, prima di collegarsi al nuovo.
+## Associates this Tree with [param n] and (re)builds the entire decorator tree for it.
+## Can be called multiple times (e.g., if the same control were reused for
+## a different node): disconnects the previous [BehaviorNode], if any, before connecting to the new one.
 func setup(n: BehaviorNode) -> void:
 	if _node != null and _node != n and _node.decorator_changed.is_connected(_refresh_decorator_tree):
 		_node.decorator_changed.disconnect(_refresh_decorator_tree)
@@ -104,8 +104,8 @@ func setup(n: BehaviorNode) -> void:
 
 	_build_decorator_tree()
 
-## Ricostruisce da zero la Tree: colonne, intestazioni e una riga per ciascuna voce di
-## [constant DECORATOR_ROWS], con le eventuali righe figlie dei parametri specifici del tipo.
+## Rebuilds the Tree from scratch: columns, headers, and one row for each entry in
+## [constant DECORATOR_ROWS], along with any child rows for type-specific parameters.
 func _build_decorator_tree() -> void:
 	clear()
 	columns = 3
@@ -199,8 +199,8 @@ func _setup_enum_cell(item: TreeItem, column: int, options_csv: String) -> void:
 	item.set_text(column, options_csv)
 	item.set_editable(column, true)
 
-## Rilegge [member BehaviorNode.decorator] e aggiorna ogni riga/checkbox/valore di conseguenza,
-## senza ricostruire l'intero albero (si limita a modificare gli item già creati da
+## Re-reads [member BehaviorNode.decorator] and updates every row/checkbox/value accordingly,
+## without rebuilding the entire tree (it just modifies the items already created by
 ## [method _build_decorator_tree]).
 func _refresh_decorator_tree() -> void:
 	_decorator_syncing = true
@@ -239,8 +239,8 @@ func _refresh_decorator_tree() -> void:
 
 	_decorator_syncing = false
 
-## Callback per [signal Tree.item_edited]: applica a [member _node] la modifica appena fatta
-## dall'utente (attivazione/disattivazione di un decorator, o cambio di uno dei suoi parametri).
+## Callback for [signal Tree.item_edited]: applies the change just made by the
+## user to [member _node] (enabling/disabling a decorator, or changing one of its parameters).
 func _on_decorator_item_edited() -> void:
 	if _decorator_syncing: return
 
@@ -278,9 +278,9 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	if _condition_cell_at(at_position) != null:
 		_node.set_decorator_field(&"blackboard_key", data["resource"].name)
 
-## Restituisce la riga "condition" se [param at_position] (coordinate locali a questa Tree,
-## già fornite come tali da Godot a [method _can_drop_data]/[method _drop_data]) cade esattamente
-## sulla sua colonna 2 ("Value"), altrimenti [code]null[/code].
+## Returns the "condition" row if [param at_position] (coordinates local to this Tree,
+## already provided as such by Godot to [method _can_drop_data]/[method _drop_data]) falls exactly
+## on its column 2 ("Value"), otherwise [code]null[/code].
 func _condition_cell_at(at_position: Vector2) -> Variant:
 	if not _decorator_rows.has("condition"): return null
 	if not Rect2(Vector2.ZERO, size).has_point(at_position): return null

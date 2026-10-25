@@ -125,9 +125,10 @@ func _ready() -> void:
 				override_blackboard_property(p,v)
 
 		add_to_group(DEBUG_GROUP)
-## Resolves the delta (in seconds) to forward to [member starting_node] for one tick, centralizing here what used to be scattered per-node fallback logic.[br]
-## If [param delta] is anything other than [code]-1[/code], it's trusted and returned as-is: this is the case for [method _process]/[method _physics_process] (which always forward the engine's own frame delta) and for an explicit call to [method tick].[br]
-## Otherwise (manual ticking with the default [code]-1[/code]), falls back to the pre-existing system: measures the real time elapsed since the previous delta-less [method tick] call via [method Time.get_ticks_msec], returning [code]0.0[/code] on the first such call so nodes that accumulate elapsed time (e.g. [Wait], [Move], [Patrol]) start from zero instead of a huge spike.
+
+## Resolves the delta (in seconds) to forward to [member starting_node] for one [method tick] call, used only by manual ticking ([constant ProcessThread.MANUAL]).[br]
+## If [param delta] is anything other than [code]-1[/code], it's trusted and returned as-is: this is the case for an explicit delta passed to [method tick].[br]
+## Otherwise (manual ticking with the default [code]-1[/code]), falls back to measuring the real time elapsed since the previous delta-less [method tick] call via [method Time.get_ticks_msec], returning [code]0.0[/code] on the first such call so nodes that accumulate elapsed time (e.g. [Wait], [Move], [Patrol]) start from zero instead of a huge spike.
 func _resolve_delta(delta: float) -> float:
 	if delta != -1.0:
 		_manual_tick_time = -1
@@ -148,14 +149,14 @@ func _process(_delta: float) -> void:
 		if starting_node != null:
 			starting_node.do_tick(_delta)
 
-## Manually ticks [member starting_node], provided [member enabled] is [code]true[/code]. Intended to be called by user code when [member graph_process_mode] is [constant ProcessThread.MANUAL].[br]
-## [param delta] defaults to [code]-1[/code]: in that case [method _resolve_delta] falls back to the pre-existing [method Time.get_ticks_msec]-based system so time-based nodes keep working unattended. Pass an explicit delta (in seconds) to drive ticking with a known, fixed step instead.
+## Ticks [member starting_node] every physics frame when [member graph_process_mode] is [constant ProcessThread.PHYSICS] (outside the editor), forwarding the engine's own physics delta directly (bypassing [method _resolve_delta], which only applies to manual ticking).
 func _physics_process(_delta: float) -> void:
 	if not Engine.is_editor_hint() && enabled:
 		if starting_node != null:
 			starting_node.do_tick(_delta)
 
-## Manually ticks [member starting_node], provided [member enabled] is [code]true[/code]. Intended to be called by user code when [member graph_process_mode] is [constant ProcessThread.MANUAL].
+## Manually ticks [member starting_node], provided [member enabled] is [code]true[/code]. Intended to be called by user code when [member graph_process_mode] is [constant ProcessThread.MANUAL].[br]
+## [param delta] defaults to [code]-1[/code]: in that case [method _resolve_delta] falls back to the pre-existing [method Time.get_ticks_msec]-based system so time-based nodes keep working unattended. Pass an explicit delta (in seconds) to drive ticking with a known, fixed step instead.
 func tick(_delta:float=-1.0) -> void:
 	if enabled and starting_node != null:
 		starting_node.do_tick(_resolve_delta(_delta))
