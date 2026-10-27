@@ -160,10 +160,6 @@ func _remove_dock() -> void:
 		remove_dock(dock)
 		_dock_added = false
 
-## Callback for the dock's close button; hides the dock.
-func _on_close_pressed() -> void:
-	_remove_dock()
-
 #region Graph opening / saving
 
 func _request_open_graph(new_graph: BehaviorGraph) -> void:

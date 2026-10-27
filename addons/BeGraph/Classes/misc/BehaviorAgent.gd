@@ -5,8 +5,6 @@ extends Node
 
 ## The thread/loop this agent's [BehaviorGraph] gets ticked on.
 enum ProcessThread { IDLE, PHYSICS, MANUAL }
-## Mirrors [enum BehaviorNode.Status]; the result of a single [method tick].
-enum Status { SUCCESS, FAILURE, RUNNING }
 
 const OBP : String = "overridable_blackboard_properties"
 ## Group every running [BehaviorAgent] adds itself to (outside the editor), used by debugging/visualization tools - e.g. the live graph debugger - to discover agents without needing a direct scene reference.
@@ -33,9 +31,9 @@ var bb_props: Dictionary[StringName,Variant]
 			behavior_graph = null
 			notify_property_list_changed.call_deferred()
 			return
+		
 		behavior_graph = value
 		_starting_point_idx = 0
-		#_select_starting_node(_starting_point_idx)
 		notify_property_list_changed.call_deferred()
 var _behavior_graph : BehaviorGraph
 
@@ -61,22 +59,26 @@ func _update_process_flags() -> void:
 
 ## Exposes the dynamic [code]starting_point[/code] enum property (its options are the labels of every access point found in [member behavior_graph]), used from the inspector to pick which entry point this agent starts ticking from.
 func _get_property_list() -> Array[Dictionary]:
+	if behavior_graph == null:
+		return []
+	
 	var ret: Array[Dictionary] = []
-	if behavior_graph != null:
-		var nodes := behavior_graph.get_nodes_by_category("access_point_node")
-		var labels := PackedStringArray()
-		for node in nodes:
-			# Fallback to the node name so an unlabeled access point still gets a readable, non-empty enum entry.
-			var label : String = node.label if node.label != "" else String(node.resource_name)
-			labels.append(label)
-		ret.append({
-			"name": "starting_point",
-			"type": TYPE_INT,
-			"hint": PROPERTY_HINT_ENUM,
-			"hint_string": ",".join(labels),
-			"usage": PROPERTY_USAGE_DEFAULT
-		})
-		ret.append_array(get_overridable_property_list())
+	var nodes := behavior_graph.get_nodes_by_category("access_point_node")
+	var labels := PackedStringArray()
+	
+	for node in nodes:
+		# Fallback to the node name so an unlabeled access point still gets a readable, non-empty enum entry.
+		var label : String = node.label if node.label != "" else String(node.resource_name)
+		labels.append(label)
+	
+	ret.append({
+		"name": "starting_point",
+		"type": TYPE_INT,
+		"hint": PROPERTY_HINT_ENUM,
+		"hint_string": ",".join(labels),
+		"usage": PROPERTY_USAGE_DEFAULT
+	})
+	ret.append_array(get_overridable_property_list())
 	return ret
 
 
@@ -102,29 +104,27 @@ func _set(property: StringName, value: Variant) -> bool:
 
 ## At runtime (not in the editor), validates that both [member behavior_graph] and [member starting_node] are set; disables this node entirely ([constant Node.PROCESS_MODE_DISABLED]) and logs an error otherwise. Also registers this agent in [constant DEBUG_GROUP] so runtime tools (e.g. the live graph debugger) can find it.
 func _ready() -> void:
-	if not Engine.is_editor_hint():
-		if behavior_graph == null:
-			push_error("Behavior Graph not set for Behavior Agent %s" % self)
-			process_mode = Node.PROCESS_MODE_DISABLED
-			return
-		
-		_behavior_graph = behavior_graph.duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
-		
-		_behavior_graph.setup_runtime(self)
-			
-		_select_starting_node(_starting_point_idx)
-		if starting_node == null:
-			push_error("Starting Node not set for Behavior Agent %s" % self)
-			process_mode = Node.PROCESS_MODE_DISABLED
-			return
-		
+	if Engine.is_editor_hint():
+		return
+	if behavior_graph == null:
+		push_error("Behavior Graph not set for Behavior Agent %s" % self)
+		process_mode = Node.PROCESS_MODE_DISABLED
+		return
+	if starting_node == null:
+		push_error("Starting Node not set for Behavior Agent %s" % self)
+		process_mode = Node.PROCESS_MODE_DISABLED
+		return
+	
+	_behavior_graph = behavior_graph.duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
+	_behavior_graph.setup_runtime(self)
+	_select_starting_node(_starting_point_idx)
+	
+	for p in bb_props:
+		var v = get("%s/%s"%[OBP,p])
+		if v!=null:
+			override_blackboard_property(p,v)
 
-		for p in bb_props:
-			var v = get("%s/%s"%[OBP,p])
-			if v!=null:
-				override_blackboard_property(p,v)
-
-		add_to_group(DEBUG_GROUP)
+	add_to_group(DEBUG_GROUP)
 
 ## Resolves the delta (in seconds) to forward to [member starting_node] for one [method tick] call, used only by manual ticking ([constant ProcessThread.MANUAL]).[br]
 ## If [param delta] is anything other than [code]-1[/code], it's trusted and returned as-is: this is the case for an explicit delta passed to [method tick].[br]
@@ -145,21 +145,27 @@ func _resolve_delta(delta: float) -> float:
 
 ## Ticks [member starting_node] every idle frame when [member graph_process_mode] is [constant ProcessThread.IDLE] (outside the editor).
 func _process(_delta: float) -> void:
-	if not Engine.is_editor_hint() && enabled:
-		if starting_node != null:
-			starting_node.do_tick(_delta)
+	if Engine.is_editor_hint(): return
+	if not enabled: return
+	if starting_node==null: return
+	
+	starting_node.do_tick(_delta)
 
 ## Ticks [member starting_node] every physics frame when [member graph_process_mode] is [constant ProcessThread.PHYSICS] (outside the editor), forwarding the engine's own physics delta directly (bypassing [method _resolve_delta], which only applies to manual ticking).
 func _physics_process(_delta: float) -> void:
-	if not Engine.is_editor_hint() && enabled:
-		if starting_node != null:
-			starting_node.do_tick(_delta)
+	if Engine.is_editor_hint(): return
+	if not enabled: return
+	if starting_node==null: return
+	
+	starting_node.do_tick(_delta)
 
 ## Manually ticks [member starting_node], provided [member enabled] is [code]true[/code]. Intended to be called by user code when [member graph_process_mode] is [constant ProcessThread.MANUAL].[br]
 ## [param delta] defaults to [code]-1[/code]: in that case [method _resolve_delta] falls back to the pre-existing [method Time.get_ticks_msec]-based system so time-based nodes keep working unattended. Pass an explicit delta (in seconds) to drive ticking with a known, fixed step instead.
 func tick(_delta:float=-1.0) -> void:
-	if enabled and starting_node != null:
-		starting_node.do_tick(_resolve_delta(_delta))
+	if not enabled: return
+	if starting_node==null: return
+	
+	starting_node.do_tick(_resolve_delta(_delta))
 
 ## Resolves [member starting_node] from the access point at [param index] inside [member behavior_graph]'s [code]"access_point_node"[/code] category, or sets it to [code]null[/code] if [member behavior_graph] is unset, has no access points, or [param index] is out of range.
 func _select_starting_node(index: int) -> void:
@@ -168,7 +174,7 @@ func _select_starting_node(index: int) -> void:
 		return
 
 	var names := behavior_graph.get_nodes_names_by_category("access_point_node")
-	if names == null:
+	if names.is_empty():
 		starting_node = null
 		return
 
@@ -185,16 +191,16 @@ func is_overridable_blackboard_property(property:StringName)->bool:
 
 func set_overridable_blackboard_property(property:StringName,value:Variant,interface : Node)->bool:
 	actor = interface
-	if property.begins_with(OBP):
-		return _set(property,value)
-	push_error("%s is not the name for an overridable blackboard property"%property)
-	return false
+	if not property.begins_with(OBP):
+		push_error("%s is not the name for an overridable blackboard property"%property)
+		return false
+	return _set(property,value)
 
 func get_overridable_blackboard_property(property:StringName)->Variant:
-	if property.begins_with(OBP):
-		return _get(property)
-	push_error("%s is not the name for an overridable blackboard property"%property)
-	return 
+	if not property.begins_with(OBP):
+		push_error("%s is not the name for an overridable blackboard property"%property)
+		return 
+	return _get(property)
 
 func get_overridable_property_list()->Array[Dictionary]:
 	var base_usage := PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_NIL_IS_VARIANT

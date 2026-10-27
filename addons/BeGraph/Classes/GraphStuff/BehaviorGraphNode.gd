@@ -27,7 +27,7 @@ func _on_node_set() -> void:
 	node.conditions_changed.connect(_on_conditions_changed)
 	set_node_color("BeGraph/colors/node_colors/%s" % node.node_category)
 	
-	if node.supports_decorator():
+	if !node.supports_decorator():
 		decorator_button = Button.new()
 		decorator_button.flat = true
 		decorator_button.toggle_mode = true
@@ -39,10 +39,6 @@ func _on_node_set() -> void:
 			reset_size.call_deferred()
 			)
 		decorator_tree.setup(node)
-
-func set_node_script(path: String) -> void:
-	if FileAccess.file_exists(path):
-		set_node(load(path).new())
 
 func set_conditions() -> void:
 	h_box_container.visible = node.conditions.size() > 0
@@ -66,9 +62,10 @@ func _on_conditions_changed() -> void:
 
 func _clear_condition_rows() -> void:
 	for child in get_children():
-		if child is Control and child != h_flow_container and child != h_box_container and child != decorator_tree:
-			remove_child(child)
-			child.queue_free()
+		if !(child is Control and child != h_flow_container and child != h_box_container and child != decorator_tree): continue
+		
+		remove_child(child)
+		child.queue_free()
 
 func _render_placeholders(text: String, container: Control, is_main_instruction: bool) -> void:
 	if is_main_instruction:

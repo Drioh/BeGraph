@@ -155,7 +155,7 @@ func _refresh_blackboard() -> void:
 ## via OS.find_keycode_from_string(), with a silent fallback to F3 if the name is invalid
 ## or unrecognized (find_keycode_from_string returns KEY_NONE in that case).
 func _resolve_toggle_keycode() -> Key:
-	var key_name : String = ProjectSettings.get_setting("BeGraph/general_settings/runtime_overlay_toggle_key", "F3")
+	var key_name : String = ProjectSettings.get_setting("BeGraph/general_settings/runtime_debug_overlay_toggle_key", "F3")
 	if key_name.is_empty():
 		return KEY_F3
 	var code := OS.find_keycode_from_string(key_name)

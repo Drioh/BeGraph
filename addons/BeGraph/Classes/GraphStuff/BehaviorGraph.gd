@@ -31,10 +31,11 @@ var _agent_ref : WeakRef = weakref(null)
 
 ## Creates the graph's first [AccessPointNode] if [member nodes] is empty, guaranteeing every new [BehaviorGraph] has at least one valid entry point.
 func _init() -> void:
-	if nodes.is_empty():
-		var first_node = AccessPointNode.new()
-		first_node.resource_name = StringName("_GraphNode_%d" % randi_range(10000, 99999))
-		add_node(first_node)
+	if not nodes.is_empty(): return
+	
+	var first_node = AccessPointNode.new()
+	first_node.resource_name = StringName("_GraphNode_%d" % randi_range(10000, 99999))
+	add_node(first_node)
 
 
 #region Node methods
@@ -76,15 +77,12 @@ func get_nodes_by_category(category : String) -> Array[BehaviorNode]:
 		push_error("BehaviorGraph: Nodes not found for category '%s'"%category)
 	return ret
 
-## Returns every [BehaviorNode]'sname in [member nodes] whose [member BehaviorNode.node_category] matches [param category]. Logs an error (and returns an empty array) if no node matches.
-func get_nodes_names_by_category(category : String) -> Array[StringName]:
-	var ret: Array[StringName] = []
-	for node in nodes.values():
-		if node and node.node_category == category:
-			ret.append(node.resource_name)
-	if ret.is_empty():
-		push_error("BehaviorGraph: Nodes not found for category '%s'" % category)
-	return ret
+## Returns every [BehaviorNode]'s name in [member nodes] whose [member BehaviorNode.node_category] matches [param category]. Logs an error (and returns an empty array) if no node matches.
+func get_nodes_names_by_category(category: String) -> Array[StringName]:
+	var names : Array[StringName] = []
+	for node in get_nodes_by_category(category):
+		names.append(node.resource_name)
+	return names
 
 #endregion
 

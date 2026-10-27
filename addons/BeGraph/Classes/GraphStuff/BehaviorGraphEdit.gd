@@ -58,8 +58,9 @@ func _ready() -> void:
 	end_node_move.connect(_sync_frame_attachments)
 	begin_node_move.connect(_on_begin_node_move)
 	end_node_move.connect(_on_end_node_move)
-	if Engine.is_editor_hint():
-		undo_redo = EditorInterface.get_editor_undo_redo()
+	if !Engine.is_editor_hint(): return
+		
+	undo_redo = EditorInterface.get_editor_undo_redo()
 #endregion
 
 
@@ -74,8 +75,7 @@ func set_graph(graph: BehaviorGraph) -> void:
 		clear_connections()
 
 	for child in get_children().duplicate():
-		if child is not BehaviorGraphNodeBase and child is not BehaviorGraphFrame:
-			continue
+		if child is not BehaviorGraphNodeBase and child is not BehaviorGraphFrame: continue
 		remove_child(child)
 		child.free()
 	current_graph = graph
@@ -150,8 +150,8 @@ func _instantiate_node(behavior_node: BehaviorNode, position: Vector2, forced_na
 
 ## Redo half of [method add_node].
 func _do_create_node(script_path: String, node_name: StringName, position: Vector2) -> void:
-	if current_graph.nodes.has(node_name) or has_node(NodePath(node_name)):
-		return
+	if current_graph.nodes.has(node_name) or has_node(NodePath(node_name)): return
+	
 	_instantiate_node(load(script_path).new(), position, node_name)
 
 ## Undo half of [method add_node] (also reused by delete/paste/embed to remove a single node).
@@ -167,8 +167,9 @@ func prune_invalid_connections_from(graph_node: BehaviorGraphNodeBase) -> void:
 	var n := graph_node.node.conditions.size()
 	var max_valid_port : int = 1 + n if n > 0 else 0
 	for c in get_connection_list_from_node(graph_node.name):
-		if c["from_port"] > max_valid_port:
-			disconnect_nodes(c["from_node"], c["from_port"], c["to_node"], c["to_port"])
+		if c["from_port"] <= max_valid_port: continue
+		
+		disconnect_nodes(c["from_node"], c["from_port"], c["to_node"], c["to_port"])
 
 ## Deletes the given nodes/frames as a single undoable action: refuses to delete a graph's last
 ## remaining starting point, severs every connection touching a deleted node (both directions, and
@@ -184,8 +185,7 @@ func _on_delete_nodes_request(nodes: Array[StringName]) -> void:
 			continue
 
 		var nod := element as BehaviorGraphNodeBase
-		if nod == null:
-			continue
+		if nod == null: continue
 
 		if nod.node.is_starting_node and current_graph.get_nodes_by_category("access_point_node").size() <= 1:
 			push_error("Node %s cannot be deleted. There must be at least one access point" % n)
@@ -193,8 +193,7 @@ func _on_delete_nodes_request(nodes: Array[StringName]) -> void:
 
 		to_delete.append(n)
 
-	if to_delete.is_empty():
-		return
+	if to_delete.is_empty(): return
 
 	var deleted_set : Dictionary = {}
 	for n in to_delete:
@@ -204,9 +203,10 @@ func _on_delete_nodes_request(nodes: Array[StringName]) -> void:
 	# connection between two co-deleted nodes is severed/restored exactly one time.
 	var touched_connections : Array[Dictionary] = []
 	for c in get_connection_list():
-		if deleted_set.has(c["from_node"]) or deleted_set.has(c["to_node"]):
-			if c not in touched_connections:
-				touched_connections.append(c)
+		if !deleted_set.has(c["from_node"]) and !deleted_set.has(c["to_node"]): continue
+		if c in touched_connections: continue
+		
+		touched_connections.append(c)
 
 	var frame_snapshots : Dictionary = {} # frame name -> snapshot dict, built below
 
@@ -257,8 +257,8 @@ func _emit_no_selection() -> void:
 	selected_node_changed.emit(null)
 
 func _do_recreate_node(n: StringName, behavior_node: BehaviorNode) -> void:
-	if has_node(NodePath(n)):
-		return
+	if has_node(NodePath(n)): return
+	
 	load_node(behavior_node, true)
 
 func _do_remove_frame(snapshot: Dictionary) -> void:
@@ -271,8 +271,8 @@ func _do_remove_frame(snapshot: Dictionary) -> void:
 		el.queue_free()
 
 func _do_recreate_frame(snapshot: Dictionary) -> void:
-	if has_node(NodePath(snapshot["name"])):
-		return
+	if has_node(NodePath(snapshot["name"])): return
+	
 	var frame_resource : BehaviorFrame = snapshot["resource"]
 	frame_resource.frame_title = snapshot["title"]
 	frame_resource.tint_color = snapshot["tint_color"]
@@ -285,8 +285,9 @@ func _do_recreate_frame(snapshot: Dictionary) -> void:
 	
 ## Callback for [signal GraphEdit.node_selected]: forwards the selected node's [BehaviorNode].
 func _on_node_selected(node: Node) -> void:
-	if node is BehaviorGraphNodeBase:
-		selected_node_changed.emit(node.node)
+	if node is not BehaviorGraphNodeBase: return
+	
+	selected_node_changed.emit(node.node)
 
 ## Callback for [signal GraphEdit.node_deselected]: nothing is selected anymore.
 func _on_node_deselected(_node: Node) -> void:
@@ -349,18 +350,19 @@ func disconnect_nodes(from_node: StringName, from_port: int, to_node: StringName
 func _do_connect(c: Dictionary) -> void:
 	var f_node: BehaviorGraphNodeBase = get_node_or_null(NodePath(c["from_node"]))
 	var t_node: BehaviorGraphNodeBase = get_node_or_null(NodePath(c["to_node"]))
-	if f_node == null or t_node == null:
-		return
+	if f_node == null or t_node == null: return
+	
 	f_node.node.add_next(t_node.node, c["from_port"])
 	if c not in current_graph.connections:
 		current_graph.add_connection(c)
+		
 	connect_node(c["from_node"], c["from_port"], c["to_node"], c["to_port"])
 
 func _do_disconnect(c: Dictionary) -> void:
 	var f_node: BehaviorGraphNodeBase = get_node_or_null(NodePath(c["from_node"]))
 	var t_node: BehaviorGraphNodeBase = get_node_or_null(NodePath(c["to_node"]))
-	if f_node == null or t_node == null:
-		return
+	if f_node == null or t_node == null: return
+	
 	f_node.node.remove_next(t_node.node, c["from_port"])
 	current_graph.remove_connection(c)
 	disconnect_node(c["from_node"], c["from_port"], c["to_node"], c["to_port"])
@@ -380,15 +382,17 @@ func _do_disconnect_many(conns: Array[Dictionary]) -> void:
 func get_connection_starting_nodes() -> Array[StringName]:
 	var ret: Array[StringName] = []
 	for c in connections:
-		if c["from_node"] not in ret:
-			ret.append(c["from_node"])
+		if c["from_node"] in ret: continue
+		
+		ret.append(c["from_node"])
 	return ret
 
 ## Returns [code]true[/code] if [param from_node] already has a connection from [param from_port].
 func is_connection_from_node_from_port_enabled(from_node: StringName, from_port: int) -> bool:
 	for c in get_connection_list_from_node(from_node):
-		if c["from_node"] == from_node and c["from_port"] == from_port:
-			return true
+		if c["from_node"] != from_node or c["from_port"] != from_port: continue
+		
+		return true
 	return false
 
 func _on_connection_to_empty(from_node: StringName, from_port: int, release_position: Vector2)->void:
@@ -396,15 +400,13 @@ func _on_connection_to_empty(from_node: StringName, from_port: int, release_posi
 	_show_node_creation_popup()
 
 func _complete_pending_connection(new_node: BehaviorGraphNodeBase) -> void:
-	if _pending_connection_from.is_empty():
-		return
+	if _pending_connection_from.is_empty(): return
 
 	var from_node: StringName = _pending_connection_from["from_node"]
 	var from_port: int = _pending_connection_from["from_port"]
 	_pending_connection_from = {}
 
-	if new_node == null or not new_node.node.input:
-		return
+	if new_node == null or not new_node.node.input: return
 
 	connect_nodes(from_node, from_port, new_node.name, 0)
 #endregion
@@ -433,29 +435,31 @@ func _show_node_creation_popup() -> void:
 
 func _on_node_popup_closed(popup: PopupMenu) -> void:
 	_pending_connection_from = {}
-	if is_instance_valid(popup):
-		popup.queue_free()
+	if !is_instance_valid(popup): return
+	
+	popup.queue_free()
 
 ## Appends custom node paths defined in ProjectSettings ([constant CUSTOM_NODES_PATHS_SETTING])
 ## as top-level macro-items named after each pointed folder.
 func _append_custom_node_paths(root_popup: PopupMenu) -> void:
-	if not ProjectSettings.has_setting(CUSTOM_NODES_PATHS_SETTING):
-		return
+	if not ProjectSettings.has_setting(CUSTOM_NODES_PATHS_SETTING): return
+	
 	var setting_val: Variant = ProjectSettings.get_setting(CUSTOM_NODES_PATHS_SETTING)
 	var paths: PackedStringArray = []
+	
 	if setting_val is PackedStringArray:
 		paths = setting_val
 	elif setting_val is Array:
 		for p in setting_val:
-			if p is String:
-				paths.append(p)
+			if p is not String: continue
+			
+			paths.append(p)
 	elif setting_val is String and not setting_val.is_empty():
 		paths.append(setting_val)
 
 	for custom_path in paths:
 		var trimmed := custom_path.strip_edges()
-		if trimmed.is_empty():
-			continue
+		if trimmed.is_empty(): continue
 		if not DirAccess.dir_exists_absolute(trimmed):
 			push_warning("Custom node path does not exist: %s" % trimmed)
 			continue
@@ -465,8 +469,8 @@ func _append_custom_node_paths(root_popup: PopupMenu) -> void:
 			folder_name = trimmed
 
 		var custom_sub := _build_node_popup(trimmed)
-		if custom_sub == null:
-			continue
+		
+		if custom_sub == null: continue
 		if custom_sub.item_count == 0:
 			custom_sub.queue_free()
 			continue
@@ -474,29 +478,33 @@ func _append_custom_node_paths(root_popup: PopupMenu) -> void:
 		custom_sub.name = folder_name
 		root_popup.add_submenu_node_item(folder_name, custom_sub)
 		var item_idx := root_popup.item_count - 1
-		if Engine.is_editor_hint():
-			var theme := EditorInterface.get_editor_theme()
-			if theme and theme.has_icon("Folder", "EditorIcons"):
-				root_popup.set_item_icon(item_idx, theme.get_icon("Folder", "EditorIcons"))
+		
+		if !Engine.is_editor_hint(): continue
+		
+		var theme := EditorInterface.get_editor_theme()
+		if theme and theme.has_icon("Folder", "EditorIcons"):
+			root_popup.set_item_icon(item_idx, theme.get_icon("Folder", "EditorIcons"))
 
 ## Recursively mirrors [param path]'s folder structure into a [PopupMenu]: subfolders become submenus (dropped if empty), [code].gd[/code] files become items labeled via [method _script_metadata]. Returns [code]null[/code] if [param path] doesn't exist.
 func _build_node_popup(path: String) -> PopupMenu:
 	if not DirAccess.dir_exists_absolute(path):
 		push_error("Path not valid: %s" % path)
 		return null
+	
 	var popup := PopupMenu.new()
 	popup.allow_search = true
 	popup.search_bar_enabled = true
 
 	var dirs := DirAccess.get_directories_at(path)
 	dirs.sort()
+	
 	for dir_name in dirs:
 		var sub: PopupMenu = _build_node_popup(path.path_join(dir_name))
-		if sub == null:
-			continue
+		if sub == null: continue
 		if sub.item_count == 0:
 			sub.queue_free()
 			continue
+		
 		sub.name = dir_name
 
 		popup.add_submenu_node_item(dir_name, sub)
@@ -509,14 +517,15 @@ func _build_node_popup(path: String) -> PopupMenu:
 	var files : PackedStringArray = DirAccess.get_files_at(path)
 	files.sort()
 	for file_name in files:
-		if not file_name.ends_with(".gd"):
-			continue
+		if not file_name.ends_with(".gd"): continue
+		
 		var full_path := path.path_join(file_name)
 		var id := popup.item_count
 		
 		var script_metadata = _script_metadata(full_path)
 		popup.add_item(script_metadata["label"], id)
-		if not script_metadata["icon"] == null:
+		
+		if not script_metadata["icon"] == null: 
 			popup.set_item_icon(id, script_metadata["icon"])
 		popup.set_item_tooltip(id,script_metadata["info"])
 		popup.set_item_metadata(id, full_path)
@@ -527,16 +536,16 @@ func _build_node_popup(path: String) -> PopupMenu:
 ## Creates a node from the script path stored in the selected item's metadata.
 func _on_node_popup_id_pressed(id: int, popup: PopupMenu) -> void:
 	var script_path = popup.get_item_metadata(id)
-	if script_path == null:
-		return
+	if script_path == null: return
+	
 	_complete_pending_connection(add_node(script_path))
 
 ## Reads a script's [code]DISPLAY_NAME[/code] and [code]DISPLAY_ICON[/code] constants, falling back to its filename and no icon.
 func _script_metadata(path: String) -> Dictionary:
 	var scr := load(path) as GDScript
-	if scr == null:
-		return {"label": path.get_file().get_basename(), "icon": null}
-	var consts := scr.get_script_constant_map()
+	if scr == null: return {"label": path.get_file().get_basename(), "icon": null}
+	
+	var consts :Dictionary= scr.get_script_constant_map()
 	return {
 		"label": consts.get("DISPLAY_NAME", path.get_file().get_basename()),
 		"icon": load(consts["DISPLAY_ICON"]) if consts.has("DISPLAY_ICON") else null,
@@ -546,19 +555,17 @@ func _script_metadata(path: String) -> Dictionary:
 
 func _scene_for(n: BehaviorNode) -> PackedScene:
 	var consts: Dictionary = n.get_script().get_script_constant_map()
-	if consts.has("DISPLAY_SCENE"):
-		return load(consts["DISPLAY_SCENE"])
-	return NODE
+	if !consts.has("DISPLAY_SCENE"): return NODE
+	
+	return load(consts["DISPLAY_SCENE"])
 
 #region Copy / Paste / Duplicate
 
 ## Stores a snapshot of the selected nodes (and of the connections between them) in the clipboard.
-func copy_selected_nodes() -> void:
-	if current_graph == null:
-		return
+func copy_selected_nodes() -> void:	
 	var snapshot : Dictionary = _capture_selection()
-	if snapshot["nodes"].is_empty():
-		return
+	if current_graph or snapshot["nodes"].is_empty(): return
+	
 	_clipboard = snapshot
 
 ## Copies the selected nodes, then deletes them.
@@ -567,8 +574,9 @@ func _on_cut_nodes_request() -> void:
 	var names : Array[StringName] = []
 	for graph_node in _get_selected_nodes():
 		names.append(graph_node.name)
-	if not names.is_empty():
-		_on_delete_nodes_request(names)
+	if names.is_empty(): return
+	
+	_on_delete_nodes_request(names)
 
 ## Pastes the clipboard with its top-left corner at the mouse (or slightly offset from the originals if the mouse is outside the graph).
 func _on_paste_nodes_request() -> void:
@@ -580,8 +588,7 @@ func _on_paste_nodes_request() -> void:
 
 ## Duplicates the selected nodes in place (shifted by [constant DUPLICATE_OFFSET]) without touching the clipboard.
 func duplicate_selected_nodes() -> void:
-	if current_graph == null:
-		return
+	if current_graph == null: return
 	_paste_snapshot(_capture_selection(), DUPLICATE_OFFSET)
 
 ## Builds a snapshot from the current selection: cloned [BehaviorNode]s plus the connections whose both ends are selected.
@@ -594,8 +601,9 @@ func _capture_selection() -> Dictionary:
 
 	var connections : Array[Dictionary] = []
 	for c in current_graph.connections:
-		if names.has(StringName(c["from_node"])) and names.has(StringName(c["to_node"])):
-			connections.append(c.duplicate())
+		if !names.has(StringName(c["from_node"])) or !names.has(StringName(c["to_node"])): continue
+		
+		connections.append(c.duplicate())
 	return {"nodes": nodes, "connections": connections}
 
 ## Recreates a snapshot inside [member current_graph], as a single undoable action: every node
@@ -603,8 +611,7 @@ func _capture_selection() -> Dictionary:
 ## up selected.
 func _paste_snapshot(snapshot : Dictionary, offset : Vector2) -> void:
 	var nodes : Array = snapshot.get("nodes", [])
-	if current_graph == null or nodes.is_empty():
-		return
+	if current_graph == null or nodes.is_empty(): return
 
 	_deselect_all()
 
@@ -616,7 +623,7 @@ func _paste_snapshot(snapshot : Dictionary, offset : Vector2) -> void:
 		name_map[StringName(source.resource_name)] = new_name
 		copy.resource_name = new_name
 		copy.position_in_graph = source.position_in_graph + offset
-		_remove_missing_blackboard_bindings(copy)
+		_unbind_blackboard_properties(copy, current_graph.blackboard.map(func(v): return v.name))
 		copies.append(copy)
 
 	var new_connections : Array[Dictionary] = []
@@ -649,8 +656,9 @@ func _paste_snapshot(snapshot : Dictionary, offset : Vector2) -> void:
 ## only matters on a later redo).
 func _do_load_nodes(copies: Array[BehaviorNode]) -> void:
 	for copy in copies:
-		if not has_node(NodePath(copy.resource_name)):
-			load_node(copy, true)
+		if has_node(NodePath(copy.resource_name)): continue
+		
+		load_node(copy, true)
 
 ## Undo counterpart of _do_load_nodes.
 func _do_remove_nodes(copies: Array[BehaviorNode]) -> void:
@@ -661,8 +669,9 @@ func _do_remove_nodes(copies: Array[BehaviorNode]) -> void:
 func _do_select_nodes(names: Array[StringName]) -> void:
 	for n in names:
 		var el := get_node_or_null(NodePath(n))
-		if el:
-			el.selected = true
+		if el == null: continue
+		
+		el.selected = true
 
 ## Recursively searches [param node]'s [Control] descendants for the one whose global rect contains [param global_pos], returning the first (deepest) match found, or [code]null[/code] if none does.
 func _generate_unique_node_name(prefix : String = "_GraphNode_") -> StringName:
@@ -679,17 +688,6 @@ func _clone_behavior_node(source : BehaviorNode) -> BehaviorNode:
 		condition["next"] = null
 	return copy
 
-## Unbinds every property of [param node] linked to a blackboard key that doesn't exist in [member current_graph] (e.g. when pasting into a different graph). The property keeps its last value.
-func _remove_missing_blackboard_bindings(node : BehaviorNode) -> void:
-	var keys : Array[StringName] = []
-	for variable in current_graph.blackboard:
-		if variable:
-			keys.append(variable.name)
-	for prop in node.behavior_properties:
-		var key : StringName = node.behavior_properties[prop][&"blackboard_reference"]
-		if key != &"" and not keys.has(key):
-			node.behavior_properties[prop][&"blackboard_reference"] = &""
-
 ## Top-left corner (graph coordinates) of the bounding box of the snapshot's nodes.
 func _snapshot_origin(snapshot : Dictionary) -> Vector2:
 	var origin := Vector2(INF, INF)
@@ -702,22 +700,24 @@ func _get_selected_nodes() -> Array[BehaviorGraphNodeBase]:
 	var ret : Array[BehaviorGraphNodeBase] = []
 	for child in get_children():
 		var graph_node := child as BehaviorGraphNodeBase
-		if graph_node != null and graph_node.selected:
-			ret.append(graph_node)
+		if graph_node == null or !graph_node.selected: continue
+		
+		ret.append(graph_node)
 	return ret
 
 func _deselect_all() -> void:
-	for child in get_children():
-		var element := child as GraphElement
-		if element != null:
-			element.selected = false
+	for child: GraphElement in get_children():
+		var element : GraphElement= child 
+		if element == null: continue
+		
+		element.selected = false
 
 #endregion
 
 #region Frames & embedding
 
 ## Padding (graph coordinates) between the top-left corner of the embedded nodes and the frame.
-const FRAME_PADDING := Vector2(40, 60)
+const FRAME_PADDING :Vector2= Vector2(40, 60)
 
 ## Copies every node of [param source] (and the connections between them) into [member current_graph], wrapped in a new frame titled after [param source], as a single undoable action. [param source] is never modified.[br]
 ## Properties bound to a blackboard variable are unbound and reset to the node's default value, since the blackboards of the two graphs are unrelated.[br]
@@ -727,13 +727,13 @@ func embed_graph(source: BehaviorGraph, include_access_points: bool = false) -> 
 		return null
 
 	var sources : Array[BehaviorNode] = []
-	for n in source.nodes.values():
-		var src := n as BehaviorNode
-		if src == null or src is BehaviorFrame:
-			continue
-		if src.node_category == "access_point_node" and not include_access_points:
-			continue
+	for n: BehaviorNode in source.nodes.values():
+		var src : BehaviorNode= n 
+		if src == null or src is BehaviorFrame: continue
+		if src.node_category == "access_point_node" and not include_access_points: continue
+		
 		sources.append(src)
+	
 	if sources.is_empty():
 		push_warning("Graph \"%s\" has no nodes to embed" % _graph_display_name(source))
 		return null
@@ -752,18 +752,19 @@ func embed_graph(source: BehaviorGraph, include_access_points: bool = false) -> 
 		name_map[StringName(src.resource_name)] = new_name
 		copy.resource_name = new_name
 		copy.position_in_graph = src.position_in_graph + offset
-		_strip_blackboard_bindings(copy)
+		_unbind_blackboard_properties(copy)
 		copies.append(copy)
 
 	var new_connections : Array[Dictionary] = []
 	for c in source.connections:
 		var from_name := StringName(c["from_node"])
 		var to_name := StringName(c["to_node"])
-		if name_map.has(from_name) and name_map.has(to_name):
-			new_connections.append({
-				"from_node": name_map[from_name], "from_port": c["from_port"],
-				"to_node": name_map[to_name], "to_port": c["to_port"],
-			})
+		if !name_map.has(from_name) or !name_map.has(to_name): continue
+		
+		new_connections.append({
+			"from_node": name_map[from_name], "from_port": c["from_port"],
+			"to_node": name_map[to_name], "to_port": c["to_port"],
+		})
 
 	var frame_node := BehaviorFrame.new()
 	var frame_name : StringName = _generate_unique_node_name("_GraphFrame_")
@@ -798,8 +799,8 @@ func embed_graph(source: BehaviorGraph, include_access_points: bool = false) -> 
 ## Redo half of embed_graph's frame creation: adds frame_node to the graph and creates its visual,
 ## unless already present (first execution happened live, above).
 func _do_add_frame_node(frame_node: BehaviorFrame) -> void:
-	if has_node(NodePath(frame_node.resource_name)):
-		return
+	if has_node(NodePath(frame_node.resource_name)): return
+	
 	current_graph.add_node(frame_node)
 	load_frame(frame_node)
 
@@ -807,10 +808,11 @@ func _do_add_frame_node(frame_node: BehaviorFrame) -> void:
 ## separately by _do_remove_nodes).
 func _do_remove_frame_node(frame_node: BehaviorFrame) -> void:
 	var fel := get_node_or_null(NodePath(frame_node.resource_name))
-	if fel:
-		current_graph.remove_node(frame_node)
-		remove_child(fel)
-		fel.queue_free()
+	if fel == null: return
+	
+	current_graph.remove_node(frame_node)
+	remove_child(fel)
+	fel.queue_free()
 
 ## Creates the visual frame for [param frame_node] (already registered in [member current_graph]) and attaches the nodes it lists.
 func load_frame(frame_node: BehaviorFrame) -> BehaviorGraphFrame:
@@ -822,8 +824,8 @@ func load_frame(frame_node: BehaviorFrame) -> BehaviorGraphFrame:
 
 	for element_name in frame_node.attached_nodes:
 		var element := get_node_or_null(NodePath(element_name)) as BehaviorGraphNodeBase
-		if element == null:
-			continue
+		if element == null: continue
+		
 		attach_graph_element_to_frame(element.name, frame.name)
 		frame.track(element)
 	if frame_node.autoshrink and not frame_node.attached_nodes.is_empty():
@@ -834,21 +836,19 @@ func load_frame(frame_node: BehaviorFrame) -> BehaviorGraphFrame:
 ## GraphEdit only emits this signal: attaching is up to us.
 func _on_elements_linked_to_frame(elements: Array, frame_name: StringName) -> void:
 	var frame := get_node_or_null(NodePath(frame_name)) as BehaviorGraphFrame
-	if frame == null:
-		return
+	if frame == null: return
 
 	var previous_frame_of : Dictionary = {} # element name -> old frame name ("" if none)
 	var element_names : Array[StringName] = []
 	for element_name in elements:
 		var element := get_node_or_null(NodePath(element_name)) as BehaviorGraphNodeBase
-		if element == null:
-			continue
+		if element == null: continue
+		
 		var old_frame := get_element_frame(element.name) as BehaviorGraphFrame
 		previous_frame_of[StringName(element.name)] = StringName(old_frame.name) if old_frame != null else &""
 		element_names.append(StringName(element.name))
 
-	if element_names.is_empty():
-		return
+	if element_names.is_empty(): return
 
 	_link_elements_to_frame(element_names, frame_name)
 
@@ -859,16 +859,17 @@ func _on_elements_linked_to_frame(elements: Array, frame_name: StringName) -> vo
 
 func _link_elements_to_frame(element_names: Array[StringName], frame_name: StringName) -> void:
 	var frame := get_node_or_null(NodePath(frame_name)) as BehaviorGraphFrame
-	if frame == null:
-		return
+	if frame == null: return
+	
 	for n in element_names:
 		var element := get_node_or_null(NodePath(n)) as GraphElement
-		if element == null:
-			continue
+		if element == null: continue
+		
 		var current_frame := get_element_frame(n) as BehaviorGraphFrame
 		if current_frame != null and current_frame != frame:
 			detach_graph_element_from_frame(n)
 			current_frame.untrack(element)
+		
 		attach_graph_element_to_frame(n, frame_name)
 		frame.track(element)
 	_sync_frame_attachments()
@@ -876,55 +877,53 @@ func _link_elements_to_frame(element_names: Array[StringName], frame_name: Strin
 func _unlink_elements_from_frame(element_names: Array[StringName], previous_frame_of: Dictionary) -> void:
 	for n in element_names:
 		var element := get_node_or_null(NodePath(n)) as GraphElement
-		if element == null:
-			continue
+		if element == null: continue
+		
 		var current_frame := get_element_frame(n) as BehaviorGraphFrame
 		if current_frame != null:
 			detach_graph_element_from_frame(n)
 			current_frame.untrack(element)
+		
 		var old_frame_name : StringName = previous_frame_of[n]
-		if old_frame_name != &"":
-			var old_frame := get_node_or_null(NodePath(old_frame_name)) as BehaviorGraphFrame
-			if old_frame != null:
-				attach_graph_element_to_frame(n, old_frame_name)
-				old_frame.track(element)
+		if old_frame_name == &"": continue
+
+		var old_frame := get_node_or_null(NodePath(old_frame_name)) as BehaviorGraphFrame
+		if old_frame == null: continue
+		
+		attach_graph_element_to_frame(n, old_frame_name)
+		old_frame.track(element)
 	_sync_frame_attachments()
 
 ## Writes the live attachments of every frame back into its [BehaviorFrame], so they get saved with the graph.
 func _sync_frame_attachments() -> void:
 	for child in get_children():
 		var frame := child as BehaviorGraphFrame
-		if frame == null or frame.frame == null:
-			continue
+		if frame == null or frame.frame == null: continue
+		
 		var attached : Array[StringName] = []
 		for element_name in get_attached_nodes_of_frame(frame.name):
 			attached.append(element_name)
 		frame.frame.attached_nodes = attached
 	_refresh_frame_buttons()
 
-## Unbinds every blackboard-linked property of [param node], restoring the default value of the property (the stored one belongs to the old graph's context).
-func _strip_blackboard_bindings(node : BehaviorNode) -> void:
-	var defaults : BehaviorNode = null
-	for prop in node.behavior_properties:
-		if node.behavior_properties[prop][&"blackboard_reference"] == &"":
-			continue
-		if defaults == null:
-			defaults = node.get_script().new()
-		node.behavior_properties[prop][&"blackboard_reference"] = &""
+func _unbind_blackboard_properties(node: BehaviorNode, keep_if_in: Array[StringName] = []) -> void:
+	for prop in node._blackboard_bindings.keys().duplicate():
+		if keep_if_in.has(node._blackboard_bindings[prop]): continue
+		
+		node.set_node_property_blackboard_key(prop)
 
 func _graph_display_name(graph: BehaviorGraph) -> String:
-	if graph.resource_name != "":
-		return graph.resource_name
-	if graph.resource_path != "":
-		return graph.resource_path.get_file().get_basename()
+	if graph.resource_name != "": return graph.resource_name
+	if graph.resource_path != "": return graph.resource_path.get_file().get_basename()
+	
 	return "Embedded Graph"
 
 ## Creates a new frame around the currently selected nodes, as a single undoable action. Nodes
 ## that already belong to another frame are moved to the new one (an element can only be in one
 ## frame). Returns the new frame, or [code]null[/code] if nothing is selected.
 func create_frame_from_selection(frame_title: String = "Frame") -> BehaviorGraphFrame:
-	if current_graph == null:
-		return null
+	if current_graph == null: return null
+	
 	var selected : Array[BehaviorGraphNodeBase] = _get_selected_nodes()
 	if selected.is_empty():
 		push_warning("Select at least one node to create a frame")
@@ -966,16 +965,19 @@ func create_frame_from_selection(frame_title: String = "Frame") -> BehaviorGraph
 ## (per [param previous_frame_of]), then creates [param frame_node]'s visual (which attaches them,
 ## since load_frame reads frame_node.attached_nodes - already populated once, up front).
 func _attach_frame_selection(frame_node: BehaviorFrame, node_names: Array[StringName], previous_frame_of: Dictionary, focus_title_on_create: bool) -> void:
-	if has_node(NodePath(frame_node.resource_name)):
-		return
+	if has_node(NodePath(frame_node.resource_name)): return
+	
 	for n in node_names:
 		var old_frame_name : StringName = previous_frame_of[n]
-		if old_frame_name != &"":
-			var old_frame := get_node_or_null(NodePath(old_frame_name)) as BehaviorGraphFrame
-			var el := get_node_or_null(NodePath(n)) as GraphElement
-			if old_frame != null and el != null:
-				detach_graph_element_from_frame(n)
-				old_frame.untrack(el)
+		if old_frame_name == &"": continue
+		var old_frame := get_node_or_null(NodePath(old_frame_name)) as BehaviorGraphFrame
+		if old_frame == null: continue
+		var el := get_node_or_null(NodePath(n)) as GraphElement
+		if el == null: continue
+		
+		detach_graph_element_from_frame(n)
+		old_frame.untrack(el)
+	
 	current_graph.add_node(frame_node)
 	var frame := load_frame(frame_node)
 	_sync_frame_attachments()
@@ -985,8 +987,8 @@ func _attach_frame_selection(frame_node: BehaviorFrame, node_names: Array[String
 ## Undo step: removes the frame and puts each node back into whatever frame (if any) it came from.
 func _detach_frame_selection(frame_name: StringName, frame_node: BehaviorFrame, node_names: Array[StringName], previous_frame_of: Dictionary) -> void:
 	var fel := get_node_or_null(NodePath(frame_name)) as BehaviorGraphFrame
-	if fel == null:
-		return
+	if fel == null: return
+	
 	for element_name in get_attached_nodes_of_frame(frame_name).duplicate():
 		detach_graph_element_from_frame(element_name)
 	current_graph.remove_node(frame_node)
@@ -995,19 +997,22 @@ func _detach_frame_selection(frame_name: StringName, frame_node: BehaviorFrame, 
 
 	for n in node_names:
 		var old_frame_name : StringName = previous_frame_of[n]
-		if old_frame_name != &"":
-			var old_frame := get_node_or_null(NodePath(old_frame_name)) as BehaviorGraphFrame
-			var el := get_node_or_null(NodePath(n)) as GraphElement
-			if old_frame != null and el != null:
-				attach_graph_element_to_frame(n, old_frame_name)
-				old_frame.track(el)
+		if old_frame_name == &"": continue
+		var old_frame := get_node_or_null(NodePath(old_frame_name)) as BehaviorGraphFrame
+		if old_frame == null: continue
+		var el := get_node_or_null(NodePath(n)) as GraphElement
+		if el == null: continue
+
+		attach_graph_element_to_frame(n, old_frame_name)
+		old_frame.track(el)
+	
 	_sync_frame_attachments()
 
 ## Detaches every selected node from the frame it belongs to, as a single undoable action. The
 ## nodes stay where they are and the frame keeps its other nodes.
 func detach_selected_nodes_from_frame() -> void:
-	if current_graph == null:
-		return
+	if current_graph == null: return
+	
 	var names : Array[StringName] = []
 	for graph_node in _get_selected_nodes():
 		names.append(StringName(graph_node.name))
@@ -1015,8 +1020,8 @@ func detach_selected_nodes_from_frame() -> void:
 
 ## Detaches a single node from its frame (used by the node's own "free from frame" button).
 func detach_node_from_frame(element_name: StringName) -> void:
-	if current_graph == null:
-		return
+	if current_graph == null:return
+	
 	_detach_names_from_frame([StringName(element_name)])
 
 ## Shared by both entry points above: detaches every name in [param names] currently in a frame,
@@ -1025,10 +1030,11 @@ func _detach_names_from_frame(names: Array[StringName]) -> void:
 	var previous_frame_of : Dictionary = {} # element name -> old frame name
 	for n in names:
 		var frame := get_element_frame(n) as BehaviorGraphFrame
-		if frame != null:
-			previous_frame_of[n] = StringName(frame.name)
-	if previous_frame_of.is_empty():
-		return
+		if frame == null: continue
+		
+		previous_frame_of[n] = StringName(frame.name)
+	
+	if previous_frame_of.is_empty(): return
 
 	_do_detach_names(previous_frame_of)
 
@@ -1040,27 +1046,33 @@ func _detach_names_from_frame(names: Array[StringName]) -> void:
 func _do_detach_names(previous_frame_of: Dictionary) -> void:
 	for n in previous_frame_of:
 		var frame := get_node_or_null(NodePath(previous_frame_of[n])) as BehaviorGraphFrame
+		if frame == null: continue
 		var element := get_node_or_null(NodePath(n)) as GraphElement
-		if frame != null and element != null and get_element_frame(n) == frame:
-			detach_graph_element_from_frame(n)
-			frame.untrack(element)
+		if element == null: continue
+		if get_element_frame(n) != frame: continue
+		
+		detach_graph_element_from_frame(n)
+		frame.untrack(element)
 	_sync_frame_attachments()
 
 func _do_reattach_names(previous_frame_of: Dictionary) -> void:
 	for n in previous_frame_of:
 		var frame := get_node_or_null(NodePath(previous_frame_of[n])) as BehaviorGraphFrame
+		if frame == null: continue
 		var element := get_node_or_null(NodePath(n)) as GraphElement
-		if frame != null and element != null:
-			attach_graph_element_to_frame(n, previous_frame_of[n])
-			frame.track(element)
+		if element == null: continue
+		
+		attach_graph_element_to_frame(n, previous_frame_of[n])
+		frame.track(element)
 	_sync_frame_attachments()
 
 ## Shows the "free from frame" button only on the nodes that currently belong to a frame.
 func _refresh_frame_buttons() -> void:
 	for child in get_children():
 		var graph_node := child as BehaviorGraphNodeBase
-		if graph_node != null:
-			graph_node.set_framed(get_element_frame(graph_node.name) != null)
+		if graph_node == null: continue
+		
+		graph_node.set_framed(get_element_frame(graph_node.name) != null)
 
 #endregion
 
@@ -1072,28 +1084,28 @@ var _move_start_positions : Dictionary = {}
 
 func _on_begin_node_move() -> void:
 	_move_start_positions.clear()
-	for child in get_children():
-		var element := child as GraphElement
-		if element != null and element.selected:
-			_move_start_positions[StringName(element.name)] = element.position_offset
+	for child: GraphElement in get_children():
+		var element :GraphElement= child
+		if element == null or !element.selected: continue
+		
+		_move_start_positions[StringName(element.name)] = element.position_offset
 
 func _on_end_node_move() -> void:
 	var start : Dictionary = _move_start_positions
 	_move_start_positions = {}
-	if start.is_empty():
-		return
+	if start.is_empty(): return
 
 	var end : Dictionary = {}
 	var moved : bool = false
 	for n in start:
 		var element := get_node_or_null(NodePath(n)) as GraphElement
-		if element == null:
-			continue
+		if element == null: continue
+		
 		end[n] = element.position_offset
-		if not (end[n] as Vector2).is_equal_approx(start[n]):
-			moved = true
-	if not moved:
-		return
+		if (end[n] as Vector2).is_equal_approx(start[n]): continue
+		
+		moved = true
+	if not moved: return
 
 	undo_redo.create_action("Move", UndoRedo.MERGE_DISABLE, current_graph)
 	undo_redo.add_do_method(self, &"_apply_positions", end)
@@ -1106,8 +1118,7 @@ func _on_end_node_move() -> void:
 func _apply_positions(positions: Dictionary) -> void:
 	for n in positions:
 		var element := get_node_or_null(NodePath(n)) as GraphElement
-		if element == null:
-			continue
+		if element == null: continue
 		element.position_offset = positions[n]
 
 #endregion

@@ -64,9 +64,6 @@ func set_breakpointable()->bool:return true
 ## For display purposes only, this parameter defines a node's category. Set using [method set_node_category].
 @export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE)var node_category : String = ""
 
-## Regular expression used to get variables from the text.
-var regex :RegEx= RegEx.create_from_string(r"\{([^{}]+)\}")
-
 ## If [code]true[/code], lets the node have one or more predecessor(s).
 @export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE)var input : bool = false
 
@@ -106,9 +103,6 @@ signal blackboard_key_set(property:StringName,blackboard_key:StringName)
 
 ## Emitted whenever [member conditions] is rebuilt (e.g. after an enum-based property changes its number of entries).
 signal conditions_changed
-
-## Emitted right after this node runs (see [method do_tick]), carrying the resulting [enum Status]. Meant for debugging/visualization tools (e.g. the live graph debugger); nothing in the plugin's own execution logic depends on it.
-signal ticked(status:Status)
 
 ## The [enum Status] returned by this node's last [method do_tick] call, or [code]-1[/code] if it has never been ticked.
 var last_status : int = -1
@@ -515,7 +509,6 @@ func do_tick(delta: float) -> Status:
 		var muted_status : Status = tick_next(delta) if conditions.is_empty() else tick_condition(delta)
 		last_status = muted_status
 		last_tick_time = Time.get_ticks_msec()
-		ticked.emit(muted_status)
 		return muted_status
 	
 	# Node is not in RUNNING state during previous frame
@@ -529,7 +522,6 @@ func do_tick(delta: float) -> Status:
 			last_tick_time = Time.get_ticks_msec()
 			on_end(Status.ERROR)
 			_disconnect_blackboard_signals()
-			ticked.emit(Status.ERROR)
 			return Status.ERROR
 
 	var status: Status = _tick_with_decorator(delta)
@@ -548,7 +540,6 @@ func do_tick(delta: float) -> Status:
 		on_end(status) 
 		_disconnect_blackboard_signals()
 
-	ticked.emit(status)
 	return status
 
 ## Routes [method tick] through [member decorator] (when this is an [code]action_node[/code] with a decorator set); returns the decorated [enum Status]. Called by [method do_tick] instead of [method tick] directly.
@@ -598,23 +589,40 @@ func tick_next(delta:float,index:int = 0) -> Status:
 		return Status.SUCCESS # Node has no successors, if it wants to tick a successor, but it has none, then it means it accomplished its purpose
 
 	var target: StringName = _next_ref[index]
-	var graph: BehaviorGraph = get_graph()
-	if graph and graph.nodes.has(target):
-		return graph.nodes[target].do_tick(delta)
+	if target == &"":
+		return Status.FAILURE
+		
+	var graph := get_graph()
+	if graph == null:
+		return abort("lost graph reference")
 
-	push_error("BehaviorNode %s: target node '%s' at index %d is invalid or missing" % [resource_name, target, index])
-	return Status.FAILURE
+	var target_node := graph.get_node(target)
+	if target_node == null:
+		return Status.FAILURE
+
+	return target_node.do_tick(delta)
 	
 
 ## Ticks the successor bound to the condition at [param index] inside [member conditions] and returns its [enum Status]. Routes through [method do_tick] (rather than calling [method tick] directly) so the successor's status/tick-time gets recorded.
 func tick_condition(delta:float,index:int = 0) -> Status:
-	if index < conditions.size():
-		var target : StringName = conditions[index]["next"] if conditions[index]["next"] else &""
-		if target != &"": 
-			return (_graph_ref.get_ref() as BehaviorGraph).nodes[target].do_tick(delta)
+	if index >= conditions.size():
+		push_error("BehaviorNode %s has less than %s conditions" % [self, index + 1])
 		return Status.FAILURE
-	push_error("BehaviorNode %s has less than %s conditions" % [self, index+1])
-	return Status.FAILURE
+
+	var target : StringName = conditions[index]["next"] if conditions[index]["next"] else &""
+	if target == &"":
+		return Status.FAILURE
+
+	var graph := get_graph()
+	if graph == null:
+		return abort("lost graph reference")
+
+	var target_node := graph.get_node(target)
+	if target_node == null:
+		return Status.FAILURE
+
+	return target_node.do_tick(delta)
+
 ## Resolves a property value. If [code]resolve node[/code] is set to [code]true[/code] and the given property value is a nodepath, returnes the resolved nodepath via [method _resolve_node]. Returns the blackboard value if bound, otherwise returns the fallback local variable.
 func eval(property_name: StringName, resolve_node: bool = false, fallback_value: Variant = null) -> Variant:
 	if fallback_value == null:
