@@ -78,6 +78,12 @@ const DECORATOR_ROWS: Array[Dictionary] = [
 	},
 ]
 
+## The BlackboardVariable instance currently bound to the "condition" decorator, tracked by
+## reference (not by name): a rename of this exact variable updates the stored key automatically
+## instead of unbinding; only its removal from the blackboard, or a value no longer boolean,
+## clears the binding.
+var _bound_variable : BlackboardVariable = null
+
 ## The currently configured [BehaviorNode], assigned via [method setup].
 var _node : BehaviorNode
 ## Decorator type (String) -> the top-level row ([TreeItem]) representing it.
@@ -90,18 +96,34 @@ var _decorator_syncing: bool = false
 func _ready() -> void:
 	if not item_edited.is_connected(_on_decorator_item_edited):
 		item_edited.connect(_on_decorator_item_edited)
+	if not item_mouse_selected.is_connected(_on_item_mouse_selected):
+		item_mouse_selected.connect(_on_item_mouse_selected)
+
+func _exit_tree() -> void:
+	_disconnect_blackboard_tracking()
 
 ## Associates this Tree with [param n] and (re)builds the entire decorator tree for it.
 ## Can be called multiple times (e.g., if the same control were reused for
 ## a different node): disconnects the previous [BehaviorNode], if any, before connecting to the new one.
 func setup(n: BehaviorNode) -> void:
-	if _node != null and _node != n and _node.decorator_changed.is_connected(_refresh_decorator_tree):
-		_node.decorator_changed.disconnect(_refresh_decorator_tree)
+	if _node != null and _node != n:
+		if _node.decorator_changed.is_connected(_refresh_decorator_tree):
+			_node.decorator_changed.disconnect(_refresh_decorator_tree)
+		if _node.decorator_changed.is_connected(_sync_bound_variable):
+			_node.decorator_changed.disconnect(_sync_bound_variable)
+	_disconnect_blackboard_tracking()
 
 	_node = n
 	if not _node.decorator_changed.is_connected(_refresh_decorator_tree):
 		_node.decorator_changed.connect(_refresh_decorator_tree)
+	if not _node.decorator_changed.is_connected(_sync_bound_variable):
+		_node.decorator_changed.connect(_sync_bound_variable)
 
+	var graph : BehaviorGraph = _node._graph_ref.get_ref() as BehaviorGraph
+	if graph != null and not graph.changed.is_connected(_on_blackboard_graph_changed):
+		graph.changed.connect(_on_blackboard_graph_changed)
+
+	_sync_bound_variable()
 	_build_decorator_tree()
 
 ## Rebuilds the Tree from scratch: columns, headers, and one row for each entry in
@@ -170,9 +192,9 @@ func _build_decorator_tree() -> void:
 				when_child.set_tooltip_text(1, "Before: waits the configured seconds (returning RUNNING) before ticking the action for the first time. After: ticks the action right away, but once it returns a final SUCCESS/FAILURE, holds that result back for the configured seconds before reporting it.")
 				when_child.set_tooltip_text(2, when_child.get_tooltip_text(1))
 			"condition":
-				item.set_selectable(2, false)
-				item.set_tooltip_text(2, "Drop a boolean Blackboard variable here to bind it. Until a variable is bound, this decorator has no effect and the action ticks as usual.")
-
+				_setup_enum_cell(item, 2, "(none)")
+				item.set_metadata(2, &"blackboard_key")
+				item.set_tooltip_text(2, "Gates the action behind a boolean Blackboard variable, chosen from this dropdown (scanned from the graph's blackboard; only boolean variables are listed).\n(none): the action always ticks normally.\nSelecting a variable: while it's true, the action ticks normally; while false, this node returns FAILURE immediately without ticking it.")
 	_refresh_decorator_tree()
 
 func _setup_range_cell(item: TreeItem, column: int, meta_key: StringName, min_v: float = 0.0, step: float = 0.01) -> void:
@@ -234,8 +256,15 @@ func _refresh_decorator_tree() -> void:
 			item.set_range(2, dec.get("seconds", 1.0))
 			item.get_child(0).set_range(2, int(dec.get("delay_mode", 0)))
 		"condition":
-			var key: String = str(dec.get("blackboard_key", &""))
-			_decorator_rows["condition"].set_text(2, key if key != "" else "(drop a bool variable)")
+			var item: TreeItem = _decorator_rows["condition"]
+			var names : PackedStringArray = _get_boolean_blackboard_names()
+			var options : PackedStringArray = PackedStringArray(["(none)"])
+			options.append_array(names)
+			item.set_text(2, ",".join(options))
+
+			var key : String = str(dec.get("blackboard_key", &""))
+			var idx : int = names.find(key)
+			item.set_range(2, idx + 1 if idx != -1 else 0)
 
 	_decorator_syncing = false
 
@@ -261,29 +290,128 @@ func _on_decorator_item_edited() -> void:
 		if field_name == &"repeater_count_timeout":
 			var variant: int = int(_node.decorator.get("variant", 0))
 			field_name = &"count" if variant == 0 else &"timeout"
-
-		_node.set_decorator_field(field_name, item.get_range(column))
+			_node.set_decorator_field(field_name, item.get_range(column))
+		elif field_name == &"blackboard_key":
+			var idx : int = int(item.get_range(column))
+			var names : PackedStringArray = _get_boolean_blackboard_names()
+			var key : StringName = &""
+			if idx > 0 and idx - 1 < names.size():
+				key = StringName(names[idx - 1])
+			_node.set_decorator_field(&"blackboard_key", key)
+		else:
+			_node.set_decorator_field(field_name, item.get_range(column))
 		_refresh_decorator_tree()
 
-func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
-	if not visible or _node == null or str(_node.decorator.get("type", "none")) != "condition":
-		return false
-	if typeof(data) != TYPE_DICTIONARY or not data.has("resource"):
-		return false
-	if typeof(data["resource"].value) != TYPE_BOOL:
-		return false
-	return _condition_cell_at(at_position) != null
+## Returns the names of every boolean [BlackboardVariable] currently in the graph owning [member _node].
+func _get_boolean_blackboard_names() -> PackedStringArray:
+	var ret : PackedStringArray = []
+	if _node == null or _node._graph_ref == null:
+		return ret
+	var graph : BehaviorGraph = _node._graph_ref.get_ref() as BehaviorGraph
+	if graph == null:
+		return ret
+	for v : BlackboardVariable in graph.blackboard:
+		if v != null and typeof(v.value) == TYPE_BOOL:
+			ret.append(String(v.name))
+	return ret
 
-func _drop_data(at_position: Vector2, data: Variant) -> void:
-	if _condition_cell_at(at_position) != null:
-		_node.set_decorator_field(&"blackboard_key", data["resource"].name)
+## Refreshes the "condition" row's dropdown options right before the user opens it, so the list
+## reflects the blackboard's current state even without a live signal connection.
+func _on_item_mouse_selected(position: Vector2, _mouse_button_index: int) -> void:
+	if not _decorator_rows.has("condition"):
+		return
+	var item := get_item_at_position(position)
+	if item != _decorator_rows["condition"]:
+		return
+	if get_column_at_position(position) != 2:
+		return
+	_refresh_condition_options(item)
 
-## Returns the "condition" row if [param at_position] (coordinates local to this Tree,
-## already provided as such by Godot to [method _can_drop_data]/[method _drop_data]) falls exactly
-## on its column 2 ("Value"), otherwise [code]null[/code].
-func _condition_cell_at(at_position: Vector2) -> Variant:
-	if not _decorator_rows.has("condition"): return null
-	if not Rect2(Vector2.ZERO, size).has_point(at_position): return null
-	if get_item_at_position(at_position) != _decorator_rows["condition"]: return null
-	if get_column_at_position(at_position) != 2: return null
-	return _decorator_rows["condition"]
+## Rebuilds only the "condition" row's dropdown text/selection (cheaper than a full _refresh_decorator_tree()).
+func _refresh_condition_options(item: TreeItem) -> void:
+	var names : PackedStringArray = _get_boolean_blackboard_names()
+	var options : PackedStringArray = PackedStringArray(["(none)"])
+	options.append_array(names)
+	item.set_text(2, ",".join(options))
+
+	var key : String = str(_node.decorator.get("blackboard_key", &""))
+	var idx : int = names.find(key)
+	item.set_range(2, idx + 1 if idx != -1 else 0)
+
+func _connect_bound_variable(v: BlackboardVariable) -> void:
+	if not v.name_changed.is_connected(_on_bound_variable_renamed):
+		v.name_changed.connect(_on_bound_variable_renamed)
+	if not v.value_changed.is_connected(_on_bound_variable_value_changed):
+		v.value_changed.connect(_on_bound_variable_value_changed)
+
+func _disconnect_bound_variable(v: BlackboardVariable) -> void:
+	if v.name_changed.is_connected(_on_bound_variable_renamed):
+		v.name_changed.disconnect(_on_bound_variable_renamed)
+	if v.value_changed.is_connected(_on_bound_variable_value_changed):
+		v.value_changed.disconnect(_on_bound_variable_value_changed)
+
+## Resolves (or re-resolves) [member _bound_variable] from [code]_node.decorator.blackboard_key[/code].
+## Called whenever the decorator changes (type switch, or a new selection from the dropdown): if
+## the currently tracked reference already matches the wanted key by name, nothing is touched -
+## this is what lets a rename of that same instance pass through untouched (see
+## [method _on_bound_variable_renamed]) instead of forcing a re-lookup every time.
+func _sync_bound_variable() -> void:
+	var wanted_key : StringName = StringName(_node.decorator.get("blackboard_key", &"")) if _node != null else &""
+
+	if _bound_variable != null and is_instance_valid(_bound_variable) and _bound_variable.name == wanted_key and wanted_key != &"":
+		return
+
+	if _bound_variable != null and is_instance_valid(_bound_variable):
+		_disconnect_bound_variable(_bound_variable)
+	_bound_variable = null
+
+	if wanted_key == &"" or _node == null or _node._graph_ref == null:
+		return
+	var graph : BehaviorGraph = _node._graph_ref.get_ref() as BehaviorGraph
+	if graph == null:
+		return
+	for v : BlackboardVariable in graph.blackboard:
+		if v != null and v.name == wanted_key:
+			_bound_variable = v
+			_connect_bound_variable(v)
+			break
+
+## The bound variable renamed itself: follow it by updating the stored key to match its new name,
+## without unbinding - this is the "by reference" part: the connection to this exact object
+## survives the rename.
+func _on_bound_variable_renamed(new_name: StringName) -> void:
+	if _node == null or str(_node.decorator.get("blackboard_key", &"")) == str(new_name):
+		return
+	_node.set_decorator_field(&"blackboard_key", new_name)
+
+## The bound variable's value changed: if it's no longer boolean, the binding is no longer valid
+## and gets cleared.
+func _on_bound_variable_value_changed(new_value: Variant) -> void:
+	if typeof(new_value) == TYPE_BOOL:
+		return
+	if _node != null:
+		_node.set_decorator_field(&"blackboard_key", &"")
+
+## Callback for the owning graph's [signal Resource.changed] (emitted when its whole blackboard
+## array is reassigned, i.e. a variable was added or removed): if the currently bound variable is
+## no longer part of the blackboard, clears the binding.
+func _on_blackboard_graph_changed() -> void:
+	if _node == null or _node._graph_ref == null:
+		return
+	if str(_node.decorator.get("type", "none")) == "condition" and _bound_variable != null:
+		var graph : BehaviorGraph = _node._graph_ref.get_ref() as BehaviorGraph
+		if graph == null or _bound_variable not in graph.blackboard:
+			_disconnect_bound_variable(_bound_variable)
+			_bound_variable = null
+			_node.set_decorator_field(&"blackboard_key", &"")
+			return
+	_refresh_decorator_tree()
+
+func _disconnect_blackboard_tracking() -> void:
+	if _node != null and _node._graph_ref != null:
+		var graph : BehaviorGraph = _node._graph_ref.get_ref() as BehaviorGraph
+		if graph != null and graph.changed.is_connected(_on_blackboard_graph_changed):
+			graph.changed.disconnect(_on_blackboard_graph_changed)
+	if _bound_variable != null and is_instance_valid(_bound_variable):
+		_disconnect_bound_variable(_bound_variable)
+	_bound_variable = null

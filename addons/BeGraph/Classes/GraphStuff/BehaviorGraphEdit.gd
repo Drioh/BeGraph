@@ -7,16 +7,12 @@ extends GraphEdit
 
 ## Root directory scanned for node scripts to populate the creation popup. Subdirectories become submenus.
 const NODE_PATH = "res://addons/BeGraph/Classes/Nodes/"
-
 ## ProjectSettings key holding additional node directories (PackedStringArray) to scan.
 const CUSTOM_NODES_PATHS_SETTING = "BeGraph/general_settings/custom_nodes_paths"
-
 ## Scene instantiated for each new [BehaviorGraphNode].
 const NODE = preload("res://addons/BeGraph/UI/BehaviorGraphNode.tscn")
-
 ## Offset (graph coordinates) applied to duplicated nodes so they don't land exactly on top of the originals.
 const DUPLICATE_OFFSET := Vector2(40, 40)
-
 ## Snapshot taken by [method copy_selected_nodes]: [code]{"nodes": Array[BehaviorNode], "connections": Array[Dictionary]}[/code].[br]
 ## It only holds [BehaviorNode] resources (never visual [GraphNode]s), detached from any graph.
 var _clipboard : Dictionary = {}
@@ -325,7 +321,8 @@ func connect_nodes(from_node: StringName, from_port: int, to_node: StringName, t
 		"from_node": StringName(from_node.validate_node_name()),
 		"from_port": from_port,
 		"to_node": StringName(to_node.validate_node_name()),
-		"to_port": to_port
+		"to_port": to_port,
+		"keep_alive": false
 	}
 
 	undo_redo.create_action("Connect %s -> %s" % [from_node, to_node], UndoRedo.MERGE_DISABLE, current_graph)
@@ -339,7 +336,8 @@ func disconnect_nodes(from_node: StringName, from_port: int, to_node: StringName
 		"from_node": from_node,
 		"from_port": from_port,
 		"to_node": to_node,
-		"to_port": to_port
+		"to_port": to_port,
+		"keep_alive": false
 	}
 	undo_redo.create_action("Disconnect %s -> %s" % [from_node, to_node], UndoRedo.MERGE_DISABLE, current_graph)
 	undo_redo.add_do_method(self, &"_do_disconnect", c)
