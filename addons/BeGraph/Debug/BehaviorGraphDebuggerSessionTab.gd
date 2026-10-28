@@ -54,6 +54,7 @@ func apply_blackboard_delta(deltas: Array) -> void:
 	var root := blackboard_tree.get_root()
 	if root == null:
 		root = blackboard_tree.create_item()
+	
 	for entry in deltas:
 		var var_name : String = entry[0]
 		if _blackboard_rows.has(var_name):

@@ -42,15 +42,16 @@ func _init() -> void:
 
 ## Appends [param node] to [member nodes] and points its [member BehaviorNode._graph_ref] back to this graph.
 func add_node(node: BehaviorNode) -> void:
-	if node == null:
-		return
+	if node == null: return
+	
 	node._graph_ref = weakref(self)
 	nodes[StringName(node.resource_name)] = node
 
 ## Removes [param node] from [member nodes].
 func remove_node(node: BehaviorNode) -> void:
-	if node:
-		nodes.erase(node.resource_name)
+	if node == null: return
+	
+	nodes.erase(node.resource_name)
 
 ## Appends [param connection] (a [code]{from_node, from_port, to_node, to_port}[/code] [Dictionary]) to [member connections].
 func add_connection(connection:Dictionary):
@@ -71,8 +72,9 @@ func get_node(name:StringName)->BehaviorNode:
 func get_nodes_by_category(category : String) -> Array[BehaviorNode]:
 	var ret : Array[BehaviorNode] = []
 	for node in nodes.values():
-		if node and node.node_category == category: 
-			ret.append(node)
+		if node == null or node.node_category != category: continue
+		
+		ret.append(node)
 	if ret.is_empty():
 		push_error("BehaviorGraph: Nodes not found for category '%s'"%category)
 	return ret
@@ -90,14 +92,14 @@ func get_nodes_names_by_category(category: String) -> Array[StringName]:
 ## Returns the [BlackboardVariable] in [member blackboard] named [param key], or [code]null[/code] (logging an error) if none is found.
 func get_blackboard_property(key: StringName) -> BlackboardVariable:
 	for variable in blackboard:
-		if variable and variable.name == key:
-			return variable
+		if variable==null or variable.name != key: continue
+		return variable
 	return null
 
 func get_blackboard_value(key: StringName, default_value: Variant = null) -> Variant:
-	var prop := get_blackboard_property(key)
-	if prop != null:
-		return prop.value
+	var prop :BlackboardVariable = get_blackboard_property(key)
+	if prop != null: prop.value
+	
 	return default_value
 
 func set_blackboard_value(key: StringName, value: Variant) -> void:
@@ -125,6 +127,7 @@ func setup_runtime(agent: Node) -> void:
 		if from_node == null or to_node == null:
 			push_error("BehaviorGraph: Can't build connection %s -> %s" % [c["from_node"], c["to_node"]])
 			continue
+		
 		from_node.add_next(to_node, c["from_port"])
 	for node in nodes.values():
 		node._graph_ref = weakref(self)

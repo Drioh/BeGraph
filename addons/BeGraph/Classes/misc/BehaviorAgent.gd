@@ -59,8 +59,7 @@ func _update_process_flags() -> void:
 
 ## Exposes the dynamic [code]starting_point[/code] enum property (its options are the labels of every access point found in [member behavior_graph]), used from the inspector to pick which entry point this agent starts ticking from.
 func _get_property_list() -> Array[Dictionary]:
-	if behavior_graph == null:
-		return []
+	if behavior_graph == null: return []
 	
 	var ret: Array[Dictionary] = []
 	var nodes := behavior_graph.get_nodes_by_category("access_point_node")

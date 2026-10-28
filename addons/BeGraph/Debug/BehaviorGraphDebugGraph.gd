@@ -42,16 +42,18 @@ func _ready() -> void:
 ## Same-process mode: loads a live [param graph], polling its nodes' [member BehaviorNode.last_status]/[member BehaviorNode.last_tick_time]/behavior properties every frame. Pass [code]null[/code] to clear.
 func set_graph(graph: BehaviorGraph) -> void:
 	_clear()
-	if graph == null:
-		return
+	if graph == null: return
+	
 	for behavior_node in graph.nodes.values():
-		if behavior_node is BehaviorFrame:
-			continue
+		if behavior_node is BehaviorFrame: continue
+		
 		_add_debug_node_from_info(behavior_node.to_debug_info())
 		_live_nodes[StringName(behavior_node.resource_name)] = behavior_node
+	
 	for c in graph.connections:
-		if _debug_nodes.has(c["from_node"]) and _debug_nodes.has(c["to_node"]):
-			connect_node(c["from_node"], c["from_port"], c["to_node"], c["to_port"])
+		if !_debug_nodes.has(c["from_node"]) or !_debug_nodes.has(c["to_node"]): continue
+		
+		connect_node(c["from_node"], c["from_port"], c["to_node"], c["to_port"])
 
 ## Data-driven mode: rebuilds the view from [param nodes_data] (an Array of the dictionaries described in [method _add_debug_node_from_info]) and [param connections_data] (an Array of [code]{"from_node","from_port","to_node","to_port"}[/code] dictionaries with String node names) - the shapes [BehaviorGraphDebugBridge] sends over [EngineDebugger]. Call with two empty arrays to clear.
 func build_from_data(nodes_data: Array, connections_data: Array) -> void:
@@ -61,8 +63,9 @@ func build_from_data(nodes_data: Array, connections_data: Array) -> void:
 	for c in connections_data:
 		var from_node : StringName = StringName(c["from_node"])
 		var to_node : StringName = StringName(c["to_node"])
-		if _debug_nodes.has(from_node) and _debug_nodes.has(to_node):
-			connect_node(from_node, c["from_port"], to_node, c["to_port"])
+		if !_debug_nodes.has(from_node) or !_debug_nodes.has(to_node): continue
+		
+		connect_node(from_node, c["from_port"], to_node, c["to_port"])
 
 ## Data-driven mode: applies a status delta - an Array of [code][node_name:String, status:int][/code] pairs, one entry per node that ticked since the previous update. Anything not listed just keeps fading from wherever it already was. Records "now" ([method Time.get_ticks_msec], read on whichever side calls this) as that node's new freshness reference.
 func apply_status_delta(deltas: Array) -> void:
@@ -86,6 +89,7 @@ func _process(_delta: float) -> void:
 			var gn : BehaviorGraphDebugNode = _debug_nodes.get(key)
 			if gn and n.has_behavior_properties():
 				gn.update_property_values(n.serialize_properties())
+	
 	for key : StringName in _debug_nodes.keys():
 		_update_status_visual(key)
 
@@ -95,9 +99,10 @@ func _clear() -> void:
 	if connections.size() > 0:
 		clear_connections()
 	for child in get_children().duplicate():
-		if child is GraphNode:
-			remove_child(child)
-			child.queue_free()
+		if child is not GraphNode: continue
+		
+		remove_child(child)
+		child.queue_free()
 	_debug_nodes.clear()
 	_node_category.clear()
 	_node_state.clear()
@@ -141,8 +146,8 @@ func _apply_category_color(gn: GraphNode, category: String) -> void:
 ## Recolors [param node_name]'s [GraphNode]/status label from [member _node_state], fading from the matching [constant STATUS_COLORS] entry back to the node's idle category color over [constant FADE_DURATION] seconds. Since GraphEdit draws each connection line as a gradient between its two endpoints' port colors, recoloring a node's slots is what makes the connections themselves appear to change color with the graph's state.
 func _update_status_visual(node_name: StringName) -> void:
 	var gn : BehaviorGraphDebugNode = _debug_nodes.get(node_name)
-	if gn == null:
-		return
+	if gn == null: return
+	
 	var idle_color : Color = _category_colors.get(_node_category.get(node_name, ""), {}).get("border", DEFAULT_IDLE_COLOR)
 	var state = _node_state.get(node_name)
 

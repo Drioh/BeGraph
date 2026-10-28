@@ -318,13 +318,11 @@ func _get_boolean_blackboard_names() -> PackedStringArray:
 ## Refreshes the "condition" row's dropdown options right before the user opens it, so the list
 ## reflects the blackboard's current state even without a live signal connection.
 func _on_item_mouse_selected(position: Vector2, _mouse_button_index: int) -> void:
-	if not _decorator_rows.has("condition"):
-		return
+	if not _decorator_rows.has("condition"):return
+	
 	var item := get_item_at_position(position)
-	if item != _decorator_rows["condition"]:
-		return
-	if get_column_at_position(position) != 2:
-		return
+	if item != _decorator_rows["condition"] or get_column_at_position(position) != 2: return
+	
 	_refresh_condition_options(item)
 
 ## Rebuilds only the "condition" row's dropdown text/selection (cheaper than a full _refresh_decorator_tree()).
@@ -358,15 +356,14 @@ func _disconnect_bound_variable(v: BlackboardVariable) -> void:
 func _sync_bound_variable() -> void:
 	var wanted_key : StringName = StringName(_node.decorator.get("blackboard_key", &"")) if _node != null else &""
 
-	if _bound_variable != null and is_instance_valid(_bound_variable) and _bound_variable.name == wanted_key and wanted_key != &"":
-		return
+	if _bound_variable != null and is_instance_valid(_bound_variable) and _bound_variable.name == wanted_key and wanted_key != &"": return
 
 	if _bound_variable != null and is_instance_valid(_bound_variable):
 		_disconnect_bound_variable(_bound_variable)
 	_bound_variable = null
 
-	if wanted_key == &"" or _node == null or _node._graph_ref == null:
-		return
+	if wanted_key == &"" or _node == null or _node._graph_ref == null: return
+	
 	var graph : BehaviorGraph = _node._graph_ref.get_ref() as BehaviorGraph
 	if graph == null:
 		return
@@ -380,15 +377,15 @@ func _sync_bound_variable() -> void:
 ## without unbinding - this is the "by reference" part: the connection to this exact object
 ## survives the rename.
 func _on_bound_variable_renamed(new_name: StringName) -> void:
-	if _node == null or str(_node.decorator.get("blackboard_key", &"")) == str(new_name):
-		return
+	if _node == null or str(_node.decorator.get("blackboard_key", &"")) == str(new_name): return
+	
 	_node.set_decorator_field(&"blackboard_key", new_name)
 
 ## The bound variable's value changed: if it's no longer boolean, the binding is no longer valid
 ## and gets cleared.
 func _on_bound_variable_value_changed(new_value: Variant) -> void:
-	if typeof(new_value) == TYPE_BOOL:
-		return
+	if typeof(new_value) == TYPE_BOOL: return
+	
 	if _node != null:
 		_node.set_decorator_field(&"blackboard_key", &"")
 
@@ -396,8 +393,8 @@ func _on_bound_variable_value_changed(new_value: Variant) -> void:
 ## array is reassigned, i.e. a variable was added or removed): if the currently bound variable is
 ## no longer part of the blackboard, clears the binding.
 func _on_blackboard_graph_changed() -> void:
-	if _node == null or _node._graph_ref == null:
-		return
+	if _node == null or _node._graph_ref == null: return
+	
 	if str(_node.decorator.get("type", "none")) == "condition" and _bound_variable != null:
 		var graph : BehaviorGraph = _node._graph_ref.get_ref() as BehaviorGraph
 		if graph == null or _bound_variable not in graph.blackboard:
