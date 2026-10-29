@@ -1,5 +1,5 @@
 @tool
-extends Control
+extends PanelContainer
 ## Root control of the BeGraph bottom dock: hosts the toolbar (edit/save/save-as/close buttons) and the [BehaviorGraphEdit] used to visually edit the currently loaded [BehaviorGraph].
 
 ## Label showing the name/path of the currently loaded [member loaded_graph].
@@ -18,12 +18,16 @@ extends Control
 
 @onready var embed_button: Button = %EmbedButton
 
+@onready var graph_container: VBoxContainer = %GraphContainer
+@onready var intro_container: VBoxContainer = %IntroContainer
+@onready var intro_new_button: Button = %IntroNewButton
+@onready var intro_load_button: Button = %IntroLoadButton
+
 ## Button that saves [member loaded_graph] to its existing resource path.
 @onready var save_button: Button = %SaveButton
 ## Button that opens a file dialog to save [member loaded_graph] to a new path.
 @onready var save_as_button: Button = %SaveAsButton
-## Button that hides this dock.
-@onready var close_button: Button = %CloseButton
+
 @onready var info_button: Button = %InfoButton
 ## The [BehaviorGraphEdit] instance used to visually edit [member loaded_graph].
 @onready var graph_edit: BehaviorGraphEdit = %GraphEdit
@@ -42,6 +46,9 @@ func _ready() -> void:
 	free_frame_button.pressed.connect(graph_edit.detach_selected_nodes_from_frame)
 	info_panel.graph_edit = graph_edit
 	
+	graph_container.visible = false
+	intro_container.visible = true
+	
 ## Opens [member loaded_graph] in the main editor's inspector/resource editor.
 func edit_graph()->void:
 	EditorInterface.edit_resource(loaded_graph)
@@ -55,6 +62,9 @@ func load_graph(object: BehaviorGraph):
 		EditorInterface.edit_resource(null)
 		return
 	refresh_label()
+	
+	graph_container.visible = true
+	intro_container.visible = false
 
 func refresh_label() -> void:
 	if loaded_graph == null:

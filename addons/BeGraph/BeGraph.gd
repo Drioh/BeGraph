@@ -1,5 +1,6 @@
 @tool
-## Main [EditorPlugin] script for the BeGraph addon: registers the bottom dock used to edit [BehaviorGraph] resources, keeps a set of [ProjectSettings] (node category colors, blackboard-binding colors, node script path) in sync, wires up the dock's save/save-as/close buttons, and registers the live graph debugger ([BehaviorGraphDebuggerPlugin] + the [BehaviorGraphDebugBridge] autoload).
+## Main [EditorPlugin] script for the BeGraph addon: registers the bottom dock used to edit [BehaviorGraph] resources, keeps a set of [ProjectSettings] (node category colors, blackboard-binding colors, node script path) in sync, wires up the dock's save/save-as/close buttons, and registers the live graph debugger ([BehaviorGraphDebuggerPlugin] + the [BehaviorGraphDebugBridge] autoload).[br]
+## The dock is added once, right away in [method _enter_tree], and stays available for the whole editor session: a [BehaviorGraph] becomes editable only through the dock's own "New"/"Load" buttons, never automatically because it (or a resource embedding it) was selected/inspected elsewhere.
 extends EditorPlugin
 
 ## The dock container added to the editor via [method EditorPlugin.add_dock].
@@ -45,7 +46,11 @@ const DEBUG_BRIDGE_AUTOLOAD_NAME :String= "BeGraphDebugBridge"
 ## Script driving the runtime side of the live graph debugger; auto-registered as an autoload so agents get streamed to the editor with no manual setup.
 const DEBUG_BRIDGE_SCRIPT_PATH :String= "res://addons/BeGraph/Debug/BehaviorGraphDebugBridge.gd"
 
-# Instantiates the dock scene, configures it as a bottom, horizontally- or floating-dockable panel, listens for resource deletions in the filesystem dock (to unload a graph being edited if its file gets removed), syncs the addon's [ProjectSettings], and registers the live graph debugger.
+# Instantiates the dock scene, adds it to the editor immediately (so it's available for the whole
+# session, independent of any graph being edited), configures it as a bottom, horizontally- or
+# floating-dockable panel, listens for resource deletions in the filesystem dock (to unload a graph
+# being edited if its file gets removed), syncs the addon's [ProjectSettings], and registers the
+# live graph debugger.
 func _enter_tree():
 	begraph_dock = preload("res://addons/BeGraph/UI/BeGraphDock.tscn").instantiate()
 	dock = EditorDock.new()
@@ -53,7 +58,7 @@ func _enter_tree():
 	dock.title = "Behavior Graph"
 	dock.default_slot = EditorDock.DOCK_SLOT_BOTTOM
 	dock.available_layouts = EditorDock.DOCK_LAYOUT_HORIZONTAL | EditorDock.DOCK_LAYOUT_FLOATING
-	
+
 	_confirm_dialog = ConfirmationDialog.new()
 	_confirm_dialog.dialog_text = "Abandon current Behavior Graph without saving changes?"
 	_confirm_dialog.ok_button_text = "Save changes and open a new graph"
@@ -63,9 +68,9 @@ func _enter_tree():
 		if a == &"unsave and load": _on_abandon_canceled()
 		)
 	_confirm_dialog.confirmed.connect(_on_abandon_confirmed)
-	
+
 	EditorInterface.get_base_control().add_child(_confirm_dialog)
-	
+
 	var fs_dock = get_editor_interface().get_file_system_dock()
 	fs_dock.resource_removed.connect(_on_resource_removed)
 	fs_dock.files_moved.connect(_on_files_moved)
@@ -74,9 +79,15 @@ func _enter_tree():
 	_debugger_plugin = BehaviorGraphDebuggerPlugin.new()
 	add_debugger_plugin(_debugger_plugin)
 	add_autoload_singleton(DEBUG_BRIDGE_AUTOLOAD_NAME, DEBUG_BRIDGE_SCRIPT_PATH)
-	
+
 	begraph_dock.ready.connect(_connect_dock_buttons, CONNECT_ONE_SHOT)
-	
+
+	# The dock is no longer added/removed depending on what's being edited/selected (see the
+	# removed _handles()/_edit()/_make_visible() below): it's simply always present from the
+	# moment the plugin is active. A BehaviorGraph only becomes editable here through the dock's
+	# own "New"/"Load" buttons.
+	_add_dock()
+	dock.make_visible()
 
 # Removes every [ProjectSettings] entry written by this addon, removes the dock, unregisters the live graph debugger, and disconnects the filesystem-dock signal.
 func _exit_tree():
@@ -96,18 +107,18 @@ func _enable_plugin() -> void:
 	pass
 
 func _connect_dock_buttons() -> void:
-	begraph_dock.close_button.pressed.connect(_remove_dock)
 	begraph_dock.save_button.pressed.connect(_on_save_pressed)
 	begraph_dock.save_as_button.pressed.connect(_on_save_as_pressed)
 	begraph_dock.new_button.pressed.connect(_on_new_pressed)
+	begraph_dock.intro_new_button.pressed.connect(_on_new_pressed)
 	begraph_dock.load_button.pressed.connect(_on_load_pressed)
+	begraph_dock.intro_load_button.pressed.connect(_on_load_pressed)
 	begraph_dock.embed_button.pressed.connect(_on_embed_pressed)
 
-## Callback for [signal FileSystemDock.resource_removed]: unloads the currently edited graph (via [method BeGraphDock.load_graph]) if the removed resource is the one currently open in the dock.
+## Callback for [signal FileSystemDock.resource_removed]: unloads the currently edited graph (via [method BeGraphDock.load_graph]) if the removed resource is the one currently open in the dock. The dock itself stays visible/present.
 func _on_resource_removed(resource: Resource) -> void:
 	if resource == begraph_dock.loaded_graph:
 		begraph_dock.load_graph(null)
-		_remove_dock() # chiude la tab
 
 func _on_files_moved(old_file: String, new_file: String) -> void:
 	if begraph_dock.loaded_graph == null:
@@ -127,26 +138,8 @@ func _on_embed_pressed() -> void:
 			push_error("\"%s\" is not a valid Behavior Graph" % path)
 	)
 
-func _disable_plugin() -> void: 
+func _disable_plugin() -> void:
 	_remove_dock()
-
-# Overrides [method EditorPlugin._handles]: this plugin's custom editing behavior applies to [BehaviorGraph] and [BehaviorNode] resources.
-func _handles(object: Object) -> bool:
-	return object is BehaviorGraph or object is BehaviorNode
-
-# Overrides [method EditorPlugin._edit]: when a [BehaviorGraph] is selected for editing, shows the dock and loads the graph into it (saving the previously loaded graph first, if any, and if it's a different resource).
-func _edit(object: Object) -> void:
-	if object is BehaviorGraph:
-		_make_visible(true)
-		_request_open_graph(object)
-
-# Overrides [method EditorPlugin._make_visible]: shows or hides the dock and, the first time it's made visible, connects the dock's close/save/save-as buttons to their handlers.
-func _make_visible(visible: bool) -> void:
-	if visible or EditorInterface.get_inspector().get_edited_object() is BehaviorGraph:
-		_add_dock()
-		dock.make_visible()
-	else:
-		_remove_dock()
 
 ## Adds [member dock] to the editor (via [method EditorPlugin.add_dock]) if it isn't already added.
 func _add_dock() -> void:
@@ -163,9 +156,12 @@ func _remove_dock() -> void:
 #region Graph opening / saving
 
 func _request_open_graph(new_graph: BehaviorGraph) -> void:
-	if new_graph == begraph_dock.loaded_graph: return
 	if begraph_dock.loaded_graph == null:
 		begraph_dock.load_graph(new_graph)
+		return
+	print(new_graph.nodes.keys()[0])
+	print(begraph_dock.loaded_graph.nodes.keys()[0])
+	if new_graph.nodes.keys()[0] == begraph_dock.loaded_graph.nodes.keys()[0]:
 		return
 		
 	_pending_graph = new_graph
@@ -217,7 +213,13 @@ func _on_save_as_pressed() -> void:
 	)
 
 func _on_new_pressed() -> void:
-	_request_open_graph(BehaviorGraph.new())
+	_open_file_dialog(EditorFileDialog.FILE_MODE_SAVE_FILE, func(path: String):
+		var err = ResourceSaver.save(BehaviorGraph.new(),path)
+		if err == OK:
+			_request_open_graph(ResourceLoader.load(path,"",ResourceLoader.CACHE_MODE_REPLACE_DEEP))
+	)
+	begraph_dock.intro_container = false
+	begraph_dock.graph_container = true
 
 func _on_load_pressed() -> void:
 	_open_file_dialog(EditorFileDialog.FILE_MODE_OPEN_FILE, func(path: String):

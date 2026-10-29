@@ -4,7 +4,6 @@
 [ext_resource type="Texture2D" uid="uid://csnxon045mpad" path="res://addons/BeGraph/Icons/edit_icon.svg" id="2_vf8wo"]
 [ext_resource type="Texture2D" uid="uid://bhe6mgc7l0t4f" path="res://addons/BeGraph/Icons/new_icon.svg" id="3_3ptl5"]
 [ext_resource type="Texture2D" uid="uid://bqgwx8fm6ojbg" path="res://addons/BeGraph/Icons/save_icon.svg" id="3_5bs10"]
-[ext_resource type="Texture2D" uid="uid://dudipaux5f7v" path="res://addons/BeGraph/Icons/close_icon.svg" id="3_vf8wo"]
 [ext_resource type="Script" uid="uid://q1edsrsnappb" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraphEdit.gd" id="4_5bs10"]
 [ext_resource type="Texture2D" uid="uid://dp7v8krbo2g8n" path="res://addons/BeGraph/Icons/load_icon.svg" id="4_fo02r"]
 [ext_resource type="Texture2D" uid="uid://32kkp5pbn562" path="res://addons/BeGraph/Icons/save_as_icon.svg" id="4_vf8wo"]
@@ -39,8 +38,10 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[node name="BeGraphDock" type="Control" unique_id=1658419202]
-layout_mode = 3
+[sub_resource type="LabelSettings" id="LabelSettings_hdwr6"]
+font_size = 96
+
+[node name="BeGraphDock" type="PanelContainer" unique_id=1354286410]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -48,25 +49,23 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_cgses")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1283577499]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="GraphContainer" type="VBoxContainer" parent="." unique_id=1283577499]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
 mouse_filter = 0
 
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer" unique_id=1786435961]
+[node name="HBoxContainer" type="HBoxContainer" parent="GraphContainer" unique_id=1786435961]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="GraphLabel" type="Label" parent="VBoxContainer/HBoxContainer" unique_id=374009597]
+[node name="GraphLabel" type="Label" parent="GraphContainer/HBoxContainer" unique_id=374009597]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+text = "Loaded Behavior Graph: none"
 
-[node name="EditButton" type="Button" parent="VBoxContainer/HBoxContainer" unique_id=1713292376]
+[node name="EditButton" type="Button" parent="GraphContainer/HBoxContainer" unique_id=1713292376]
 unique_name_in_owner = true
 custom_maximum_size = Vector2(-1, 24)
 layout_mode = 2
@@ -79,14 +78,14 @@ icon = ExtResource("2_vf8wo")
 flat = true
 alignment = 2
 
-[node name="PanelContainer" type="PanelContainer" parent="VBoxContainer/HBoxContainer" unique_id=213504907]
+[node name="PanelContainer" type="PanelContainer" parent="GraphContainer/HBoxContainer" unique_id=213504907]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_hdwr6")
 
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/HBoxContainer/PanelContainer" unique_id=300397549]
+[node name="HBoxContainer" type="HBoxContainer" parent="GraphContainer/HBoxContainer/PanelContainer" unique_id=300397549]
 layout_mode = 2
 
-[node name="NewButton" type="Button" parent="VBoxContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=1778180357]
+[node name="NewButton" type="Button" parent="GraphContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=1778180357]
 unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "Create New Behavior Graph"
@@ -94,7 +93,7 @@ icon = ExtResource("3_3ptl5")
 flat = true
 icon_alignment = 1
 
-[node name="LoadButton" type="Button" parent="VBoxContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=1317708645]
+[node name="LoadButton" type="Button" parent="GraphContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=1317708645]
 unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "Load Behavior Graph"
@@ -102,13 +101,13 @@ icon = ExtResource("4_fo02r")
 flat = true
 icon_alignment = 1
 
-[node name="VSeparator2" type="VSeparator" parent="VBoxContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=1984982261]
+[node name="VSeparator2" type="VSeparator" parent="GraphContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=1984982261]
 layout_mode = 2
 offset_transform_enabled = true
 theme_override_constants/separation = 2
 theme_override_styles/separator = SubResource("StyleBoxLine_rnfta")
 
-[node name="FrameButton" type="Button" parent="VBoxContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=1207783668]
+[node name="FrameButton" type="Button" parent="GraphContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=1207783668]
 unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "Collect selected nodes in frame"
@@ -116,7 +115,7 @@ icon = ExtResource("5_fhgid")
 flat = true
 icon_alignment = 1
 
-[node name="FreeFrameButton" type="Button" parent="VBoxContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=2067875201]
+[node name="FreeFrameButton" type="Button" parent="GraphContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=2067875201]
 unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "Remove selected nodes from frame"
@@ -124,7 +123,7 @@ icon = ExtResource("6_504je")
 flat = true
 icon_alignment = 1
 
-[node name="EmbedButton" type="Button" parent="VBoxContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=1717636031]
+[node name="EmbedButton" type="Button" parent="GraphContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=1717636031]
 unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "Embed external graph"
@@ -132,13 +131,13 @@ icon = ExtResource("6_yi4b3")
 flat = true
 icon_alignment = 1
 
-[node name="VSeparator3" type="VSeparator" parent="VBoxContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=481422621]
+[node name="VSeparator3" type="VSeparator" parent="GraphContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=481422621]
 layout_mode = 2
 offset_transform_enabled = true
 theme_override_constants/separation = 2
 theme_override_styles/separator = SubResource("StyleBoxLine_rnfta")
 
-[node name="SaveButton" type="Button" parent="VBoxContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=1276617218]
+[node name="SaveButton" type="Button" parent="GraphContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=1276617218]
 unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "Save Behavior Graph"
@@ -146,7 +145,7 @@ icon = ExtResource("3_5bs10")
 flat = true
 icon_alignment = 1
 
-[node name="SaveAsButton" type="Button" parent="VBoxContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=1802126656]
+[node name="SaveAsButton" type="Button" parent="GraphContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=1802126656]
 unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "Save Behavior Graph as..."
@@ -154,13 +153,13 @@ icon = ExtResource("4_vf8wo")
 flat = true
 icon_alignment = 1
 
-[node name="VSeparator" type="VSeparator" parent="VBoxContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=1143243255]
+[node name="VSeparator" type="VSeparator" parent="GraphContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=1143243255]
 layout_mode = 2
 offset_transform_enabled = true
 theme_override_constants/separation = 2
 theme_override_styles/separator = SubResource("StyleBoxLine_rnfta")
 
-[node name="InfoButton" type="Button" parent="VBoxContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=335333109]
+[node name="InfoButton" type="Button" parent="GraphContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=335333109]
 unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "Show/Hide Info Panel"
@@ -169,19 +168,11 @@ icon = ExtResource("7_fo02r")
 flat = true
 icon_alignment = 1
 
-[node name="CloseButton" type="Button" parent="VBoxContainer/HBoxContainer/PanelContainer/HBoxContainer" unique_id=228367462]
-unique_name_in_owner = true
-layout_mode = 2
-tooltip_text = "Close Behavior Graph dock"
-icon = ExtResource("3_vf8wo")
-flat = true
-icon_alignment = 1
-
-[node name="HBoxContainer2" type="HSplitContainer" parent="VBoxContainer" unique_id=1334396200]
+[node name="HBoxContainer2" type="HSplitContainer" parent="GraphContainer" unique_id=1334396200]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="GraphEdit" type="GraphEdit" parent="VBoxContainer/HBoxContainer2" unique_id=522006960]
+[node name="GraphEdit" type="GraphEdit" parent="GraphContainer/HBoxContainer2" unique_id=522006960]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -194,7 +185,35 @@ show_menu = false
 show_zoom_buttons = false
 script = ExtResource("4_5bs10")
 
-[node name="InfoPanel" parent="VBoxContainer/HBoxContainer2" unique_id=226918092 instance=ExtResource("10_grsls")]
+[node name="InfoPanel" parent="GraphContainer/HBoxContainer2" unique_id=226918092 instance=ExtResource("10_grsls")]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
+
+[node name="IntroContainer" type="VBoxContainer" parent="." unique_id=659244635]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Label" type="Label" parent="IntroContainer" unique_id=2962149]
+layout_mode = 2
+text = "BeGraph"
+label_settings = SubResource("LabelSettings_hdwr6")
+
+[node name="Label2" type="Label" parent="IntroContainer" unique_id=1694099619]
+layout_mode = 2
+text = "by Dario Romano"
+horizontal_alignment = 2
+
+[node name="IntroNewButton" type="Button" parent="IntroContainer" unique_id=551766206]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Create New Graph"
+icon = ExtResource("3_3ptl5")
+alignment = 0
+
+[node name="IntroLoadButton" type="Button" parent="IntroContainer" unique_id=867079962]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Load Graph"
+icon = ExtResource("4_fo02r")
+alignment = 0
