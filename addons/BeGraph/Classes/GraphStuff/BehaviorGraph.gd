@@ -112,6 +112,7 @@ func set_blackboard_value(key: StringName, value: Variant) -> void:
 		prop.value = value
 		blackboard_value_changed.emit(key, value)
 #endregion
+
 func set_agent(n: Node) -> void:
 	_agent_ref = weakref(n)
 

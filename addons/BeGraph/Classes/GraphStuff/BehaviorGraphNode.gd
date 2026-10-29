@@ -27,7 +27,7 @@ func _on_node_set() -> void:
 	node.conditions_changed.connect(_on_conditions_changed)
 	set_node_color("BeGraph/colors/node_colors/%s" % node.node_category)
 	
-	if !node.supports_decorator():
+	if node.supports_decorator():
 		decorator_button = Button.new()
 		decorator_button.flat = true
 		decorator_button.toggle_mode = true
