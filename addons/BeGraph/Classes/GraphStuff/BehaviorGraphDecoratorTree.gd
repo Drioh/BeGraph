@@ -286,21 +286,25 @@ func _on_decorator_item_edited() -> void:
 		return
 
 	var field_name = item.get_metadata(column)
-	if field_name != null:
-		if field_name == &"repeater_count_timeout":
+	if field_name == null:
+		return
+
+	match field_name:
+		&"repeater_count_timeout":
 			var variant: int = int(_node.decorator.get("variant", 0))
-			field_name = &"count" if variant == 0 else &"timeout"
-			_node.set_decorator_field(field_name, item.get_range(column))
-		elif field_name == &"blackboard_key":
-			var idx : int = int(item.get_range(column))
-			var names : PackedStringArray = _get_boolean_blackboard_names()
-			var key : StringName = &""
+			var resolved_field: StringName = &"count" if variant == 0 else &"timeout"
+			_node.set_decorator_field(resolved_field, item.get_range(column))
+		&"blackboard_key":
+			var idx: int = int(item.get_range(column))
+			var names: PackedStringArray = _get_boolean_blackboard_names()
+			var key: StringName = &""
 			if idx > 0 and idx - 1 < names.size():
 				key = StringName(names[idx - 1])
 			_node.set_decorator_field(&"blackboard_key", key)
-		else:
+		_:
 			_node.set_decorator_field(field_name, item.get_range(column))
-		_refresh_decorator_tree()
+
+	_refresh_decorator_tree()
 
 ## Returns the names of every boolean [BlackboardVariable] currently in the graph owning [member _node].
 func _get_boolean_blackboard_names() -> PackedStringArray:

@@ -306,17 +306,15 @@ func connect_nodes(from_node: StringName, from_port: int, to_node: StringName, t
 
 	var f_node: BehaviorGraphNodeBase = get_node(NodePath(from_node))
 	var t_node: BehaviorGraphNodeBase = get_node(NodePath(to_node))
+	var has_conditions : bool = f_node.node.conditions.size() > 0
 
-	if f_node.node.conditions.size() > 0:
-		# Each condition can have only one connection: if this condition already has an exiting connection, deny a new one.
-		if is_connection_from_node_from_port_enabled(from_node, from_port):
-			push_error("Output %d of node %s is a condition and already has a connection" % [from_port, from_node])
-			return
-	elif not f_node.node.allows_multiple_outputs:
-		# A node that does not have conditions and that allows only one exit: if there's already an exit, deny it.
-		if from_node in get_connection_starting_nodes():
-			push_error("Node %s does not allow multiple outputs" % from_node)
-			return
+	if has_conditions and is_connection_from_node_from_port_enabled(from_node, from_port):
+		push_error("Output %d of node %s is a condition and already has a connection" % [from_port, from_node])
+		return
+
+	if not has_conditions and not f_node.node.allows_multiple_outputs and from_node in get_connection_starting_nodes():
+		push_error("Node %s does not allow multiple outputs" % from_node)
+		return
 
 	var c: Dictionary = {
 		"from_node": StringName(from_node.validate_node_name()),

@@ -163,13 +163,13 @@ func _remove_dock() -> void:
 #region Graph opening / saving
 
 func _request_open_graph(new_graph: BehaviorGraph) -> void:
-	if new_graph == begraph_dock.loaded_graph:
-		return
-	if begraph_dock.loaded_graph != null:
-		_pending_graph = new_graph
-		_confirm_dialog.popup_centered()
-	else:
+	if new_graph == begraph_dock.loaded_graph: return
+	if begraph_dock.loaded_graph == null:
 		begraph_dock.load_graph(new_graph)
+		return
+		
+	_pending_graph = new_graph
+	_confirm_dialog.popup_centered()
 
 func _on_abandon_confirmed() -> void:
 	var graph : BehaviorGraph = _pending_graph

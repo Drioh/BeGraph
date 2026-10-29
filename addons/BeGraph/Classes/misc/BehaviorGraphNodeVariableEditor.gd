@@ -170,37 +170,39 @@ func refresh_editor(property: Dictionary) -> void:
 
 ## Callback for [signal EditorProperty.property_changed], forwarded from [member var_property_editor]: applies the new value to [member node].
 func change_property(property: StringName, new_value: Variant, field: StringName, changing: bool) -> void:
-	if !node._set(property, new_value):
-		if type==TYPE_PACKED_STRING_ARRAY and node.get_node_property_info(property,"hint_string").begins_with(BG.CONDITION):
-			var old_value:Variant = node.get(property)
-			node.set(property, new_value)
-			var previous_size:int = old_value.size()
-			if previous_size==0:
-				node.set(property,PackedStringArray(["Value 0"])) # if the array gets a 0 size, it gets populated with a single value "Value 0"
-			if previous_size<new_value.size():
-				node.get(property)[-1]="new enum value" # if the action performed is a new entry creation, initializes it to "new enum value"
-			
-			var values = node.get(property)
-			var old_conditions : Array[Dictionary] = node.conditions.duplicate(true)
-			node.conditions.clear()
-			for i in values.size():
-				var cond : bool = i < old_conditions.size()
-				var kept_next : WeakRef = old_conditions[i]["next"] if cond else null
-				node.conditions.append({"text": values[i], "next": kept_next})
-				
-			node.output = false
-			node.conditions_changed.emit()
-			
-			# an element gets added or removed, so that previous size is both valid anddifferent than the old value
-			var cond_1 : bool = previous_size != -1 and previous_size != values.size()
-			# happens specifically when value gets set via the enter button when editing anentry
-			var cond_2 : bool = old_value==node.get(property)
-			if cond_1 or cond_2: 
-				notify_property_list_changed.call_deferred()
-			node.emit_changed()
-			return
+	if node._set(property, new_value): return
+	
+	if type==TYPE_PACKED_STRING_ARRAY and node.get_node_property_info(property,"hint_string").begins_with(BG.CONDITION):
+		var old_value:Variant = node.get(property)
 		node.set(property, new_value)
+		var previous_size:int = old_value.size()
+		if previous_size==0:
+			node.set(property,PackedStringArray(["Value 0"])) # if the array gets a 0 size, it gets populated with a single value "Value 0"
+		if previous_size<new_value.size():
+			node.get(property)[-1]="new enum value" # if the action performed is a new entry creation, initializes it to "new enum value"
+		
+		var values = node.get(property)
+		var old_conditions : Array[Dictionary] = node.conditions.duplicate(true)
+		node.conditions.clear()
+		for i in values.size():
+			var cond : bool = i < old_conditions.size()
+			var kept_next : WeakRef = old_conditions[i]["next"] if cond else null
+			node.conditions.append({"text": values[i], "next": kept_next})
+			
+		node.output = false
+		node.conditions_changed.emit()
+		
+		# an element gets added or removed, so that previous size is both valid anddifferent than the old value
+		var cond_1 : bool = previous_size != -1 and previous_size != values.size()
+		# happens specifically when value gets set via the enter button when editing anentry
+		var cond_2 : bool = old_value==node.get(property)
+		if cond_1 or cond_2: 
+			notify_property_list_changed.call_deferred()
 		node.emit_changed()
+		return
+		
+	node.set(property, new_value)
+	node.emit_changed()
 
 ## Wraps change_property(): captures a full property snapshot at the start of an edit sequence
 ## (the first call, whether or not it is later followed by more "changing=true" calls, e.g. a
@@ -238,18 +240,20 @@ func _commit_property_change(property: StringName) -> void:
 
 ## Callback for [signal BehaviorNode.blackboard_key_set]: if the changed property matches [member key], updates [member linked] to reflect whether a blackboard key is now bound ([param bb_key] non-empty) or not.
 func sync_blackboard_keys(k : StringName = &"",bb_key : StringName = &""):
-	if key == k:
-		if bb_key == &"":
-			linked =false
-		elif var_property_editor.visible: 
-			linked = true
-			bb_reference.text = String(bb_key)
-			var graph : BehaviorGraph = node.get_graph()
-			if graph != null:
-				for v in graph.blackboard:
-					if v.name == bb_key:
-						linked_property = v
-						break
+	if key != k: return
+	if bb_key == &"":
+		linked = false
+		return
+	if not var_property_editor.visible: return
+
+	linked = true
+	bb_reference.text = String(bb_key)
+	var graph : BehaviorGraph = node.get_graph()
+	if graph == null: return
+	for v in graph.blackboard:
+		if v.name == bb_key:
+			linked_property = v
+			break
 
 ## Callback for [signal MenuButton.about_to_popup] on [member bb_link_button]. Repopulates [member popup] with every variable from the owning graph's blackboard whose type is compatible with [member type] (per [constant CONVERSION_DICT]), each with its type icon; shows a disabled placeholder item if none is compatible.
 func _populate_popup() -> void:
@@ -359,10 +363,11 @@ func _get_slot_at(node, global_pos):
 
 ## Callback for the owning [BehaviorGraph]'s [signal Resource.changed]: unbinds [member linked_property] (reverting to the plain value editor) if it is no longer present in [param blackboard].
 func check_property(blackboard:Array[BlackboardVariable])->void:
-	if linked_property != null:
-		if linked_property not in blackboard:
-			node.set_node_property_blackboard_key(key)
-			linked=false
+	if linked_property == null: return
+	if linked_property in blackboard: return
+	
+	node.set_node_property_blackboard_key(key)
+	linked = false
 
 ## Provides drag-and-drop visual feedback: while a compatible/incompatible blackboard variable resource is being dragged over this control, tints [member fallback_layer] accordingly; clears the tint once the drag ends.
 func _notification(what: int) -> void:
