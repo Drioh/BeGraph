@@ -6,7 +6,7 @@
 [ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="4_f7umo"]
 
 [sub_resource type="Resource" id="Resource_vy5gx"]
-resource_name = "_GraphNode_24337"
+resource_name = "_GraphNode_75481"
 script = ExtResource("3_wa3i5")
 node_category = "access_point_node"
 output = true
@@ -19,7 +19,7 @@ mutable = true
 [resource]
 script = ExtResource("4_f7umo")
 nodes = Dictionary[StringName, ExtResource("2_h7p2p")]({
-&"_GraphNode_24337": SubResource("Resource_vy5gx")
+&"_GraphNode_75481": SubResource("Resource_vy5gx")
 })
 _agent_ref = Object(WeakRef,"script":null)
 

@@ -155,15 +155,16 @@ func _remove_dock() -> void:
 
 #region Graph opening / saving
 
-func _request_open_graph(new_graph: BehaviorGraph) -> void:
+func _request_open_graph(new_graph: BehaviorGraph, force_reload: bool = false) -> void:
 	if begraph_dock.loaded_graph == null:
 		begraph_dock.load_graph(new_graph)
 		return
-	print(new_graph.nodes.keys()[0])
-	print(begraph_dock.loaded_graph.nodes.keys()[0])
-	if new_graph.nodes.keys()[0] == begraph_dock.loaded_graph.nodes.keys()[0]:
+
+	if new_graph == begraph_dock.loaded_graph:
+		if force_reload:
+			begraph_dock.load_graph(new_graph)
 		return
-		
+
 	_pending_graph = new_graph
 	_confirm_dialog.popup_centered()
 
@@ -216,7 +217,7 @@ func _on_new_pressed() -> void:
 	_open_file_dialog(EditorFileDialog.FILE_MODE_SAVE_FILE, func(path: String):
 		var err = ResourceSaver.save(BehaviorGraph.new(),path)
 		if err == OK:
-			_request_open_graph(ResourceLoader.load(path,"",ResourceLoader.CACHE_MODE_REPLACE_DEEP))
+			_request_open_graph(ResourceLoader.load(path,"",ResourceLoader.CACHE_MODE_REPLACE_DEEP),true)
 	)
 	begraph_dock.intro_container = false
 	begraph_dock.graph_container = true
