@@ -562,7 +562,7 @@ func _scene_for(n: BehaviorNode) -> PackedScene:
 ## Stores a snapshot of the selected nodes (and of the connections between them) in the clipboard.
 func copy_selected_nodes() -> void:	
 	var snapshot : Dictionary = _capture_selection()
-	if current_graph or snapshot["nodes"].is_empty(): return
+	if current_graph==null or snapshot["nodes"].is_empty(): return
 	
 	_clipboard = snapshot
 

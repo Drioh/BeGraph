@@ -98,9 +98,7 @@ func get_blackboard_property(key: StringName) -> BlackboardVariable:
 
 func get_blackboard_value(key: StringName, default_value: Variant = null) -> Variant:
 	var prop :BlackboardVariable = get_blackboard_property(key)
-	if prop != null: prop.value
-	
-	return default_value
+	return prop.value if prop != null else default_value 
 
 func set_blackboard_value(key: StringName, value: Variant) -> void:
 	var prop := get_blackboard_property(key)
