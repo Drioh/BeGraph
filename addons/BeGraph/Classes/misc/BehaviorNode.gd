@@ -637,6 +637,7 @@ func eval(property_name: StringName, resolve_node: bool = false, fallback_value:
 	if resolve_node:
 		return _resolve_node(val)
 	return val
+
 ## Accepts either an absolute or relative [NodePath] (resolved through the owning [BehaviorAgent]'s [member BehaviorAgent.actor]) or a direct reference to a [Node] (useful if [param value] is connected to a blackboard variable containing the node).
 func _resolve_node(value: Variant) -> Node:
 	if Engine.is_editor_hint():
@@ -649,7 +650,7 @@ func _resolve_node(value: Variant) -> Node:
 		if agent == null or agent.actor == null:
 			push_error("BehaviorNode %s: missing agent or actor" % resource_name)
 			return null
-		var resolved = agent.actor.get_node_or_null(value)
+		var resolved = agent.actor.get_node_or_null(value) if agent.resolve_nodes_from_actor else agent.get_node_or_null(value)
 		if resolved == null:
 			push_error("BehaviorNode %s: node not found at path '%s'" % [resource_name, value])
 		return resolved

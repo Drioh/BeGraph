@@ -45,6 +45,9 @@ var _behavior_graph : BehaviorGraph
 			enabled = false
 		_update_process_flags()
 
+## If [\code]true[code], NodePath variables get solved from the Actor's path. Set this to [\code] false [code] if nodepaths must be solved from this node's path.
+@export var resolve_nodes_from_actor:bool = true 
+
 ## Index of the currently selected access point inside [code]behavior_graph.get_nodes_by_category("access_point_node")[/code], backing the dynamically-built [code]starting_point[/code] inspector enum.
 var _starting_point_idx: int = 0
 ## The [BehaviorNode] (the chosen access point's entry into the graph) that gets ticked by [method _process] / [method _physics_process] / [method tick].
@@ -109,19 +112,20 @@ func _ready() -> void:
 		push_error("Behavior Graph not set for Behavior Agent %s" % self)
 		process_mode = Node.PROCESS_MODE_DISABLED
 		return
+
+	_behavior_graph = behavior_graph.duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
+	_behavior_graph.setup_runtime(self)
+	_select_starting_node(_starting_point_idx)
+
 	if starting_node == null:
 		push_error("Starting Node not set for Behavior Agent %s" % self)
 		process_mode = Node.PROCESS_MODE_DISABLED
 		return
-	
-	_behavior_graph = behavior_graph.duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
-	_behavior_graph.setup_runtime(self)
-	_select_starting_node(_starting_point_idx)
-	
+
 	for p in bb_props:
-		var v = get("%s/%s"%[OBP,p])
-		if v!=null:
-			override_blackboard_property(p,v)
+		var v = get("%s/%s" % [OBP, p])
+		if v != null:
+			override_blackboard_property(p, v)
 
 	add_to_group(DEBUG_GROUP)
 
@@ -168,11 +172,11 @@ func tick(_delta:float=-1.0) -> void:
 
 ## Resolves [member starting_node] from the access point at [param index] inside [member behavior_graph]'s [code]"access_point_node"[/code] category, or sets it to [code]null[/code] if [member behavior_graph] is unset, has no access points, or [param index] is out of range.
 func _select_starting_node(index: int) -> void:
-	if behavior_graph == null:
+	if _behavior_graph == null:
 		starting_node = null
 		return
 
-	var names := behavior_graph.get_nodes_names_by_category("access_point_node")
+	var names := _behavior_graph.get_nodes_names_by_category("access_point_node")
 	if names.is_empty():
 		starting_node = null
 		return

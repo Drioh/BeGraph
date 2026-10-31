@@ -80,7 +80,7 @@ overridable_blackboard_properties/loop = 2
 [node name="Sprite2D2" parent="." unique_id=420164419 instance=ExtResource("1_00g8v")]
 position = Vector2(149, 312)
 texture = SubResource("GradientTexture2D_map4d")
-overridable_blackboard_properties/Points = [NodePath("../Point4"), NodePath("../Point5"), NodePath("../Point6")]
+script = null
 
 [node name="Point1" type="Node2D" parent="." unique_id=1626982480]
 position = Vector2(699, 330)
