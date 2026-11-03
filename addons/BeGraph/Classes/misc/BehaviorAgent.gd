@@ -11,7 +11,7 @@ const DEBUG_GROUP : StringName = &"begraph_agents"
 
 signal behavior_signal(args: Array)
 
-@export_custom(PROPERTY_HINT_NONE,"",PROPERTY_USAGE_EDITOR) var bb_props: Dictionary[StringName,Variant]
+@export_custom(PROPERTY_HINT_NONE,"",PROPERTY_USAGE_EDITOR|PROPERTY_USAGE_STORAGE|PROPERTY_USAGE_READ_ONLY) var bb_props: Dictionary[StringName,Variant]
 
 ## If [code]false[/code], disables both [method Node._process] and [method Node._physics_process] ticking for this agent.
 @export var enabled: bool = true:
@@ -75,6 +75,7 @@ func _get_property_list() -> Array[Dictionary]:
 func _get(property: StringName) -> Variant:
 	if property == "starting_point": return _starting_point_idx
 	if not property.begins_with(BG.OBP): return null
+
 	return bb_props[property]
 
 func _set(property: StringName, value: Variant) -> bool:
@@ -104,19 +105,15 @@ func _ready() -> void:
 		push_error("Starting Node not set for Behavior Agent %s" % self)
 		process_mode = Node.PROCESS_MODE_DISABLED
 		return
-
+		
 	add_to_group(DEBUG_GROUP)
 	
-	print("mio padre è %s, le mie proprietà sono %s"%[get_parent(),bb_props])
 	for p in bb_props:
-		var v = get("%s/%s"%[BG.OBP,p])
-		print("voglio settare %s a %s"%[p,v])
-		print("il valore segnato è %s"%bb_props.get(StringName(p.get_slice("/", 1))))
+		var v = get(p)
 		if v == null: continue
 		if v is NodePath and !v.is_absolute():
-			print("ciao sono crot")
+			print("sono %s con valore %s"%[p,v])
 			v=get_node(v).get_path()
-		print("setto %s a %s\n"%[p,v])
 		set_blackboard_property(p, v)
 	
 ## Resolves the delta (in seconds) to forward to [member starting_node] for one [method tick] call, used only by manual ticking ([constant ProcessThread.MANUAL]).[br]
@@ -186,7 +183,6 @@ func get_overridable_property_list()->Array[Dictionary]:
 	for bb_var in behavior_graph.blackboard:
 		if bb_var.export_variable:
 			var name :String = "%s/%s"%[BG.OBP,bb_var.name]
-			
 			if name not in bb_props.keys():
 				bb_props[name] = bb_var._value
 				
@@ -205,7 +201,7 @@ func get_overridable_property_list()->Array[Dictionary]:
 func set_blackboard_property(key: StringName, value: Variant) -> bool:
 	var graph : BehaviorGraph = _behavior_graph if _behavior_graph != null else behavior_graph
 	
-	var clean_key:StringName = key.get_slice("/", 1) if key.begins_with(BG.OBP) else key
+	var clean_key:StringName = BG.clean_key(key)
 
 	if graph == null or graph.get_blackboard_property(clean_key) == null:
 		return false
@@ -214,7 +210,7 @@ func set_blackboard_property(key: StringName, value: Variant) -> bool:
 
 func get_blackboard_property_value(key: StringName, default_value: Variant = null) -> Variant:
 	var graph : BehaviorGraph = _behavior_graph if _behavior_graph != null else behavior_graph
-	var clean_key:StringName = key.get_slice("/", 1) if key.begins_with(BG.OBP) else key
+	var clean_key:StringName = BG.clean_key(key)
 	
 	return graph.get_blackboard_value(clean_key, default_value) if graph != null else default_value
 

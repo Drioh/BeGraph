@@ -27,6 +27,9 @@ class Protocol:
 	static func safe_value(value: Variant) -> Variant:
 		return str(value) if value is Object else value
 
+static func clean_key(key:String)->StringName:
+	return key.get_slice("/", 1) if key.begins_with(BG.OBP) else key
+
 ## Maps each [enum Variant.Type] to the list of [enum Variant.Type] values that are considered compatible with it.
 const CONVERSION_DICT: Dictionary = {
 	TYPE_NIL: [

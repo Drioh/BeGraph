@@ -9,7 +9,7 @@ enum Mode { ONCE, LOOP, PING_PONG, PING_PONG_LOOP}
 
 @export_custom(PROPERTY_HINT_NODE_TYPE, BG.PROPERTY+"Node2D,Node3D") var node : NodePath = NodePath("")
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var waypoints : Array = []
-@export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+"Loop,PingPong,Once") var mode : Mode = Mode.LOOP
+@export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+"Once,Loop,Ping Pong,Ping Pong (Loop)") var mode : Mode = Mode.ONCE
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var speed : float = 100.0
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var wait_time : float = 0.0
 

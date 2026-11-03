@@ -16,13 +16,15 @@ colors = PackedColorArray(0.3, 1, 0.4, 1, 0.1, 0.8, 0.2, 0)
 
 [node name="ActorA" type="CharacterBody2D" unique_id=532875850 node_paths=PackedStringArray("behavior_agent")]
 script = ExtResource("1_273ow")
-fill_color = Color(0.95, 0.5, 0.2, 1)
 behavior_agent = NodePath("BehaviorAgent")
-overridable_blackboard_properties/moving = true
-overridable_blackboard_properties/mode = 1
-overridable_blackboard_properties/waypoints = []
-overridable_blackboard_properties/ParticleEmitter = NodePath("../CPUParticles2D")
-overridable_blackboard_properties/self = NodePath("..")
+allowed_list = Dictionary[StringName, bool]({
+&"overridable_blackboard_properties/ParticleEmitter": false,
+&"overridable_blackboard_properties/mode": false,
+&"overridable_blackboard_properties/moving": false,
+&"overridable_blackboard_properties/self": false,
+&"overridable_blackboard_properties/statusLabel": true,
+&"overridable_blackboard_properties/waypoints": false
+})
 overridable_blackboard_properties/statusLabel = NodePath("../StatusLabel")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1445763016]
@@ -31,10 +33,18 @@ disabled = true
 
 [node name="BehaviorAgent" type="Node" parent="." unique_id=189775700]
 script = ExtResource("2_eok6o")
+bb_props = Dictionary[StringName, Variant]({
+&"overridable_blackboard_properties/ParticleEmitter": NodePath("../CPUParticles2D"),
+&"overridable_blackboard_properties/mode": 2,
+&"overridable_blackboard_properties/moving": true,
+&"overridable_blackboard_properties/self": NodePath(".."),
+&"overridable_blackboard_properties/statusLabel": NodePath("../StatusLabel"),
+&"overridable_blackboard_properties/waypoints": []
+})
 behavior_graph = ExtResource("3_42xkt")
 starting_point = 0
 overridable_blackboard_properties/moving = true
-overridable_blackboard_properties/mode = 1
+overridable_blackboard_properties/mode = 2
 overridable_blackboard_properties/waypoints = []
 overridable_blackboard_properties/ParticleEmitter = NodePath("../CPUParticles2D")
 overridable_blackboard_properties/self = NodePath("..")

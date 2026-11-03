@@ -71,7 +71,6 @@ resource_name = "PatrolOnce"
 script = ExtResource("4_tan1m")
 node = NodePath(".")
 waypoints = [NodePath("../WaypointA1"), NodePath("../WaypointA2"), NodePath("../WaypointA3")]
-mode = 2
 speed = 120.0
 wait_time = 0.2
 instruction = "Patrol {node} ({mode}, speed {speed})"

@@ -16,7 +16,15 @@ extends Node2D
 @onready var label_d: Label = $ActorD/StatusLabel
 @onready var reset_button_node: Button = $ResetButtonNode/Control/Button
 
-
+func _ready() -> void:
+	reset_actors()
+	
+	actor_a.set(&"waypoints",[%WaypointA1, %WaypointA2, %WaypointA3])
+	actor_b.set(&"waypoints",[%WaypointB1, %WaypointB2, %WaypointB3])
+	actor_c.set(&"waypoints",[%WaypointC1, %WaypointC2, %WaypointC3, %WaypointC4])
+	actor_d.set(&"waypoints",[%WaypointD1, %WaypointD2, %WaypointD3, %WaypointD4])
+		
+	
 func _draw() -> void:
 	reset_button_node.pressed.connect(reset_actors)
 	
@@ -42,27 +50,27 @@ func reset_actors() -> void:
 	if actor_a and waypoint_a1:
 		actor_a.global_position = waypoint_a1.global_position
 		actor_a.modulate = Color.WHITE
-		actor_a.behavior_agent.set_blackboard_property(&"moving",true)
+		actor_a.set(&"moving",true)
 		if label_a:
 			label_a.text = "Patrol: Once"
-	
+		
 	if actor_b and waypoint_b1:
 		actor_b.global_position = waypoint_b1.global_position
 		actor_b.modulate = Color.WHITE
-		actor_b.behavior_agent.set_blackboard_property(&"moving",true)
+		actor_b.set(&"moving",true)
 		if label_b:
 			label_b.text = "Patrol: Ping-Pong"
 	
 	if actor_c and waypoint_c1:
 		actor_c.global_position = waypoint_c1.global_position
 		actor_c.modulate = Color.WHITE
-		actor_c.behavior_agent.set_blackboard_property(&"moving",true)
+		actor_c.set(&"moving",true)
 		if label_c:
 			label_c.text = "Patrol: Loop"
 	
 	if actor_d and waypoint_d1:
 		actor_d.global_position = waypoint_d1.global_position
 		actor_d.modulate = Color.WHITE
-		actor_d.behavior_agent.set_blackboard_property(&"moving",true)
+		actor_d.set(&"moving",true)
 		if label_d:
 			label_d.text = "Patrol: Ping-Pong (Loop)"

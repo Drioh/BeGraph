@@ -18,20 +18,33 @@ extends CharacterBody2D
 
 var _prev_safe_pos: Vector2 = Vector2.ZERO
 
+
 @export var behavior_agent: BehaviorAgent
+@export var allowed_list : Dictionary[StringName,bool]:
+	set(value):
+		if value:
+			allowed_list = value
+			notify_property_list_changed()
 
 func _get_property_list() -> Array[Dictionary]:
 	if behavior_agent:
-		return behavior_agent.get_overridable_property_list()
+		var list: Array[Dictionary] = behavior_agent.get_overridable_property_list()
+		var ret: Array[Dictionary]
+		for item in list:
+			if allowed_list.get_or_add(item["name"],false):
+				ret.append(item)
+			
+		return ret
 	return []
 
 func _get(property: StringName) -> Variant:
 	if behavior_agent:
-		return behavior_agent.bb_props[property]
+		return behavior_agent.bb_props[property] if behavior_agent.bb_props.has(property) else null
 	return null
 
 func _set(property: StringName, value: Variant) -> bool:
 	if behavior_agent:
+		if !behavior_agent.bb_props.has(property): return false
 		if value is NodePath:
 			value = behavior_agent.get_path_to(get_node(value))
 		behavior_agent.bb_props[property]=value
@@ -41,6 +54,7 @@ func _set(property: StringName, value: Variant) -> bool:
 func _ready() -> void:
 	_prev_safe_pos = global_position
 	queue_redraw()
+	
 
 func _physics_process(_delta: float) -> void:
 	if Engine.is_editor_hint():
