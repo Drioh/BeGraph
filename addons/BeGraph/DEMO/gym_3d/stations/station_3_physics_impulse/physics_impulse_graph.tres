@@ -1,0 +1,192 @@
+[gd_resource type="Resource" script_class="BehaviorGraph" format=3 uid="uid://cybxoxtamaomh"]
+
+[ext_resource type="Script" uid="uid://da0t4052e3fsp" path="res://addons/BeGraph/Classes/misc/BlackboardVariable.gd" id="1_bb"]
+[ext_resource type="Script" uid="uid://ca0cevcqjpnsq" path="res://addons/BeGraph/Classes/misc/BehaviorNode.gd" id="2_node"]
+[ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="3_ap"]
+[ext_resource type="Script" uid="uid://lm5p5pupyhdf" path="res://addons/BeGraph/Classes/Nodes/Flow/Comparators/Detect Bodies in Area.gd" id="4_area"]
+[ext_resource type="Script" uid="uid://udb6cj1a818n" path="res://addons/BeGraph/Classes/Nodes/Flow/Misc/Repeat.gd" id="5_rep"]
+[ext_resource type="Script" uid="uid://bucm3hk7h14de" path="res://addons/BeGraph/Classes/Nodes/Flow/Classic/Sequence.gd" id="6_seq"]
+[ext_resource type="Script" uid="uid://b5qh72hlrsv4u" path="res://addons/BeGraph/Classes/Nodes/Actions/Physics/Apply Impulse.gd" id="7_imp"]
+[ext_resource type="Script" uid="uid://b0sc0g6pmwp4q" path="res://addons/BeGraph/Classes/Nodes/Actions/Time/Wait.gd" id="8_wait"]
+[ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="9_graph"]
+
+[sub_resource type="Resource" id="SubResource_ap"]
+resource_name = "AccessPoint"
+script = ExtResource("3_ap")
+label = "Start"
+node_category = "access_point_node"
+output = true
+position_in_graph = Vector2(-300, 0)
+is_starting_node = true
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"AreaTrigger"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_area"]
+resource_name = "AreaTrigger"
+script = ExtResource("4_area")
+area = NodePath("../PitTriggerArea")
+instruction = "Check bodies overlapping {area}"
+conditions = Array[Dictionary]([{
+"next": &"ImpulseLoop",
+"text": "Body detected"
+}, {
+"next": null,
+"text": "No body detected"
+}])
+node_category = "control_flow_node"
+input = true
+position_in_graph = Vector2(-100, 0)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_rep"]
+resource_name = "ImpulseLoop"
+script = ExtResource("5_rep")
+times = 0
+instruction = "Repeat {times} times"
+node_category = "control_flow_node"
+input = true
+output = true
+position_in_graph = Vector2(120, 0)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"LaunchSequence"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_imp_a"]
+resource_name = "LaunchCrateA"
+script = ExtResource("7_imp")
+node = NodePath("../Crate1")
+impulse = Vector3(0, 9, 1.5)
+instruction = "Apply impulse {impulse} to {node}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(500, -100)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_imp_b"]
+resource_name = "LaunchCrateB"
+script = ExtResource("7_imp")
+node = NodePath("../Crate2")
+impulse = Vector3(1.5, 8.5, -1)
+instruction = "Apply impulse {impulse} to {node}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(500, 40)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_seq"]
+resource_name = "LaunchSequence"
+script = ExtResource("6_seq")
+memory = true
+instruction = "Sequence (memory: {memory})"
+node_category = "control_flow_node"
+input = true
+output = true
+allows_multiple_outputs = true
+position_in_graph = Vector2(300, 0)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"LaunchCrateA", &"WaitA", &"LaunchCrateB", &"WaitB"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_wait_a"]
+resource_name = "WaitA"
+script = ExtResource("8_wait")
+seconds = 1.4
+instruction = "Wait {seconds}s"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(500, -30)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_wait_b"]
+resource_name = "WaitB"
+script = ExtResource("8_wait")
+seconds = 1.4
+instruction = "Wait {seconds}s"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(500, 110)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[resource]
+script = ExtResource("9_graph")
+nodes = Dictionary[StringName, ExtResource("2_node")]({
+&"AccessPoint": SubResource("SubResource_ap"),
+&"AreaTrigger": SubResource("SubResource_area"),
+&"ImpulseLoop": SubResource("SubResource_rep"),
+&"LaunchCrateA": SubResource("SubResource_imp_a"),
+&"LaunchCrateB": SubResource("SubResource_imp_b"),
+&"LaunchSequence": SubResource("SubResource_seq"),
+&"WaitA": SubResource("SubResource_wait_a"),
+&"WaitB": SubResource("SubResource_wait_b")
+})
+connections = Array[Dictionary]([{
+"from_node": &"AccessPoint",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"AreaTrigger",
+"to_port": 0
+}, {
+"from_node": &"AreaTrigger",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"ImpulseLoop",
+"to_port": 0
+}, {
+"from_node": &"ImpulseLoop",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"LaunchSequence",
+"to_port": 0
+}, {
+"from_node": &"LaunchSequence",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"LaunchCrateA",
+"to_port": 0
+}, {
+"from_node": &"LaunchSequence",
+"from_port": 1,
+"keep_alive": false,
+"to_node": &"WaitA",
+"to_port": 0
+}, {
+"from_node": &"LaunchSequence",
+"from_port": 2,
+"keep_alive": false,
+"to_node": &"LaunchCrateB",
+"to_port": 0
+}, {
+"from_node": &"LaunchSequence",
+"from_port": 3,
+"keep_alive": false,
+"to_node": &"WaitB",
+"to_port": 0
+}])
+_agent_ref = Object(WeakRef,"script":null)
+

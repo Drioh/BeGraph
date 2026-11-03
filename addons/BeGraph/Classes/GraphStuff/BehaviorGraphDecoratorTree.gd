@@ -119,7 +119,7 @@ func setup(n: BehaviorNode) -> void:
 	if not _node.decorator_changed.is_connected(_sync_bound_variable):
 		_node.decorator_changed.connect(_sync_bound_variable)
 
-	var graph : BehaviorGraph = _node._graph_ref.get_ref() as BehaviorGraph
+	var graph : BehaviorGraph = _node._graph_ref.get_ref() as BehaviorGraph if _node._graph_ref != null else null
 	if graph != null and not graph.changed.is_connected(_on_blackboard_graph_changed):
 		graph.changed.connect(_on_blackboard_graph_changed)
 

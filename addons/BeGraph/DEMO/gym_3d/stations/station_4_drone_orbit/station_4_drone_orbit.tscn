@@ -1,0 +1,93 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://addons/BeGraph/DEMO/gym_3d/common/station_billboard_3d.tscn" id="1_bb"]
+[ext_resource type="Script" uid="uid://cw01p0ypvtv25" path="res://addons/BeGraph/DEMO/gym_3d/common/actor_3d.gd" id="2_act"]
+[ext_resource type="Script" uid="uid://cj0fv54i6ere" path="res://addons/BeGraph/Classes/misc/BehaviorAgent.gd" id="3_agent"]
+[ext_resource type="Resource" uid="uid://p7dnouhxg5wc" path="res://addons/BeGraph/DEMO/gym_3d/stations/station_4_drone_orbit/drone_orbit_graph.tres" id="4_graph"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
+albedo_color = Color(0.14, 0.18, 0.2, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_floor"]
+material = SubResource("StandardMaterial3D_floor")
+size = Vector3(14, 0.4, 14)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
+size = Vector3(14, 0.4, 14)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pylon"]
+albedo_color = Color(0.25, 0.45, 0.65, 1)
+emission_enabled = true
+emission = Color(0.15, 0.35, 0.55, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_pylon"]
+material = SubResource("StandardMaterial3D_pylon")
+top_radius = 0.3
+bottom_radius = 0.5
+height = 3.0
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_pylon"]
+height = 3.0
+radius = 0.5
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_drone"]
+radius = 0.4
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_drone"]
+albedo_color = Color(0.2, 0.8, 1, 1)
+emission_enabled = true
+emission = Color(0.1, 0.5, 0.7, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_drone"]
+material = SubResource("StandardMaterial3D_drone")
+radius = 0.4
+height = 0.8
+
+[node name="Station4_DroneOrbit" type="Node3D"]
+
+[node name="StationBillboard3D" parent="." instance=ExtResource("1_bb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, -6.5)
+title = "Station 4: 3D Drone Orbit & Dynamic Standoff"
+summary = "Demonstrates 3D spatial orbit mechanics (Orbit node), 3D cone-of-vision detection (Field Of View), target-facing orientation (Rotate Node), and dynamic standoff distance regulation (Keep Distance)."
+nodes_used = PackedStringArray("Access Point", "Field Of View", "Sequence", "Orbit", "Keep Distance", "Rotate Node", "Set Property")
+station_color = Color(0.2, 0.8, 1, 1)
+
+[node name="Floor" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
+collision_layer = 2
+collision_mask = 7
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Floor"]
+mesh = SubResource("BoxMesh_floor")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
+shape = SubResource("BoxShape3D_floor")
+
+[node name="CenterPylon" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+collision_layer = 2
+collision_mask = 7
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CenterPylon"]
+mesh = SubResource("CylinderMesh_pylon")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CenterPylon"]
+shape = SubResource("CylinderShape3D_pylon")
+
+[node name="DroneActor" type="CharacterBody3D" parent="." node_paths=PackedStringArray("behavior_agent")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2.2, 0)
+collision_layer = 4
+collision_mask = 3
+script = ExtResource("2_act")
+behavior_agent = NodePath("BehaviorAgent")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DroneActor"]
+shape = SubResource("SphereShape3D_drone")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="DroneActor"]
+mesh = SubResource("SphereMesh_drone")
+
+[node name="BehaviorAgent" type="Node" parent="DroneActor" node_paths=PackedStringArray("actor")]
+script = ExtResource("3_agent")
+actor = NodePath("..")
+behavior_graph = ExtResource("4_graph")

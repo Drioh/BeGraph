@@ -6,15 +6,12 @@ extends Node
 ## The thread/loop this agent's [BehaviorGraph] gets ticked on.
 enum ProcessThread { IDLE, PHYSICS, MANUAL }
 
-const OBP : String = "overridable_blackboard_properties"
 ## Group every running [BehaviorAgent] adds itself to (outside the editor), used by debugging/visualization tools - e.g. the live graph debugger - to discover agents without needing a direct scene reference.
 const DEBUG_GROUP : StringName = &"begraph_agents"
 
 signal behavior_signal(args: Array)
 
-@export var actor : Node = self
-
-var bb_props: Dictionary[StringName,Variant]
+@export_custom(PROPERTY_HINT_NONE,"",PROPERTY_USAGE_EDITOR) var bb_props: Dictionary[StringName,Variant]
 
 ## If [code]false[/code], disables both [method Node._process] and [method Node._physics_process] ticking for this agent.
 @export var enabled: bool = true:
@@ -25,16 +22,11 @@ var bb_props: Dictionary[StringName,Variant]
 ## The [BehaviorGraph] this agent executes. Assigning a new value resets the selected starting point back to the graph's first access point.
 @export var behavior_graph: BehaviorGraph:
 	set(value):
-		if behavior_graph == value:
-			return
-		if value == null:
-			behavior_graph = null
-			notify_property_list_changed.call_deferred()
-			return
-		
+		if behavior_graph == value: return
 		behavior_graph = value
 		_starting_point_idx = 0
-		notify_property_list_changed.call_deferred()
+		if behavior_graph != null:
+			notify_property_list_changed.call_deferred()
 var _behavior_graph : BehaviorGraph
 
 ## Which loop drives this agent's ticking. Setting this to [constant ProcessThread.MANUAL] also disables [member enabled], since manual mode expects [method tick] to be called explicitly by user code.
@@ -44,9 +36,6 @@ var _behavior_graph : BehaviorGraph
 		if graph_process_mode == ProcessThread.MANUAL:
 			enabled = false
 		_update_process_flags()
-
-## If [\code]true[code], NodePath variables get solved from the Actor's path. Set this to [\code] false [code] if nodepaths must be solved from this node's path.
-@export var resolve_nodes_from_actor:bool = true 
 
 ## Index of the currently selected access point inside [code]behavior_graph.get_nodes_by_category("access_point_node")[/code], backing the dynamically-built [code]starting_point[/code] inspector enum.
 var _starting_point_idx: int = 0
@@ -83,26 +72,20 @@ func _get_property_list() -> Array[Dictionary]:
 	ret.append_array(get_overridable_property_list())
 	return ret
 
-
-## Overrides [method Object._get] to back the dynamic [code]starting_point[/code] property with [member _starting_point_idx].
 func _get(property: StringName) -> Variant:
-	if property == "starting_point":
-		return _starting_point_idx
-	if property.begins_with(OBP):
-		var key := StringName(property.get_slice("/", 1))
-		if bb_props.has(key):
-			return bb_props[key]
-	return null
+	if property == "starting_point": return _starting_point_idx
+	if not property.begins_with(BG.OBP): return null
+	return bb_props[property]
 
-## Overrides [method Object._set] to update [member _starting_point_idx] and re-resolve [member starting_node] whenever [code]starting_point[/code] is changed from the inspector.
 func _set(property: StringName, value: Variant) -> bool:
 	if property == "starting_point":
 		_starting_point_idx = value
 		return true
-	if property.begins_with(OBP):
-		bb_props[StringName(property.get_slice("/",1))] = value
-		return true
-	return false
+	
+	if not property.begins_with(BG.OBP): return false
+	
+	bb_props[property] = value
+	return true
 
 ## At runtime (not in the editor), validates that both [member behavior_graph] and [member starting_node] are set; disables this node entirely ([constant Node.PROCESS_MODE_DISABLED]) and logs an error otherwise. Also registers this agent in [constant DEBUG_GROUP] so runtime tools (e.g. the live graph debugger) can find it.
 func _ready() -> void:
@@ -122,13 +105,20 @@ func _ready() -> void:
 		process_mode = Node.PROCESS_MODE_DISABLED
 		return
 
-	for p in bb_props:
-		var v = get("%s/%s" % [OBP, p])
-		if v != null:
-			override_blackboard_property(p, v)
-
 	add_to_group(DEBUG_GROUP)
-
+	
+	print("mio padre è %s, le mie proprietà sono %s"%[get_parent(),bb_props])
+	for p in bb_props:
+		var v = get("%s/%s"%[BG.OBP,p])
+		print("voglio settare %s a %s"%[p,v])
+		print("il valore segnato è %s"%bb_props.get(StringName(p.get_slice("/", 1))))
+		if v == null: continue
+		if v is NodePath and !v.is_absolute():
+			print("ciao sono crot")
+			v=get_node(v).get_path()
+		print("setto %s a %s\n"%[p,v])
+		set_blackboard_property(p, v)
+	
 ## Resolves the delta (in seconds) to forward to [member starting_node] for one [method tick] call, used only by manual ticking ([constant ProcessThread.MANUAL]).[br]
 ## If [param delta] is anything other than [code]-1[/code], it's trusted and returned as-is: this is the case for an explicit delta passed to [method tick].[br]
 ## Otherwise (manual ticking with the default [code]-1[/code]), falls back to measuring the real time elapsed since the previous delta-less [method tick] call via [method Time.get_ticks_msec], returning [code]0.0[/code] on the first such call so nodes that accumulate elapsed time (e.g. [Wait], [Move], [Patrol]) start from zero instead of a huge spike.
@@ -186,38 +176,47 @@ func _select_starting_node(index: int) -> void:
 	else:
 		starting_node = null
 
-func override_blackboard_property(property:StringName, value : Variant)->void:
-	_behavior_graph.get_blackboard_property(property).value = value
-
-func is_overridable_blackboard_property(property:StringName)->bool:
-	return property.begins_with(OBP)
-
-func set_overridable_blackboard_property(property:StringName,value:Variant,interface : Node)->bool:
-	actor = interface
-	if not property.begins_with(OBP):
-		push_error("%s is not the name for an overridable blackboard property"%property)
-		return false
-	return _set(property,value)
-
-func get_overridable_blackboard_property(property:StringName)->Variant:
-	if not property.begins_with(OBP):
-		push_error("%s is not the name for an overridable blackboard property"%property)
-		return 
-	return _get(property)
+##Returns [code]true[/code] if given [code]property[/code] is contained withing the [code]Blackboard[/code] associated with this [code]BehaviorAgent[/code]
+func is_bb_property(property:StringName)->bool:
+	return property.begins_with(BG.OBP)
 
 func get_overridable_property_list()->Array[Dictionary]:
 	var base_usage := PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_NIL_IS_VARIANT
 	var ret : Array[Dictionary]
 	for bb_var in behavior_graph.blackboard:
 		if bb_var.export_variable:
+			var name :String = "%s/%s"%[BG.OBP,bb_var.name]
+			
+			if name not in bb_props.keys():
+				bb_props[name] = bb_var._value
+				
 			ret.append({
-				"name": "%s/%s"%[OBP,bb_var.name],
+				"name": name,
 				"type": typeof(bb_var._value),
 				"hint": PROPERTY_HINT_NONE,
 				"hint_string": "",
 				"usage": base_usage
 			})
+	for bb_prop in bb_props.duplicate():
+		if behavior_graph.get_blackboard_property(bb_prop.get_slice("/", 1))== null:
+			bb_props.erase(bb_prop)
 	return ret
+
+func set_blackboard_property(key: StringName, value: Variant) -> bool:
+	var graph : BehaviorGraph = _behavior_graph if _behavior_graph != null else behavior_graph
+	
+	var clean_key:StringName = key.get_slice("/", 1) if key.begins_with(BG.OBP) else key
+
+	if graph == null or graph.get_blackboard_property(clean_key) == null:
+		return false
+	graph.set_blackboard_value(clean_key, value)
+	return true
+
+func get_blackboard_property_value(key: StringName, default_value: Variant = null) -> Variant:
+	var graph : BehaviorGraph = _behavior_graph if _behavior_graph != null else behavior_graph
+	var clean_key:StringName = key.get_slice("/", 1) if key.begins_with(BG.OBP) else key
+	
+	return graph.get_blackboard_value(clean_key, default_value) if graph != null else default_value
 
 ## Returns this agent's live, runtime-duplicated [BehaviorGraph] (the one actually being ticked via [method do_tick] each frame), for read-only inspection by external tools such as the live graph debugger. Returns [code]null[/code] before [method _ready] has run (e.g. in the editor, or before the game has started).
 func get_debug_graph() -> BehaviorGraph:

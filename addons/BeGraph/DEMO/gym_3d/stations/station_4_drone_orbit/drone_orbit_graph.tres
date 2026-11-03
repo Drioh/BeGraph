@@ -1,0 +1,229 @@
+[gd_resource type="Resource" script_class="BehaviorGraph" format=3 uid="uid://p7dnouhxg5wc"]
+
+[ext_resource type="Script" uid="uid://da0t4052e3fsp" path="res://addons/BeGraph/Classes/misc/BlackboardVariable.gd" id="1_bb"]
+[ext_resource type="Script" uid="uid://ca0cevcqjpnsq" path="res://addons/BeGraph/Classes/misc/BehaviorNode.gd" id="2_node"]
+[ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="3_ap"]
+[ext_resource type="Script" uid="uid://bhj1hc7733pwg" path="res://addons/BeGraph/Classes/Nodes/Flow/Comparators/Field Of View.gd" id="4_fov"]
+[ext_resource type="Script" uid="uid://bucm3hk7h14de" path="res://addons/BeGraph/Classes/Nodes/Flow/Classic/Sequence.gd" id="5_seq"]
+[ext_resource type="Script" uid="uid://clrsjv6q4uf7d" path="res://addons/BeGraph/Classes/Nodes/Actions/Movement/Orbit.gd" id="6_orbit"]
+[ext_resource type="Script" uid="uid://c2x3rmp70yc7h" path="res://addons/BeGraph/Classes/Nodes/Actions/Movement/Keep Distance.gd" id="7_dist"]
+[ext_resource type="Script" uid="uid://yikob6c0d8wi" path="res://addons/BeGraph/Classes/Nodes/Actions/Movement/Rotate Node.gd" id="8_rot"]
+[ext_resource type="Script" uid="uid://bhduga4xd8gmu" path="res://addons/BeGraph/Classes/Nodes/Actions/Misc/Set Property.gd" id="9_prop"]
+[ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="10_graph"]
+
+[sub_resource type="Resource" id="SubResource_ap"]
+resource_name = "AccessPoint"
+script = ExtResource("3_ap")
+label = "Start"
+node_category = "access_point_node"
+output = true
+position_in_graph = Vector2(-280, 0)
+is_starting_node = true
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"FOVCheck"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_fov"]
+resource_name = "FOVCheck"
+script = ExtResource("4_fov")
+node = NodePath(".")
+target = NodePath("../../../Player3D")
+angle = 120.0
+max_distance = 8.0
+forward = 4
+instruction = "Field of view {node} -> {target}"
+conditions = Array[Dictionary]([{
+"next": &"StandoffSequence",
+"text": "Target in field of view"
+}, {
+"next": &"OrbitSequence",
+"text": "Target not in field of view"
+}])
+node_category = "control_flow_node"
+input = true
+position_in_graph = Vector2(-80, 0)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_rot_player"]
+resource_name = "FacePlayer3D"
+script = ExtResource("8_rot")
+node = NodePath(".")
+mode = 1
+angular_speed = 120.0
+target_node = NodePath("../../../Player3D")
+instruction = "Rotate {node} ({mode})"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(380, -60)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_keep_dist"]
+resource_name = "MaintainDistance"
+script = ExtResource("7_dist")
+node = NodePath(".")
+target = NodePath("../../../Player3D")
+target_distance = 4.5
+tolerance = 0.5
+speed = 4.0
+instruction = "Keep distance {target_distance} from {target}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(380, 10)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_orbit_action"]
+resource_name = "OrbitCenterPylon"
+script = ExtResource("6_orbit")
+node = NodePath(".")
+center = NodePath("../CenterPylon")
+radius = 3.5
+angular_speed = 60.0
+instruction = "Orbit {node} around {center} (radius {radius})"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(380, 170)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_orbit_seq"]
+resource_name = "OrbitSequence"
+script = ExtResource("5_seq")
+instruction = "Sequence (memory: {memory})"
+node_category = "control_flow_node"
+input = true
+output = true
+allows_multiple_outputs = true
+position_in_graph = Vector2(160, 90)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"SetCyanDroneColor", &"OrbitCenterPylon"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_alert_col"]
+resource_name = "SetAlertDroneColor"
+script = ExtResource("9_prop")
+node = NodePath(".")
+property = "actor_color"
+value = Color(1, 0.45, 0.1, 1)
+instruction = "Set {node}'s {property} value: {value}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(380, -130)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_cyan_col"]
+resource_name = "SetCyanDroneColor"
+script = ExtResource("9_prop")
+node = NodePath(".")
+property = "actor_color"
+value = Color(0.2, 0.8, 1, 1)
+instruction = "Set {node}'s {property} value: {value}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(380, 100)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_standoff_seq"]
+resource_name = "StandoffSequence"
+script = ExtResource("5_seq")
+instruction = "Sequence (memory: {memory})"
+node_category = "control_flow_node"
+input = true
+output = true
+allows_multiple_outputs = true
+position_in_graph = Vector2(160, -70)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"SetAlertDroneColor", &"FacePlayer3D", &"MaintainDistance"])
+breakpointable = true
+mutable = true
+
+[resource]
+script = ExtResource("10_graph")
+nodes = Dictionary[StringName, ExtResource("2_node")]({
+&"AccessPoint": SubResource("SubResource_ap"),
+&"FOVCheck": SubResource("SubResource_fov"),
+&"FacePlayer3D": SubResource("SubResource_rot_player"),
+&"MaintainDistance": SubResource("SubResource_keep_dist"),
+&"OrbitCenterPylon": SubResource("SubResource_orbit_action"),
+&"OrbitSequence": SubResource("SubResource_orbit_seq"),
+&"SetAlertDroneColor": SubResource("SubResource_alert_col"),
+&"SetCyanDroneColor": SubResource("SubResource_cyan_col"),
+&"StandoffSequence": SubResource("SubResource_standoff_seq")
+})
+connections = Array[Dictionary]([{
+"from_node": &"AccessPoint",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"FOVCheck",
+"to_port": 0
+}, {
+"from_node": &"FOVCheck",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"StandoffSequence",
+"to_port": 0
+}, {
+"from_node": &"FOVCheck",
+"from_port": 1,
+"keep_alive": false,
+"to_node": &"OrbitSequence",
+"to_port": 0
+}, {
+"from_node": &"StandoffSequence",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"SetAlertDroneColor",
+"to_port": 0
+}, {
+"from_node": &"StandoffSequence",
+"from_port": 1,
+"keep_alive": false,
+"to_node": &"FacePlayer3D",
+"to_port": 0
+}, {
+"from_node": &"StandoffSequence",
+"from_port": 2,
+"keep_alive": false,
+"to_node": &"MaintainDistance",
+"to_port": 0
+}, {
+"from_node": &"OrbitSequence",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"SetCyanDroneColor",
+"to_port": 0
+}, {
+"from_node": &"OrbitSequence",
+"from_port": 1,
+"keep_alive": false,
+"to_node": &"OrbitCenterPylon",
+"to_port": 0
+}])
+_agent_ref = Object(WeakRef,"script":null)
+

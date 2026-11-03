@@ -11,12 +11,14 @@ func _manual_successor_propagation() -> bool:
 	return true
 
 func tick(delta: float) -> Status:
-	if not bool(eval(&"condition")):
-		return Status.FAILURE
-	return tick_next(delta)
+	if bool(eval(&"condition")):
+		return tick_condition(delta,0)
+	else:
+		return tick_condition(delta,1)
 
 func set_instruction() -> String: return "If {condition}"
 func set_node_category() -> String: return "control_flow_node"
 func set_input() -> bool: return true
 func set_output() -> bool: return true
 func set_allows_multiple_outputs() -> bool: return false
+func set_conditions() -> PackedStringArray: return PackedStringArray(["True", "False"])

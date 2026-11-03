@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://cmrfvdmqgb40y"]
+
+[ext_resource type="Script" uid="uid://kimyqi46fmc1" path="res://addons/BeGraph/DEMO/gym_2d/common/player.gd" id="1_player"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_p1"]
+radius = 18.0
+
+[node name="Player" type="CharacterBody2D" unique_id=2087504719]
+collision_mask = 3
+script = ExtResource("1_player")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1002613469]
+shape = SubResource("CircleShape2D_p1")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1200678359]
+position_smoothing_enabled = true
+position_smoothing_speed = 8.0

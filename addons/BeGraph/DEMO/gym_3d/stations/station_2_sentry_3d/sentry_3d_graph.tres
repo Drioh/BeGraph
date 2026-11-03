@@ -1,0 +1,308 @@
+[gd_resource type="Resource" script_class="BehaviorGraph" format=3 uid="uid://bafa6sj56fofd"]
+
+[ext_resource type="Script" uid="uid://da0t4052e3fsp" path="res://addons/BeGraph/Classes/misc/BlackboardVariable.gd" id="1_bb"]
+[ext_resource type="Script" uid="uid://ca0cevcqjpnsq" path="res://addons/BeGraph/Classes/misc/BehaviorNode.gd" id="2_node"]
+[ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="3_ap"]
+[ext_resource type="Script" uid="uid://dm5elean4ukgt" path="res://addons/BeGraph/Classes/Nodes/Flow/Comparators/Distance.gd" id="4_dist"]
+[ext_resource type="Script" uid="uid://cd7gmuduqriaq" path="res://addons/BeGraph/Classes/Nodes/Flow/Comparators/Line of Sight.gd" id="5_los"]
+[ext_resource type="Script" uid="uid://bucm3hk7h14de" path="res://addons/BeGraph/Classes/Nodes/Flow/Classic/Sequence.gd" id="6_seq"]
+[ext_resource type="Script" uid="uid://c01yj1dubsqk5" path="res://addons/BeGraph/Classes/Nodes/Actions/Lighting/Fade Light Energy.gd" id="7_light"]
+[ext_resource type="Script" uid="uid://bhduga4xd8gmu" path="res://addons/BeGraph/Classes/Nodes/Actions/Misc/Set Property.gd" id="8_prop"]
+[ext_resource type="Script" uid="uid://c62x6ud6lldmf" path="res://addons/BeGraph/Classes/Nodes/Actions/Audio/Play Sound.gd" id="9_snd"]
+[ext_resource type="Script" uid="uid://rvvqrjewmn2a" path="res://addons/BeGraph/Classes/Nodes/Actions/Misc/Spawn Projectile.gd" id="10_spawn"]
+[ext_resource type="Script" uid="uid://b0sc0g6pmwp4q" path="res://addons/BeGraph/Classes/Nodes/Actions/Time/Wait.gd" id="11_wait"]
+[ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="12_graph"]
+
+[sub_resource type="Resource" id="SubResource_ap"]
+resource_name = "AccessPoint"
+script = ExtResource("3_ap")
+label = "Start"
+node_category = "access_point_node"
+output = true
+position_in_graph = Vector2(-300, 0)
+is_starting_node = true
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"DistanceCheck"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_seq_atk"]
+resource_name = "AttackSequence"
+script = ExtResource("6_seq")
+memory = true
+instruction = "Sequence (memory: {memory})"
+node_category = "control_flow_node"
+input = true
+output = true
+allows_multiple_outputs = true
+position_in_graph = Vector2(380, 80)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"BrightenSpotLight", &"SetRedColor", &"PlayAlarmSound", &"FireSphere3D", &"CooldownWait"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_bright_light"]
+resource_name = "BrightenSpotLight"
+script = ExtResource("7_light")
+node = NodePath("SpotLight3D")
+target_energy = 4.0
+duration = 0.1
+instruction = "Sets {node} to energy {target_energy}, fading over {duration}s"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(620, -50)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_cd"]
+resource_name = "CooldownWait"
+script = ExtResource("11_wait")
+seconds = 0.8
+instruction = "Wait {seconds}s"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(620, 230)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_dim_light"]
+resource_name = "DimSpotLight"
+script = ExtResource("7_light")
+node = NodePath("SpotLight3D")
+target_energy = 0.2
+duration = 0.2
+instruction = "Sets {node} to energy {target_energy}, fading over {duration}s"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(400, -140)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_dist"]
+resource_name = "DistanceCheck"
+script = ExtResource("4_dist")
+node_a = NodePath(".")
+node_b = NodePath("../../../Player3D")
+threshold = 14.0
+instruction = "Distance {node_a} - {node_b} vs {threshold}"
+conditions = Array[Dictionary]([{
+"next": &"ResetIdleMode",
+"text": "distance > {threshold}"
+}, {
+"next": null,
+"text": "distance = {threshold}"
+}, {
+"next": &"LOSCheck",
+"text": "distance < {threshold}"
+}])
+node_category = "control_flow_node"
+input = true
+position_in_graph = Vector2(-100, 0)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_spawn_sphere"]
+resource_name = "FireSphere3D"
+script = ExtResource("10_spawn")
+scene_path = "res://gym_3d/stations/station_2_sentry_3d/projectile_3d.tscn"
+parent = NodePath("../Projectiles3D")
+origin = NodePath(".")
+target = NodePath("../../../Player3D")
+speed = 18.0
+instruction = "Spawn {scene_path} from {origin} (target: {target})"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(620, 160)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_los"]
+resource_name = "LOSCheck"
+script = ExtResource("5_los")
+raycast = NodePath("RayCast3D")
+target = NodePath("../../../Player3D")
+instruction = "Line of sight from {raycast} to {target}"
+conditions = Array[Dictionary]([{
+"next": &"AttackSequence",
+"text": "Target visible"
+}, {
+"next": &"ResetIdleMode",
+"text": "Target obstructed / out of range"
+}])
+node_category = "control_flow_node"
+input = true
+position_in_graph = Vector2(150, 60)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_alarm_snd"]
+resource_name = "PlayAlarmSound"
+script = ExtResource("9_snd")
+player = NodePath("AudioStreamPlayer")
+volume_db = -6.0
+instruction = "Play sound {player}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(620, 90)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_idle"]
+resource_name = "ResetIdleMode"
+script = ExtResource("6_seq")
+instruction = "Sequence (memory: {memory})"
+node_category = "control_flow_node"
+input = true
+output = true
+allows_multiple_outputs = true
+position_in_graph = Vector2(150, -100)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"DimSpotLight", &"ResetYellowColor"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_reset_col"]
+resource_name = "ResetYellowColor"
+script = ExtResource("8_prop")
+node = NodePath(".")
+property = "actor_color"
+value = Color(0.9, 0.8, 0.2, 1)
+instruction = "Set {node}'s {property} value: {value}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(400, -70)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_set_red"]
+resource_name = "SetRedColor"
+script = ExtResource("8_prop")
+node = NodePath(".")
+property = "actor_color"
+value = Color(1, 0.2, 0.2, 1)
+instruction = "Set {node}'s {property} value: {value}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(620, 20)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[resource]
+script = ExtResource("12_graph")
+nodes = Dictionary[StringName, ExtResource("2_node")]({
+&"AccessPoint": SubResource("SubResource_ap"),
+&"AttackSequence": SubResource("SubResource_seq_atk"),
+&"BrightenSpotLight": SubResource("SubResource_bright_light"),
+&"CooldownWait": SubResource("SubResource_cd"),
+&"DimSpotLight": SubResource("SubResource_dim_light"),
+&"DistanceCheck": SubResource("SubResource_dist"),
+&"FireSphere3D": SubResource("SubResource_spawn_sphere"),
+&"LOSCheck": SubResource("SubResource_los"),
+&"PlayAlarmSound": SubResource("SubResource_alarm_snd"),
+&"ResetIdleMode": SubResource("SubResource_idle"),
+&"ResetYellowColor": SubResource("SubResource_reset_col"),
+&"SetRedColor": SubResource("SubResource_set_red")
+})
+connections = Array[Dictionary]([{
+"from_node": &"AccessPoint",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"DistanceCheck",
+"to_port": 0
+}, {
+"from_node": &"DistanceCheck",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"ResetIdleMode",
+"to_port": 0
+}, {
+"from_node": &"DistanceCheck",
+"from_port": 2,
+"keep_alive": false,
+"to_node": &"LOSCheck",
+"to_port": 0
+}, {
+"from_node": &"LOSCheck",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"AttackSequence",
+"to_port": 0
+}, {
+"from_node": &"LOSCheck",
+"from_port": 1,
+"keep_alive": false,
+"to_node": &"ResetIdleMode",
+"to_port": 0
+}, {
+"from_node": &"ResetIdleMode",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"DimSpotLight",
+"to_port": 0
+}, {
+"from_node": &"ResetIdleMode",
+"from_port": 1,
+"keep_alive": false,
+"to_node": &"ResetYellowColor",
+"to_port": 0
+}, {
+"from_node": &"AttackSequence",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"BrightenSpotLight",
+"to_port": 0
+}, {
+"from_node": &"AttackSequence",
+"from_port": 1,
+"keep_alive": false,
+"to_node": &"SetRedColor",
+"to_port": 0
+}, {
+"from_node": &"AttackSequence",
+"from_port": 2,
+"keep_alive": false,
+"to_node": &"PlayAlarmSound",
+"to_port": 0
+}, {
+"from_node": &"AttackSequence",
+"from_port": 3,
+"keep_alive": false,
+"to_node": &"FireSphere3D",
+"to_port": 0
+}, {
+"from_node": &"AttackSequence",
+"from_port": 4,
+"keep_alive": false,
+"to_node": &"CooldownWait",
+"to_port": 0
+}])
+_agent_ref = Object(WeakRef,"script":null)
+

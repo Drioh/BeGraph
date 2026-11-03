@@ -1,0 +1,193 @@
+[gd_resource type="Resource" script_class="BehaviorGraph" format=3 uid="uid://df7glh24lgjle"]
+
+[ext_resource type="Script" uid="uid://da0t4052e3fsp" path="res://addons/BeGraph/Classes/misc/BlackboardVariable.gd" id="1_bb"]
+[ext_resource type="Script" uid="uid://ca0cevcqjpnsq" path="res://addons/BeGraph/Classes/misc/BehaviorNode.gd" id="2_node"]
+[ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="3_ap"]
+[ext_resource type="Script" uid="uid://udb6cj1a818n" path="res://addons/BeGraph/Classes/Nodes/Flow/Misc/Repeat.gd" id="4_rep"]
+[ext_resource type="Script" uid="uid://bucm3hk7h14de" path="res://addons/BeGraph/Classes/Nodes/Flow/Classic/Sequence.gd" id="5_seq"]
+[ext_resource type="Script" uid="uid://cq8g3r4itu5p0" path="res://addons/BeGraph/Classes/Nodes/Actions/Movement/Jump.gd" id="6_jump"]
+[ext_resource type="Script" uid="uid://yikob6c0d8wi" path="res://addons/BeGraph/Classes/Nodes/Actions/Movement/Rotate Node.gd" id="7_rot"]
+[ext_resource type="Script" uid="uid://bbgig7yaxqlb0" path="res://addons/BeGraph/Classes/Nodes/Actions/Misc/Tween Property.gd" id="8_tween"]
+[ext_resource type="Script" uid="uid://b0sc0g6pmwp4q" path="res://addons/BeGraph/Classes/Nodes/Actions/Time/Wait.gd" id="9_wait"]
+[ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="10_graph"]
+
+[sub_resource type="Resource" id="SubResource_ap"]
+resource_name = "AccessPoint"
+script = ExtResource("3_ap")
+label = "Start"
+node_category = "access_point_node"
+output = true
+position_in_graph = Vector2(-280, 0)
+is_starting_node = true
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"LoopForever"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_jump"]
+resource_name = "DoJump"
+script = ExtResource("6_jump")
+node = NodePath(".")
+jump_height = 2.5
+instruction = "Jump {node} (height: {jump_height})"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(350, -140)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_squash_reset"]
+resource_name = "LandingReset"
+script = ExtResource("8_tween")
+node = NodePath("MeshInstance3D")
+property = "scale"
+target_value = Vector3(1, 1, 1)
+duration = 0.2
+instruction = "Tween {node}'s {property} to {target_value} over {duration}s"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(350, 20)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_squash"]
+resource_name = "LandingSquash"
+script = ExtResource("8_tween")
+node = NodePath("MeshInstance3D")
+property = "scale"
+target_value = Vector3(1.3, 0.7, 1.3)
+duration = 0.15
+instruction = "Tween {node}'s {property} to {target_value} over {duration}s"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(350, -60)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_rep"]
+resource_name = "LoopForever"
+script = ExtResource("4_rep")
+times = 0
+instruction = "Repeat {times} times"
+node_category = "control_flow_node"
+input = true
+output = true
+position_in_graph = Vector2(-100, 0)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"ParkourSequence"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_seq"]
+resource_name = "ParkourSequence"
+script = ExtResource("5_seq")
+memory = true
+instruction = "Sequence (memory: {memory})"
+node_category = "control_flow_node"
+input = true
+output = true
+allows_multiple_outputs = true
+position_in_graph = Vector2(100, 0)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"DoJump", &"LandingSquash", &"LandingReset", &"SpinTurn", &"RestBetweenJumps"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_rest"]
+resource_name = "RestBetweenJumps"
+script = ExtResource("9_wait")
+instruction = "Wait {seconds}s"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(350, 180)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_spin"]
+resource_name = "SpinTurn"
+script = ExtResource("7_rot")
+node = NodePath(".")
+angular_speed = 180.0
+target_angle = 180.0
+instruction = "Rotate {node} ({mode})"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(350, 100)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[resource]
+script = ExtResource("10_graph")
+nodes = Dictionary[StringName, ExtResource("2_node")]({
+&"AccessPoint": SubResource("SubResource_ap"),
+&"DoJump": SubResource("SubResource_jump"),
+&"LandingReset": SubResource("SubResource_squash_reset"),
+&"LandingSquash": SubResource("SubResource_squash"),
+&"LoopForever": SubResource("SubResource_rep"),
+&"ParkourSequence": SubResource("SubResource_seq"),
+&"RestBetweenJumps": SubResource("SubResource_rest"),
+&"SpinTurn": SubResource("SubResource_spin")
+})
+connections = Array[Dictionary]([{
+"from_node": &"AccessPoint",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"LoopForever",
+"to_port": 0
+}, {
+"from_node": &"LoopForever",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"ParkourSequence",
+"to_port": 0
+}, {
+"from_node": &"ParkourSequence",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"DoJump",
+"to_port": 0
+}, {
+"from_node": &"ParkourSequence",
+"from_port": 1,
+"keep_alive": false,
+"to_node": &"LandingSquash",
+"to_port": 0
+}, {
+"from_node": &"ParkourSequence",
+"from_port": 2,
+"keep_alive": false,
+"to_node": &"LandingReset",
+"to_port": 0
+}, {
+"from_node": &"ParkourSequence",
+"from_port": 3,
+"keep_alive": false,
+"to_node": &"SpinTurn",
+"to_port": 0
+}, {
+"from_node": &"ParkourSequence",
+"from_port": 4,
+"keep_alive": false,
+"to_node": &"RestBetweenJumps",
+"to_port": 0
+}])
+_agent_ref = Object(WeakRef,"script":null)
+

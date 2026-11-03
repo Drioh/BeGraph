@@ -1,0 +1,361 @@
+[gd_resource type="Resource" script_class="BehaviorGraph" format=3 uid="uid://djotignqc46r"]
+
+[ext_resource type="Script" uid="uid://da0t4052e3fsp" path="res://addons/BeGraph/Classes/misc/BlackboardVariable.gd" id="1_bb"]
+[ext_resource type="Script" uid="uid://ca0cevcqjpnsq" path="res://addons/BeGraph/Classes/misc/BehaviorNode.gd" id="2_node"]
+[ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="3_ap"]
+[ext_resource type="Script" uid="uid://udb6cj1a818n" path="res://addons/BeGraph/Classes/Nodes/Flow/Misc/Repeat.gd" id="4_rep"]
+[ext_resource type="Script" uid="uid://buoorgg5w3x50" path="res://addons/BeGraph/Classes/Nodes/Flow/Classic/Random Selector.gd" id="5_rsel"]
+[ext_resource type="Script" uid="uid://bbgig7yaxqlb0" path="res://addons/BeGraph/Classes/Nodes/Actions/Misc/Tween Property.gd" id="7_tween"]
+[ext_resource type="Script" uid="uid://dc3xdjgtnutmf" path="res://addons/BeGraph/Classes/Nodes/Actions/Misc/Set Text Property.gd" id="8_txt"]
+[ext_resource type="Script" uid="uid://b0sc0g6pmwp4q" path="res://addons/BeGraph/Classes/Nodes/Actions/Time/Wait.gd" id="9_wait"]
+[ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="10_graph"]
+
+[sub_resource type="Resource" id="SubResource_ap"]
+resource_name = "AccessPoint"
+script = ExtResource("3_ap")
+label = "Start"
+node_category = "access_point_node"
+output = true
+position_in_graph = Vector2(-840, -160)
+is_starting_node = true
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"InfiniteLoop"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_rep"]
+resource_name = "InfiniteLoop"
+script = ExtResource("4_rep")
+times = 0
+instruction = "Repeat {times} times"
+node_category = "control_flow_node"
+input = true
+output = true
+position_in_graph = Vector2(-420, -160)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"RandomPicker"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_rsel"]
+resource_name = "RandomPicker"
+script = ExtResource("5_rsel")
+memory = true
+instruction = "Random Selector (memory: {memory})"
+node_category = "control_flow_node"
+input = true
+output = true
+allows_multiple_outputs = true
+position_in_graph = Vector2(240, -100)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"TxtSquish", &"TxtColor", &"TxtRest"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_tw_col1"]
+resource_name = "TweenCol1"
+script = ExtResource("7_tween")
+node = NodePath(".")
+property = "modulate"
+target_value = Color(1, 0.3, 0.8, 1)
+duration = 0.3
+instruction = "Tween {node}'s {property} to {target_value} over {duration}s"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(1500, -180)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"TweenCol2"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_tw_col2"]
+resource_name = "TweenCol2"
+script = ExtResource("7_tween")
+node = NodePath(".")
+property = "modulate"
+target_value = Color(0.3, 0.9, 1, 1)
+duration = 0.3
+instruction = "Tween {node}'s {property} to {target_value} over {duration}s"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(2100, -180)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"TweenCol3"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_tw_col3"]
+resource_name = "TweenCol3"
+script = ExtResource("7_tween")
+node = NodePath(".")
+property = "modulate"
+target_value = Color(1, 1, 1, 1)
+duration = 0.3
+instruction = "Tween {node}'s {property} to {target_value} over {duration}s"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(2660, -180)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"WaitCol"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_tw_sq1"]
+resource_name = "TweenSquish1"
+script = ExtResource("7_tween")
+node = NodePath(".")
+property = "scale"
+target_value = Vector2(1.35, 0.7)
+duration = 0.2
+instruction = "Tween {node}'s {property} to {target_value} over {duration}s"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(2020, -780)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"TweenSquish2"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_tw_sq2"]
+resource_name = "TweenSquish2"
+script = ExtResource("7_tween")
+node = NodePath(".")
+property = "scale"
+target_value = Vector2(0.75, 1.35)
+duration = 0.2
+instruction = "Tween {node}'s {property} to {target_value} over {duration}s"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(2680, -740)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"TweenSquish3"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_tw_sq3"]
+resource_name = "TweenSquish3"
+script = ExtResource("7_tween")
+node = NodePath(".")
+property = "scale"
+target_value = Vector2(1, 1)
+duration = 0.2
+instruction = "Tween {node}'s {property} to {target_value} over {duration}s"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(3300, -740)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"WaitSquish"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_txt_col"]
+resource_name = "TxtColor"
+script = ExtResource("8_txt")
+node = NodePath("StatusLabel")
+value = "Color Pulse!"
+instruction = "Set {node}'s {property}: {value} ({mode})"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(1000, -160)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"TweenCol1"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_txt_rest"]
+resource_name = "TxtRest"
+script = ExtResource("8_txt")
+node = NodePath("StatusLabel")
+value = "Resting / Idle..."
+instruction = "Set {node}'s {property}: {value} ({mode})"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(840, 180)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"WaitRest"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_txt_squish"]
+resource_name = "TxtSquish"
+script = ExtResource("8_txt")
+node = NodePath("StatusLabel")
+value = "Squish & Hop!"
+instruction = "Set {node}'s {property}: {value} ({mode})"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(1400, -740)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"TweenSquish1"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_wait_col"]
+resource_name = "WaitCol"
+script = ExtResource("9_wait")
+seconds = 0.5
+instruction = "Wait {seconds}s"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(3220, -100)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_wait_rest"]
+resource_name = "WaitRest"
+script = ExtResource("9_wait")
+seconds = 1.2
+instruction = "Wait {seconds}s"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(1420, 260)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_wait_sq"]
+resource_name = "WaitSquish"
+script = ExtResource("9_wait")
+seconds = 0.5
+instruction = "Wait {seconds}s"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(3860, -640)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[resource]
+script = ExtResource("10_graph")
+nodes = Dictionary[StringName, ExtResource("2_node")]({
+&"AccessPoint": SubResource("SubResource_ap"),
+&"InfiniteLoop": SubResource("SubResource_rep"),
+&"RandomPicker": SubResource("SubResource_rsel"),
+&"TweenCol1": SubResource("SubResource_tw_col1"),
+&"TweenCol2": SubResource("SubResource_tw_col2"),
+&"TweenCol3": SubResource("SubResource_tw_col3"),
+&"TweenSquish1": SubResource("SubResource_tw_sq1"),
+&"TweenSquish2": SubResource("SubResource_tw_sq2"),
+&"TweenSquish3": SubResource("SubResource_tw_sq3"),
+&"TxtColor": SubResource("SubResource_txt_col"),
+&"TxtRest": SubResource("SubResource_txt_rest"),
+&"TxtSquish": SubResource("SubResource_txt_squish"),
+&"WaitCol": SubResource("SubResource_wait_col"),
+&"WaitRest": SubResource("SubResource_wait_rest"),
+&"WaitSquish": SubResource("SubResource_wait_sq")
+})
+connections = Array[Dictionary]([{
+"from_node": &"TxtSquish",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"TweenSquish1",
+"to_port": 0
+}, {
+"from_node": &"TweenSquish1",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"TweenSquish2",
+"to_port": 0
+}, {
+"from_node": &"TweenSquish2",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"TweenSquish3",
+"to_port": 0
+}, {
+"from_node": &"TweenSquish3",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"WaitSquish",
+"to_port": 0
+}, {
+"from_node": &"RandomPicker",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"TxtSquish",
+"to_port": 0
+}, {
+"from_node": &"TxtColor",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"TweenCol1",
+"to_port": 0
+}, {
+"from_node": &"RandomPicker",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"TxtColor",
+"to_port": 0
+}, {
+"from_node": &"TweenCol1",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"TweenCol2",
+"to_port": 0
+}, {
+"from_node": &"TweenCol2",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"TweenCol3",
+"to_port": 0
+}, {
+"from_node": &"TweenCol3",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"WaitCol",
+"to_port": 0
+}, {
+"from_node": &"RandomPicker",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"TxtRest",
+"to_port": 0
+}, {
+"from_node": &"TxtRest",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"WaitRest",
+"to_port": 0
+}, {
+"from_node": &"AccessPoint",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"InfiniteLoop",
+"to_port": 0
+}, {
+"from_node": &"InfiniteLoop",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"RandomPicker",
+"to_port": 0
+}])
+_agent_ref = Object(WeakRef,"script":null)
+

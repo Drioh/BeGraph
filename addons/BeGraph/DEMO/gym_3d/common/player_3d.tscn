@@ -1,0 +1,40 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://b7u6c2o4nwkhx" path="res://addons/BeGraph/DEMO/gym_3d/common/player_3d.gd" id="1_p3d"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_p"]
+radius = 0.5
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_p"]
+albedo_color = Color(0.15, 0.65, 1, 1)
+emission_enabled = true
+emission = Color(0.1, 0.45, 0.85, 1)
+emission_energy_multiplier = 0.4
+roughness = 0.3
+
+[sub_resource type="SphereMesh" id="SphereMesh_p"]
+material = SubResource("StandardMaterial3D_p")
+radius = 0.5
+height = 1.0
+
+[node name="Player3D" type="CharacterBody3D"]
+collision_layer = 1
+collision_mask = 7
+script = ExtResource("1_p3d")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("SphereShape3D_p")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+mesh = SubResource("SphereMesh_p")
+
+[node name="SpringArm3D" type="SpringArm3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.906308, 0.422618, 0, -0.422618, 0.906308, 0, 0.8, 0)
+spring_length = 5.0
+margin = 0.2
+
+[node name="Camera3D" type="Camera3D" parent="SpringArm3D"]
+current = true
+fov = 65.0

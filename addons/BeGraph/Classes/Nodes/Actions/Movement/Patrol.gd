@@ -5,7 +5,7 @@ const DISPLAY_NAME : String = "Patrol"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/action_node_icon.svg"
 const DISPLAY_INFO : String = "Patrols a list of waypoint points in sequence (Loop, PingPong, or Once) with an optional wait time at each point."
 
-enum Mode { LOOP, PING_PONG, ONCE }
+enum Mode { ONCE, LOOP, PING_PONG, PING_PONG_LOOP}
 
 @export_custom(PROPERTY_HINT_NODE_TYPE, BG.PROPERTY+"Node2D,Node3D") var node : NodePath = NodePath("")
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var waypoints : Array = []
@@ -70,6 +70,10 @@ func _advance_next(_delta: float) -> Status:
 	var count : int = pts.size()
 	
 	match eval(&"mode") as Mode:
+		Mode.ONCE:
+			_current_index += 1
+			if _current_index >= count:
+				return Status.SUCCESS
 		Mode.LOOP:
 			_current_index = (_current_index + 1) % count
 		Mode.PING_PONG:
@@ -78,12 +82,15 @@ func _advance_next(_delta: float) -> Status:
 				_current_index = maxi(0, count - 2)
 				_direction = -1
 			elif _current_index < 0:
+				return Status.SUCCESS
+		Mode.PING_PONG_LOOP:
+			_current_index += _direction
+			if _current_index >= count:
+				_current_index = maxi(0, count - 2)
+				_direction = -1
+			elif _current_index < 0:
 				_current_index = mini(1, count - 1)
 				_direction = 1
-		Mode.ONCE:
-			_current_index += 1
-			if _current_index >= count:
-				return Status.SUCCESS
 				
 	return Status.RUNNING
 

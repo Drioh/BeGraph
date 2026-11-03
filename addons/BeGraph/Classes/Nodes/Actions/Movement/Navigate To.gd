@@ -7,7 +7,7 @@ const DISPLAY_INFO : String = "Navigates a node towards a target position using 
 
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var node : NodePath = NodePath("")
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var navigation_agent : NodePath = NodePath("")
-@export_custom(BG.HINT_NONE, BG.PROPERTY, PROPERTY_USAGE_NIL_IS_VARIANT) var target : Variant = null
+@export_custom(BG.HINT_NONE, BG.PROPERTY) var target : NodePath = NodePath("")
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var speed : float = 100.0
 
 var _target_node : Node
@@ -46,11 +46,16 @@ func tick(delta: float) -> Status:
 	var current_pos : Variant = _node.global_position
 	var spd : float = eval(&"speed") as float
 
-	if _node is Node2D:
-		var dir : Vector2 = (next_path_pos - current_pos).normalized()
+	var dir = (next_path_pos - current_pos).normalized()
+	if _node is CharacterBody2D:
+		_node.velocity = dir * spd
+		_node.move_and_slide()
+	elif _node is CharacterBody3D:
+		_node.velocity = dir * spd
+		_node.move_and_slide()
+	elif _node is Node2D:
 		_node.global_position += dir * spd * delta
 	elif _node is Node3D:
-		var dir : Vector3 = (next_path_pos - current_pos).normalized()
 		_node.global_position += dir * spd * delta
 
 	return Status.RUNNING

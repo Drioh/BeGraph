@@ -1,0 +1,203 @@
+[gd_resource type="Resource" script_class="BehaviorGraph" format=3 uid="uid://ea5hly2onsqa"]
+
+[ext_resource type="Script" uid="uid://da0t4052e3fsp" path="res://addons/BeGraph/Classes/misc/BlackboardVariable.gd" id="1_bb"]
+[ext_resource type="Script" uid="uid://ca0cevcqjpnsq" path="res://addons/BeGraph/Classes/misc/BehaviorNode.gd" id="2_node"]
+[ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="3_ap"]
+[ext_resource type="Script" uid="uid://bhj1hc7733pwg" path="res://addons/BeGraph/Classes/Nodes/Flow/Comparators/Field Of View.gd" id="4_fov"]
+[ext_resource type="Script" uid="uid://bhduga4xd8gmu" path="res://addons/BeGraph/Classes/Nodes/Actions/Misc/Set Property.gd" id="6_prop"]
+[ext_resource type="Script" uid="uid://dc3xdjgtnutmf" path="res://addons/BeGraph/Classes/Nodes/Actions/Misc/Set Text Property.gd" id="7_txt"]
+[ext_resource type="Script" uid="uid://yikob6c0d8wi" path="res://addons/BeGraph/Classes/Nodes/Actions/Movement/Rotate Node.gd" id="8_rot"]
+[ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="9_graph"]
+
+[sub_resource type="Resource" id="SubResource_ap"]
+resource_name = "AccessPoint"
+script = ExtResource("3_ap")
+label = "Start"
+node_category = "access_point_node"
+output = true
+position_in_graph = Vector2(-600, -440)
+is_starting_node = true
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"FOVCheck"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_fov"]
+resource_name = "FOVCheck"
+script = ExtResource("4_fov")
+node = NodePath(".")
+target = NodePath("../../../Player")
+max_distance = 260.0
+instruction = "Field of view {node} -> {target}"
+conditions = Array[Dictionary]([{
+"next": "SetAlertColor",
+"text": "Target in field of view"
+}, {
+"next": "SetScanColor",
+"text": "Target not in field of view"
+}])
+node_category = "control_flow_node"
+input = true
+position_in_graph = Vector2(-180, -480)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_face_player"]
+resource_name = "FacePlayer"
+script = ExtResource("8_rot")
+node = NodePath(".")
+mode = 1
+angular_speed = 180.0
+target_node = NodePath("../../../Player")
+instruction = "Rotate {node} ({mode})"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(1720, -380)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_alert_col"]
+resource_name = "SetAlertColor"
+script = ExtResource("6_prop")
+node = NodePath(".")
+property = "modulate"
+value = Color(1, 0.35, 0.1, 1)
+instruction = "Set {node}'s {property} value: {value}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(520, -400)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"SetAlertText"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_alert_txt"]
+resource_name = "SetAlertText"
+script = ExtResource("7_txt")
+node = NodePath("StatusLabel")
+value = "SPOTTED IN FOV!"
+instruction = "Set {node}'s {property}: {value} ({mode})"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(1080, -420)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"FacePlayer"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_scan_col"]
+resource_name = "SetScanColor"
+script = ExtResource("6_prop")
+node = NodePath(".")
+property = "modulate"
+value = Color(0.9, 0.85, 0.3, 1)
+instruction = "Set {node}'s {property} value: {value}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(520, -100)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"SetScanText"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_scan_txt"]
+resource_name = "SetScanText"
+script = ExtResource("7_txt")
+node = NodePath("StatusLabel")
+value = "Scanning FOV..."
+instruction = "Set {node}'s {property}: {value} ({mode})"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(1200, -120)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"SpinScan"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_spin_scan"]
+resource_name = "SpinScan"
+script = ExtResource("8_rot")
+node = NodePath(".")
+mode = 2
+angular_speed = 45.0
+instruction = "Rotate {node} ({mode})"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(1800, -60)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[resource]
+script = ExtResource("9_graph")
+nodes = Dictionary[StringName, ExtResource("2_node")]({
+&"AccessPoint": SubResource("SubResource_ap"),
+&"FOVCheck": SubResource("SubResource_fov"),
+&"FacePlayer": SubResource("SubResource_face_player"),
+&"SetAlertColor": SubResource("SubResource_alert_col"),
+&"SetAlertText": SubResource("SubResource_alert_txt"),
+&"SetScanColor": SubResource("SubResource_scan_col"),
+&"SetScanText": SubResource("SubResource_scan_txt"),
+&"SpinScan": SubResource("SubResource_spin_scan")
+})
+connections = Array[Dictionary]([{
+"from_node": &"AccessPoint",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"FOVCheck",
+"to_port": 0
+}, {
+"from_node": &"FOVCheck",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"SetAlertColor",
+"to_port": 0
+}, {
+"from_node": &"SetAlertColor",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"SetAlertText",
+"to_port": 0
+}, {
+"from_node": &"SetAlertText",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"FacePlayer",
+"to_port": 0
+}, {
+"from_node": &"FOVCheck",
+"from_port": 1,
+"keep_alive": false,
+"to_node": &"SetScanColor",
+"to_port": 0
+}, {
+"from_node": &"SetScanColor",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"SetScanText",
+"to_port": 0
+}, {
+"from_node": &"SetScanText",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"SpinScan",
+"to_port": 0
+}])
+_agent_ref = Object(WeakRef,"script":null)
+

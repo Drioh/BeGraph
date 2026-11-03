@@ -21,6 +21,9 @@ const FADE_DURATION : float = 1.2
 ## Scene instantiated for each node's visual representation; see [BehaviorGraphDebugNode].
 const DEBUG_NODE_SCENE : PackedScene = preload("res://addons/BeGraph/Debug/BehaviorGraphDebugNode.tscn")
 
+## node name (StringName) -> number of condition rows it has, cached at build time to know how many slots to color.
+var _node_condition_count : Dictionary = {}
+
 ## node name (StringName) -> the [BehaviorGraphDebugNode] visualizing it.
 var _debug_nodes : Dictionary = {}
 ## node name (StringName) -> its category (String), cached at build time (needed for the idle color, since data-driven mode has no live resource to ask).
@@ -71,7 +74,11 @@ func build_from_data(nodes_data: Array, connections_data: Array) -> void:
 func apply_status_delta(deltas: Array) -> void:
 	var now : int = Time.get_ticks_msec()
 	for entry in deltas:
-		_node_state[StringName(entry[0])] = {"status": entry[1], "since": now}
+		_node_state[StringName(entry[0])] = {
+			"status": entry[1],
+			"since": now,
+			"condition": entry[2] if entry.size() > 2 else -1,
+		}
 
 ## Data-driven mode: applies a behavior-properties delta - an Array of [code][node_name:String, properties:Array][/code] pairs (see [method BehaviorGraphDebugBridge._serialize_properties]), one entry per node whose property values changed since the previous update (either because it ticked, or because a blackboard entry it reads from did). Refreshes only the matching [BehaviorGraphDebugNode]'s displayed values.
 func apply_properties_delta(deltas: Array) -> void:
@@ -85,7 +92,7 @@ func _process(_delta: float) -> void:
 		for key : StringName in _live_nodes.keys():
 			var n : BehaviorNode = _live_nodes[key]
 			if n.last_tick_time != -1:
-				_node_state[key] = {"status": n.last_status, "since": n.last_tick_time}
+				_node_state[key] = {"status": n.last_status, "since": n.last_tick_time, "condition": n.last_ticked_condition}
 			var gn : BehaviorGraphDebugNode = _debug_nodes.get(key)
 			if gn and n.has_behavior_properties():
 				gn.update_property_values(n.serialize_properties())
@@ -105,6 +112,7 @@ func _clear() -> void:
 		child.queue_free()
 	_debug_nodes.clear()
 	_node_category.clear()
+	_node_condition_count.clear()
 	_node_state.clear()
 	_live_nodes.clear()
 
@@ -117,7 +125,8 @@ func _add_debug_node_from_info(info: Dictionary) -> void:
 	add_child(gn)
 	gn.setup(info)
 	gn.position_offset = info.get("position", Vector2.ZERO)
-
+	
+	_node_condition_count[key] = (info.get("conditions", []) as Array).size()
 	_node_category[key] = info.get("category", "")
 	_apply_category_color(gn, _node_category[key])
 	_debug_nodes[key] = gn
@@ -137,7 +146,9 @@ func _apply_category_color(gn: GraphNode, category: String) -> void:
 	var colors : Dictionary = _category_colors[category]
 	gn.set_indexed("theme_override_styles/panel:bg_color", colors["bg"])
 	gn.set_indexed("theme_override_styles/titlebar:bg_color", colors["bg"])
-	_set_slot_colors(gn, colors["border"])
+	
+	for slot in gn.get_child_count():
+		_set_slot_color(gn, slot, colors["border"])
 
 #endregion
 
@@ -147,12 +158,15 @@ func _apply_category_color(gn: GraphNode, category: String) -> void:
 func _update_status_visual(node_name: StringName) -> void:
 	var gn : BehaviorGraphDebugNode = _debug_nodes.get(node_name)
 	if gn == null: return
-	
+
 	var idle_color : Color = _category_colors.get(_node_category.get(node_name, ""), {}).get("border", DEFAULT_IDLE_COLOR)
+	var condition_count : int = _node_condition_count.get(node_name, 0)
 	var state = _node_state.get(node_name)
 
 	if state == null:
-		_set_slot_colors(gn, idle_color)
+		_set_slot_color(gn, 0, idle_color)
+		for i in condition_count:
+			_set_slot_color(gn, 2 + i, idle_color)
 		gn.update_status_text("idle")
 		gn.status_label.modulate.a = 0.4
 		return
@@ -161,7 +175,20 @@ func _update_status_visual(node_name: StringName) -> void:
 	var freshness : float = clamp(1.0 - age / FADE_DURATION, 0.0, 1.0)
 	var status_color : Color = STATUS_COLORS.get(state["status"], idle_color)
 
-	_set_slot_colors(gn, idle_color.lerp(status_color, freshness))
+	_set_slot_color(gn, 0, idle_color.lerp(status_color, freshness))
+
+	if condition_count > 0:
+		var taken : int = state.get("condition", -1)
+		var traversed_color : Color = STATUS_COLORS[BehaviorNode.Status.SUCCESS]
+		var untraversed_color : Color = STATUS_COLORS[BehaviorNode.Status.FAILURE]
+		for i in condition_count:
+			var target_color : Color = idle_color
+			if i == taken:
+				target_color = traversed_color
+			elif taken != -1:
+				target_color = untraversed_color
+			_set_slot_color(gn, 2 + i, idle_color.lerp(target_color, freshness))
+
 	gn.update_status_text(_status_text(state["status"]))
 	gn.status_label.modulate.a = 0.4 + 0.6 * freshness
 
@@ -172,9 +199,7 @@ func _status_text(status: int) -> String:
 		BehaviorNode.Status.RUNNING: return "RUNNING"
 		_: return "idle"
 
-func _set_slot_colors(gn: GraphNode, color: Color) -> void:
-	for slot in gn.get_child_count():
-		gn.set("slot/%s/left_color" % slot, color)
-		gn.set("slot/%s/right_color" % slot, color)
-
+func _set_slot_color(gn: GraphNode, slot: int, color: Color) -> void:
+	gn.set("slot/%s/left_color" % slot, color)
+	gn.set("slot/%s/right_color" % slot, color)
 #endregion

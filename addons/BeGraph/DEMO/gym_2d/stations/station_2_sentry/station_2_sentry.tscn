@@ -1,0 +1,112 @@
+[gd_scene format=3 uid="uid://6sqknnriouhm"]
+
+[ext_resource type="PackedScene" uid="uid://c2qpefnnwufdt" path="res://addons/BeGraph/DEMO/gym_2d/common/station_billboard.tscn" id="1_billboard"]
+[ext_resource type="Script" uid="uid://clgn3v8hpy77y" path="res://addons/BeGraph/DEMO/gym_2d/common/actor_2d.gd" id="2_actor"]
+[ext_resource type="Script" uid="uid://cj0fv54i6ere" path="res://addons/BeGraph/Classes/misc/BehaviorAgent.gd" id="3_agent"]
+[ext_resource type="Resource" uid="uid://bcxgj5gu5v2qs" path="res://addons/BeGraph/DEMO/gym_2d/stations/station_2_sentry/sentry_graph.tres" id="4_sentry_graph"]
+[ext_resource type="AudioStream" uid="uid://cn2otyaopiua0" path="res://addons/BeGraph/DEMO/gym_2d/common/alert_sound.wav" id="5_audio"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_sentry"]
+radius = 18.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_w1"]
+size = Vector2(28, 140)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_w2"]
+size = Vector2(160, 28)
+
+[node name="Station2_Sentry" type="Node2D" unique_id=2020230602]
+
+[node name="StationBillboard" parent="." unique_id=718683900 instance=ExtResource("1_billboard")]
+position = Vector2(0, -220)
+title = "Station 2: Sentry & Line of Sight Arena"
+summary = "Demonstrates proximity sensing (Distance node), raycast line-of-sight verification behind obstacles (Line Of Sight node), sound cues (Play Sound), color state modulation (Set Property), and projectile firing (Spawn Projectile). The sentry only alerts and fires when unobstructed."
+nodes_used = PackedStringArray("Access Point", "Distance", "Line Of Sight", "Sequence", "Set Property", "Play Sound", "Spawn Projectile", "Wait")
+station_color = Color(0.95, 0.35, 0.25, 1)
+
+[node name="ArenaFloor" type="ColorRect" parent="." unique_id=632019740]
+offset_left = -280.0
+offset_top = -140.0
+offset_right = 280.0
+offset_bottom = 180.0
+color = Color(0.12, 0.14, 0.18, 0.6)
+
+[node name="SentryActor" type="CharacterBody2D" parent="." unique_id=256551611 node_paths=PackedStringArray("behavior_agent")]
+position = Vector2(0, -70)
+script = ExtResource("2_actor")
+radius = 20.0
+fill_color = Color(1, 0.85, 0.3, 1)
+border_color = Color(1, 0.3, 0.3, 1)
+behavior_agent = NodePath("BehaviorAgent")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SentryActor" unique_id=2079074475]
+shape = SubResource("CircleShape2D_sentry")
+
+[node name="RayCast2D" type="RayCast2D" parent="SentryActor" unique_id=626801373]
+target_position = Vector2(0, 200)
+collision_mask = 3
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="SentryActor" unique_id=657588529]
+stream = ExtResource("5_audio")
+volume_db = -8.0
+
+[node name="BehaviorAgent" type="Node" parent="SentryActor" unique_id=1037011001]
+script = ExtResource("3_agent")
+behavior_graph = ExtResource("4_sentry_graph")
+starting_point = 0
+
+[node name="StatusLabel" type="Label" parent="SentryActor" unique_id=2111781538]
+offset_left = -50.0
+offset_top = -36.0
+offset_right = 50.0
+offset_bottom = -20.0
+theme_override_font_sizes/font_size = 10
+text = "SENTRY"
+horizontal_alignment = 1
+
+[node name="ProjectilesContainer" type="Node2D" parent="." unique_id=1253565822]
+
+[node name="ObstaclePillarLeft" type="StaticBody2D" parent="." unique_id=1680389507]
+position = Vector2(-120, 40)
+collision_layer = 2
+collision_mask = 5
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ObstaclePillarLeft" unique_id=1329590510]
+shape = SubResource("RectangleShape2D_w1")
+
+[node name="ColorRect" type="ColorRect" parent="ObstaclePillarLeft" unique_id=1219982985]
+offset_left = -14.0
+offset_top = -70.0
+offset_right = 14.0
+offset_bottom = 70.0
+color = Color(0.28, 0.32, 0.42, 1)
+
+[node name="ObstaclePillarRight" type="StaticBody2D" parent="." unique_id=1831430656]
+position = Vector2(120, 40)
+collision_layer = 2
+collision_mask = 5
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ObstaclePillarRight" unique_id=2019539175]
+shape = SubResource("RectangleShape2D_w1")
+
+[node name="ColorRect" type="ColorRect" parent="ObstaclePillarRight" unique_id=1529055385]
+offset_left = -14.0
+offset_top = -70.0
+offset_right = 14.0
+offset_bottom = 70.0
+color = Color(0.28, 0.32, 0.42, 1)
+
+[node name="ObstacleBarrierMid" type="StaticBody2D" parent="." unique_id=1543159573]
+position = Vector2(0, 100)
+collision_layer = 2
+collision_mask = 5
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ObstacleBarrierMid" unique_id=1690080050]
+shape = SubResource("RectangleShape2D_w2")
+
+[node name="ColorRect" type="ColorRect" parent="ObstacleBarrierMid" unique_id=431805402]
+offset_left = -80.0
+offset_top = -14.0
+offset_right = 80.0
+offset_bottom = 14.0
+color = Color(0.28, 0.32, 0.42, 1)

@@ -1,0 +1,65 @@
+[gd_scene format=3 uid="uid://bxbtfw1cfim0"]
+
+[ext_resource type="Script" uid="uid://clgn3v8hpy77y" path="res://addons/BeGraph/DEMO/gym_2d/common/actor_2d.gd" id="1_273ow"]
+[ext_resource type="Script" uid="uid://cj0fv54i6ere" path="res://addons/BeGraph/Classes/misc/BehaviorAgent.gd" id="2_eok6o"]
+[ext_resource type="Resource" uid="uid://de7gsug1pcfiu" path="res://addons/BeGraph/DEMO/gym_2d/stations/station_1_patrol/patrol_graph.tres" id="3_42xkt"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_a"]
+radius = 16.0
+
+[sub_resource type="Curve" id="Curve_p"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="Gradient" id="Gradient_p"]
+colors = PackedColorArray(0.3, 1, 0.4, 1, 0.1, 0.8, 0.2, 0)
+
+[node name="ActorA" type="CharacterBody2D" unique_id=532875850 node_paths=PackedStringArray("behavior_agent")]
+script = ExtResource("1_273ow")
+fill_color = Color(0.95, 0.5, 0.2, 1)
+behavior_agent = NodePath("BehaviorAgent")
+overridable_blackboard_properties/moving = true
+overridable_blackboard_properties/mode = 1
+overridable_blackboard_properties/waypoints = []
+overridable_blackboard_properties/ParticleEmitter = NodePath("../CPUParticles2D")
+overridable_blackboard_properties/self = NodePath("..")
+overridable_blackboard_properties/statusLabel = NodePath("../StatusLabel")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1445763016]
+shape = SubResource("CircleShape2D_a")
+disabled = true
+
+[node name="BehaviorAgent" type="Node" parent="." unique_id=189775700]
+script = ExtResource("2_eok6o")
+behavior_graph = ExtResource("3_42xkt")
+starting_point = 0
+overridable_blackboard_properties/moving = true
+overridable_blackboard_properties/mode = 1
+overridable_blackboard_properties/waypoints = []
+overridable_blackboard_properties/ParticleEmitter = NodePath("../CPUParticles2D")
+overridable_blackboard_properties/self = NodePath("..")
+overridable_blackboard_properties/statusLabel = NodePath("../StatusLabel")
+
+[node name="StatusLabel" type="Label" parent="." unique_id=924475008]
+offset_left = -70.0
+offset_top = -34.0
+offset_right = 70.0
+offset_bottom = -18.0
+theme_override_font_sizes/font_size = 11
+text = "Patrol: Once"
+horizontal_alignment = 1
+
+[node name="CPUParticles2D" type="CPUParticles2D" parent="." unique_id=1503607048]
+emitting = false
+amount = 28
+lifetime = 0.8
+one_shot = true
+explosiveness = 0.95
+spread = 180.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 40.0
+initial_velocity_max = 90.0
+scale_amount_min = 3.0
+scale_amount_max = 6.0
+scale_amount_curve = SubResource("Curve_p")
+color_ramp = SubResource("Gradient_p")

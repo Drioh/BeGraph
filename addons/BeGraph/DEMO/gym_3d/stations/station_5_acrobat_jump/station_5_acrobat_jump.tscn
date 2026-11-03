@@ -1,0 +1,70 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://addons/BeGraph/DEMO/gym_3d/common/station_billboard_3d.tscn" id="1_bb"]
+[ext_resource type="Script" uid="uid://cw01p0ypvtv25" path="res://addons/BeGraph/DEMO/gym_3d/common/actor_3d.gd" id="2_act"]
+[ext_resource type="Script" uid="uid://cj0fv54i6ere" path="res://addons/BeGraph/Classes/misc/BehaviorAgent.gd" id="3_agent"]
+[ext_resource type="Resource" uid="uid://df7glh24lgjle" path="res://addons/BeGraph/DEMO/gym_3d/stations/station_5_acrobat_jump/acrobat_jump_graph.tres" id="4_graph"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
+albedo_color = Color(0.18, 0.14, 0.22, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_floor"]
+material = SubResource("StandardMaterial3D_floor")
+size = Vector3(14, 0.4, 14)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
+size = Vector3(14, 0.4, 14)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_bot"]
+radius = 0.4
+height = 1.2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bot"]
+albedo_color = Color(0.85, 0.35, 0.9, 1)
+roughness = 0.3
+emission_enabled = true
+emission = Color(0.6, 0.2, 0.7, 1)
+emission_energy_multiplier = 0.3
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_bot"]
+material = SubResource("StandardMaterial3D_bot")
+radius = 0.4
+height = 1.2
+
+[node name="Station5_AcrobatJump" type="Node3D"]
+
+[node name="StationBillboard3D" parent="." instance=ExtResource("1_bb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, -6.5)
+title = "Station 5: 3D Platforming Acrobat"
+summary = "Showcases vertical 3D kinematics via the Jump node (height-calculated velocity & floor landing detection), spatial orientation (Rotate Node), and landing squash-and-stretch animation (Tween Property) inside a Repeat loop."
+nodes_used = PackedStringArray("Access Point", "Repeat", "Sequence", "Jump", "Rotate Node", "Tween Property", "Wait")
+station_color = Color(0.85, 0.35, 0.9, 1)
+
+[node name="Floor" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
+collision_layer = 2
+collision_mask = 7
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Floor"]
+mesh = SubResource("BoxMesh_floor")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
+shape = SubResource("BoxShape3D_floor")
+
+[node name="AcrobatBot" type="CharacterBody3D" parent="." node_paths=PackedStringArray("behavior_agent")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+collision_layer = 4
+collision_mask = 3
+script = ExtResource("2_act")
+behavior_agent = NodePath("BehaviorAgent")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="AcrobatBot"]
+shape = SubResource("CapsuleShape3D_bot")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="AcrobatBot"]
+mesh = SubResource("CapsuleMesh_bot")
+
+[node name="BehaviorAgent" type="Node" parent="AcrobatBot" node_paths=PackedStringArray("actor")]
+script = ExtResource("3_agent")
+actor = NodePath("..")
+behavior_graph = ExtResource("4_graph")

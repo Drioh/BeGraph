@@ -1,0 +1,50 @@
+[gd_scene format=3 uid="uid://p6173yl3kri7"]
+
+[ext_resource type="PackedScene" uid="uid://c2qpefnnwufdt" path="res://addons/BeGraph/DEMO/gym_2d/common/station_billboard.tscn" id="1_billboard"]
+[ext_resource type="Script" uid="uid://iownh40pwdqt" path="res://addons/BeGraph/DEMO/gym_2d/stations/station_4_fov/fov_actor.gd" id="2_fov_actor"]
+[ext_resource type="Script" uid="uid://cj0fv54i6ere" path="res://addons/BeGraph/Classes/misc/BehaviorAgent.gd" id="3_agent"]
+[ext_resource type="Resource" uid="uid://ea5hly2onsqa" path="res://addons/BeGraph/DEMO/gym_2d/stations/station_4_fov/fov_graph.tres" id="4_fov_graph"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_f"]
+radius = 18.0
+
+[node name="Station4_FOV" type="Node2D" unique_id=1142710202]
+
+[node name="StationBillboard" parent="." unique_id=86876338 instance=ExtResource("1_billboard")]
+position = Vector2(0, -220)
+title = "Station 4: Stealth & Field of View (FOV)"
+summary = "Demonstrates angular vision detection using the Field Of View node. The actor smoothly scans around (Rotate Node in continuous spin); when the player enters its 90-degree vision cone, it immediately locks eyes (Rotate Node towards node) and switches to high alert."
+nodes_used = PackedStringArray("Access Point", "Field Of View", "Sequence", "Rotate Node", "Set Property", "Set Text Property")
+station_color = Color(0.9, 0.7, 0.15, 1)
+
+[node name="FloorArea" type="ColorRect" parent="." unique_id=1944436491]
+offset_left = -260.0
+offset_top = -140.0
+offset_right = 260.0
+offset_bottom = 160.0
+color = Color(0.12, 0.13, 0.16, 0.5)
+
+[node name="FOVActor" type="CharacterBody2D" parent="." unique_id=1369200809 node_paths=PackedStringArray("behavior_agent")]
+position = Vector2(0, 10)
+collision_layer = 2
+collision_mask = 3
+script = ExtResource("2_fov_actor")
+behavior_agent = NodePath("BehaviorAgent")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FOVActor" unique_id=483039531]
+shape = SubResource("CircleShape2D_f")
+
+[node name="BehaviorAgent" type="Node" parent="FOVActor" unique_id=1266420050 node_paths=PackedStringArray("actor")]
+script = ExtResource("3_agent")
+actor = NodePath("..")
+behavior_graph = ExtResource("4_fov_graph")
+starting_point = 0
+
+[node name="StatusLabel" type="Label" parent="FOVActor" unique_id=127612686]
+offset_left = -60.0
+offset_top = -34.0
+offset_right = 60.0
+offset_bottom = -18.0
+theme_override_font_sizes/font_size = 10
+text = "Scanning FOV..."
+horizontal_alignment = 1

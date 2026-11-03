@@ -302,7 +302,7 @@ func _can_drop_data(at_position, data):
 	var global_pos = get_global_transform() * at_position
 	var cond_1:bool=_get_slot_at(self,global_pos)!=null and typeof(data["resource"].value) in BG.CONVERSION_DICT[type]
 	var cond_2 : bool = typeof(data["resource"].value) == TYPE_NIL
-	return cond_1 or cond_2
+	return cond_1 or cond_2 or type==TYPE_NIL
 
 ## Handles a successful drop of a blackboard variable resource: binds [member node]'s property to the dropped variable's name via [method BehaviorNode.set_node_property_blackboard_key] and updates [member linked_property]/[member bb_reference] accordingly.
 func _drop_data(at_position, data):
@@ -379,7 +379,7 @@ func _notification(what: int) -> void:
 		var cond_1 : bool = typeof(drag_data["resource"].value) in BG.CONVERSION_DICT[type]
 		var cond_2 : bool = typeof(drag_data["resource"].value) == TYPE_NIL
 
-		var prefix : String = "" if (cond_1 or cond_2) else "not_"
+		var prefix : String = "" if (cond_1 or cond_2 or type==TYPE_NIL) else "not_"
 		var bg_color : Color = ProjectSettings.get_setting("BeGraph/colors/graph_editor/%sallowed_variable/background"%prefix)
 		var border_color : Color = ProjectSettings.get_setting("BeGraph/colors/graph_editor/%sallowed_variable/border"%prefix)
 		fallback_layer.set_indexed("theme_override_styles/panel:bg_color",bg_color)

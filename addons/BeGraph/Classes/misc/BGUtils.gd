@@ -11,6 +11,8 @@ const PROPERTY : String = "BeGraph:property:"
 const ENUMERATOR : String = "BeGraph:enumerator:"
 const CONDITION : String = "BeGraph:condition:"
 
+const OBP : String = "overridable_blackboard_properties"
+
 ## Messages exchanged via EngineDebugger between game (Bridge) and editor (Plugin).
 ## Formerly its own class (BeGraphProtocol, Debug/BehaviorGraphProtocol.gd), folded in here
 ## so every addon-wide constant lives in a single place.

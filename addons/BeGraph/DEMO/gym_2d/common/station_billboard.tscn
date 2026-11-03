@@ -1,0 +1,84 @@
+[gd_scene format=3 uid="uid://c2qpefnnwufdt"]
+
+[ext_resource type="Script" uid="uid://be34wapmik6vn" path="res://addons/BeGraph/DEMO/gym_2d/common/station_billboard.gd" id="1_billboard"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.039215688, 0.039215688, 0.039215688, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.078431375, 0.078431375, 0.078431375, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(0, 0, 0, 0.45)
+shadow_size = 6
+shadow_offset = Vector2(0, 3)
+
+[node name="StationBillboard" type="Node2D" unique_id=1855401784]
+script = ExtResource("1_billboard")
+nodes_used = PackedStringArray("Access Point", "Action Node")
+
+[node name="Control" type="Control" parent="." unique_id=1604159673]
+custom_minimum_size = Vector2(380, 220)
+layout_mode = 3
+anchors_preset = 0
+offset_left = -190.0
+offset_top = -220.0
+offset_right = 190.0
+
+[node name="PanelContainer" type="PanelContainer" parent="Control" unique_id=204801558]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="VBox" type="VBoxContainer" parent="Control/PanelContainer" unique_id=851639867]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Margin" type="MarginContainer" parent="Control/PanelContainer/VBox" unique_id=1533828027]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 10
+
+[node name="Content" type="VBoxContainer" parent="Control/PanelContainer/VBox/Margin" unique_id=1081385512]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="Label" parent="Control/PanelContainer/VBox/Margin/Content" unique_id=309077294]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 15
+text = "Station Title"
+
+[node name="SummaryLabel" type="Label" parent="Control/PanelContainer/VBox/Margin/Content" unique_id=523876624]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 11
+text = "Summary of what this BehaviorGraph demonstrates."
+autowrap_mode = 2
+
+[node name="Separator" type="HSeparator" parent="Control/PanelContainer/VBox/Margin/Content" unique_id=1942728421]
+layout_mode = 2
+
+[node name="NodesHeader" type="Label" parent="Control/PanelContainer/VBox/Margin/Content" unique_id=1419038598]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "NODES USED IN THIS GRAPH:"
+
+[node name="NodesContainer" type="HFlowContainer" parent="Control/PanelContainer/VBox/Margin/Content" unique_id=1100883170]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 4

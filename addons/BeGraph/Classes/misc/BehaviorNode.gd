@@ -108,6 +108,8 @@ signal conditions_changed
 var last_status : int = -1
 ## [method Time.get_ticks_msec] timestamp of this node's last [method do_tick] call, or [code]-1[/code] if it has never been ticked.
 var last_tick_time : int = -1
+## Index of the condition branch chosen on this node's last tick_condition() call, or -1 if never ticked via conditions. Used by the debugger to highlight only the traversed slot.
+var last_ticked_condition : int = -1
 
 #region Decorator
 
@@ -462,7 +464,7 @@ func _set(property: StringName, value: Variant) -> bool:
 		emit_changed()
 	return true
 
-func get_agent()->Node:
+func get_agent()->BehaviorAgent:
 	var graph : BehaviorGraph = get_graph()
 	if graph == null:
 		push_error("Graph reference lost for node %s" % resource_name)
@@ -605,6 +607,7 @@ func tick_next(delta:float,index:int = 0) -> Status:
 
 ## Ticks the successor bound to the condition at [param index] inside [member conditions] and returns its [enum Status]. Routes through [method do_tick] (rather than calling [method tick] directly) so the successor's status/tick-time gets recorded.
 func tick_condition(delta:float,index:int = 0) -> Status:
+	last_ticked_condition = index
 	if index >= conditions.size():
 		push_error("BehaviorNode %s has less than %s conditions" % [self, index + 1])
 		return Status.FAILURE
@@ -645,12 +648,20 @@ func _resolve_node(value: Variant) -> Node:
 	if value == null:
 		push_error("BehaviorNode %s: trying to resolve null value" % resource_name)
 		return null
+	
 	if value is NodePath and value != NodePath(""):
-		var agent : Node = get_agent()
-		if agent == null or agent.actor == null:
-			push_error("BehaviorNode %s: missing agent or actor" % resource_name)
+		var agent : BehaviorAgent = get_agent()
+		if agent == null:
+			push_error("BehaviorNode %s: missing agent" % resource_name)
 			return null
-		var resolved = agent.actor.get_node_or_null(value) if agent.resolve_nodes_from_actor else agent.get_node_or_null(value)
+			
+		var resolved: Node = null
+		if value.is_absolute():
+			var tree =Engine.get_main_loop() as SceneTree
+			resolved = tree.root.get_node_or_null(value)
+		else:
+			push_error("BehaviorNode %s: node path is not absolute '%s'" % [resource_name, value])
+		
 		if resolved == null:
 			push_error("BehaviorNode %s: node not found at path '%s'" % [resource_name, value])
 		return resolved

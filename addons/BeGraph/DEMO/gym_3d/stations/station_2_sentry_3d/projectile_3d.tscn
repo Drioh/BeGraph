@@ -1,0 +1,28 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://b4mk77r6sdexm" path="res://addons/BeGraph/DEMO/gym_3d/stations/station_2_sentry_3d/projectile_3d.gd" id="1_p3d"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_pr"]
+radius = 0.25
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pr"]
+albedo_color = Color(1, 0.2, 0.2, 1)
+emission_enabled = true
+emission = Color(1, 0.3, 0.2, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_pr"]
+material = SubResource("StandardMaterial3D_pr")
+radius = 0.25
+height = 0.5
+
+[node name="Projectile3D" type="Area3D"]
+collision_layer = 4
+collision_mask = 3
+script = ExtResource("1_p3d")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_pr")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_pr")

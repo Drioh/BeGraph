@@ -1,0 +1,140 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://addons/BeGraph/DEMO/gym_3d/common/station_billboard_3d.tscn" id="1_bb"]
+[ext_resource type="Script" uid="uid://cw01p0ypvtv25" path="res://addons/BeGraph/DEMO/gym_3d/common/actor_3d.gd" id="2_act"]
+[ext_resource type="Script" uid="uid://cj0fv54i6ere" path="res://addons/BeGraph/Classes/misc/BehaviorAgent.gd" id="3_agent"]
+[ext_resource type="Resource" uid="uid://dkd7jxnlf4pln" path="res://addons/BeGraph/DEMO/gym_3d/stations/station_1_elevation_patrol/patrol_elevation.tres" id="4_graph"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
+albedo_color = Color(0.18, 0.22, 0.28, 1)
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_floor"]
+material = SubResource("StandardMaterial3D_floor")
+size = Vector3(14, 0.4, 14)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
+size = Vector3(14, 0.4, 14)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_plat"]
+albedo_color = Color(0.24, 0.3, 0.38, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_plat"]
+material = SubResource("StandardMaterial3D_plat")
+size = Vector3(5, 0.4, 4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_plat"]
+size = Vector3(5, 0.4, 4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ramp"]
+material = SubResource("StandardMaterial3D_plat")
+size = Vector3(3, 0.4, 5.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ramp"]
+size = Vector3(3, 0.4, 5.5)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_act"]
+radius = 0.4
+height = 1.2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_actor"]
+albedo_color = Color(0.95, 0.55, 0.15, 1)
+roughness = 0.4
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_act"]
+material = SubResource("StandardMaterial3D_actor")
+radius = 0.4
+height = 1.2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_part"]
+albedo_color = Color(0.3, 1, 0.4, 1)
+emission_enabled = true
+emission = Color(0.2, 0.9, 0.3, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_part"]
+material = SubResource("StandardMaterial3D_part")
+radius = 0.1
+height = 0.2
+
+[node name="Station1_ElevationPatrol" type="Node3D"]
+
+[node name="StationBillboard3D" parent="." instance=ExtResource("1_bb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, -6.5)
+title = "Station 1: 3D Elevation Patrol"
+summary = "Demonstrates 3D waypoint patrol mechanics across varying elevations and ramp inclines. Actor A climbs the terrace using Patrol (Once mode); on reaching the summit, it shifts its material color and triggers a 3D particle fountain via Restart Particles."
+nodes_used = PackedStringArray("Access Point", "Sequence", "Patrol", "Set Property", "Restart Particles", "Wait")
+station_color = Color(0.2, 0.8, 0.4, 1)
+
+[node name="Floor" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
+collision_layer = 2
+collision_mask = 7
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Floor"]
+mesh = SubResource("BoxMesh_floor")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
+shape = SubResource("BoxShape3D_floor")
+
+[node name="RaisedPlatform" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, -4)
+collision_layer = 2
+collision_mask = 7
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RaisedPlatform"]
+mesh = SubResource("BoxMesh_plat")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RaisedPlatform"]
+shape = SubResource("BoxShape3D_plat")
+
+[node name="Ramp" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.939693, -0.34202, 0, 0.34202, 0.939693, 0, 0.9, -0.5)
+collision_layer = 2
+collision_mask = 7
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Ramp"]
+mesh = SubResource("BoxMesh_ramp")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ramp"]
+shape = SubResource("BoxShape3D_ramp")
+
+[node name="Waypoint1" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 3.5)
+
+[node name="Waypoint2" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, -0.5)
+
+[node name="Waypoint3" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6, -4)
+
+[node name="ClimberActor" type="CharacterBody3D" parent="." node_paths=PackedStringArray("behavior_agent")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 3.5)
+collision_layer = 4
+collision_mask = 3
+script = ExtResource("2_act")
+behavior_agent = NodePath("BehaviorAgent")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ClimberActor"]
+shape = SubResource("CapsuleShape3D_act")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="ClimberActor"]
+mesh = SubResource("CapsuleMesh_act")
+
+[node name="BehaviorAgent" type="Node" parent="ClimberActor" node_paths=PackedStringArray("actor")]
+script = ExtResource("3_agent")
+actor = NodePath("..")
+behavior_graph = ExtResource("4_graph")
+
+[node name="CPUParticles3D" type="CPUParticles3D" parent="ClimberActor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+emitting = false
+amount = 25
+lifetime = 1.0
+one_shot = true
+explosiveness = 0.95
+mesh = SubResource("SphereMesh_part")
+direction = Vector3(0, 1, 0)
+spread = 60.0
+gravity = Vector3(0, -9.8, 0)
+initial_velocity_min = 4.0
+initial_velocity_max = 7.0

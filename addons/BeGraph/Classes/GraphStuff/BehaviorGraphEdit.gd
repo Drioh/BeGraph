@@ -135,6 +135,7 @@ func add_node(script_path: String = "") -> BehaviorGraphNodeBase:
 ## Shared instantiation step: builds the visual node for [param behavior_node] at [param position],
 ## optionally forcing its name to [param forced_name] (used so redo recreates the exact same name).
 func _instantiate_node(behavior_node: BehaviorNode, position: Vector2, forced_name: StringName = &"") -> BehaviorGraphNodeBase:
+	behavior_node._graph_ref = weakref(current_graph) 
 	var node: BehaviorGraphNodeBase = _scene_for(behavior_node).instantiate()
 	add_child(node)
 	if forced_name != &"":
@@ -143,9 +144,9 @@ func _instantiate_node(behavior_node: BehaviorNode, position: Vector2, forced_na
 	node.graph_edit = self
 	node.position_offset = position
 	behavior_node.position_in_graph = position
-	node.set_node(behavior_node) # reads self.name -> writes behavior_node.resource_name
+	node.set_node(behavior_node)
 
-	current_graph.add_node(behavior_node)
+	current_graph.add_node(behavior_node)  
 	return node
 
 ## Redo half of [method add_node].

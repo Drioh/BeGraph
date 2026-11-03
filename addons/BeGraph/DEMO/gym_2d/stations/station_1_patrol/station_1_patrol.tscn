@@ -1,0 +1,107 @@
+[gd_scene format=3 uid="uid://cyaats1wij3j2"]
+
+[ext_resource type="Script" uid="uid://clg6yhsm2fd5o" path="res://addons/BeGraph/DEMO/gym_2d/stations/station_1_patrol/station_1_patrol.gd" id="1_st1"]
+[ext_resource type="PackedScene" uid="uid://c2qpefnnwufdt" path="res://addons/BeGraph/DEMO/gym_2d/common/station_billboard.tscn" id="2_billboard"]
+[ext_resource type="PackedScene" uid="uid://bxbtfw1cfim0" path="res://addons/BeGraph/DEMO/gym_2d/stations/station_1_patrol/station_1_agent.tscn" id="3_u0ds0"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vumwu"]
+content_margin_left = 6.0
+content_margin_top = 6.0
+content_margin_right = 6.0
+content_margin_bottom = 5.0
+bg_color = Color(0.039215688, 0.039215688, 0.039215688, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.078431375, 0.078431375, 0.078431375, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(0, 0, 0, 0.45)
+shadow_size = 6
+shadow_offset = Vector2(0, 3)
+
+[node name="Station1_Patrol" type="Node2D" unique_id=965711847]
+script = ExtResource("1_st1")
+
+[node name="StationBillboard" parent="." unique_id=1777311164 instance=ExtResource("2_billboard")]
+position = Vector2(0, -216)
+title = "Station 1: Waypoint Patrol Variants"
+summary = "Showcases the Patrol node operating across its four modes: Once, Loop, Ping-Pong and Ping-Pong (Loop). 
+Actor A executes a finite waypoint sequence; upon reaching its goal, it triggers a text update, modulates its color to green, and bursts particles via Restart Particles. 
+Actors B and C showcase continuous linear oscillation and closed-circuit looping."
+nodes_used = PackedStringArray("Access Point", "Sequence", "Patrol", "Set Text Property", "Set Property", "Restart Particles")
+station_color = Color(0.2, 0.75, 0.35, 1)
+
+[node name="ActorA" parent="." unique_id=532875850 instance=ExtResource("3_u0ds0")]
+
+[node name="ActorB" parent="." unique_id=1693127382 instance=ExtResource("3_u0ds0")]
+
+[node name="ActorC" parent="." unique_id=949426406 instance=ExtResource("3_u0ds0")]
+
+[node name="ActorD" parent="." unique_id=1592504572 instance=ExtResource("3_u0ds0")]
+
+[node name="ResetButtonNode" type="Node2D" parent="." unique_id=319958608]
+position = Vector2(200, -320)
+
+[node name="Control" type="PanelContainer" parent="ResetButtonNode" unique_id=1539128375]
+offset_right = 50.0
+offset_bottom = 44.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_vumwu")
+
+[node name="Button" type="Button" parent="ResetButtonNode/Control" unique_id=490294867]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_colors/font_pressed_color = Color(0.4, 0.8117647, 0.5137255, 1)
+theme_override_colors/font_hover_color = Color(0.3015736, 0.62426466, 0.39069784, 1)
+theme_override_font_sizes/font_size = 11
+text = "Reset
+Station"
+flat = true
+
+[node name="WaypointA1" type="Node2D" parent="." unique_id=1929009780]
+position = Vector2(-260, -90)
+
+[node name="WaypointA2" type="Node2D" parent="." unique_id=36464328]
+position = Vector2(-170, -40)
+
+[node name="WaypointA3" type="Node2D" parent="." unique_id=57663387]
+position = Vector2(-70, -90)
+
+[node name="WaypointB1" type="Node2D" parent="." unique_id=558475384]
+position = Vector2(-267, 133)
+
+[node name="WaypointB2" type="Node2D" parent="." unique_id=1532071992]
+position = Vector2(-186, 74)
+
+[node name="WaypointB3" type="Node2D" parent="." unique_id=712036188]
+position = Vector2(-128, 148)
+
+[node name="WaypointC1" type="Node2D" parent="." unique_id=784272022]
+position = Vector2(120, -120)
+
+[node name="WaypointC2" type="Node2D" parent="." unique_id=1718475096]
+position = Vector2(250, -120)
+
+[node name="WaypointC3" type="Node2D" parent="." unique_id=1796804001]
+position = Vector2(250, -20)
+
+[node name="WaypointC4" type="Node2D" parent="." unique_id=1952765702]
+position = Vector2(120, -20)
+
+[node name="WaypointD1" type="Node2D" parent="." unique_id=551745238]
+position = Vector2(120, 60)
+
+[node name="WaypointD2" type="Node2D" parent="." unique_id=1623825884]
+position = Vector2(220, 100)
+
+[node name="WaypointD3" type="Node2D" parent="." unique_id=355256464]
+position = Vector2(220, 160)
+
+[node name="WaypointD4" type="Node2D" parent="." unique_id=307818638]
+position = Vector2(120, 190)

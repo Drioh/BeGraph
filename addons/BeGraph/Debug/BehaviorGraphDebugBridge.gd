@@ -88,7 +88,7 @@ func _send_status_delta(path: String, graph: BehaviorGraph) -> void:
 			continue
 		var key : StringName = node.resource_name
 		if last.get(key, -1) != node.last_tick_time:
-			deltas.append([String(key), node.last_status])
+			deltas.append([String(key), node.last_status, node.last_ticked_condition])
 			last[key] = node.last_tick_time
 
 	if deltas.size() > 0:
