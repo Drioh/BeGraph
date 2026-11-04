@@ -112,7 +112,6 @@ func _ready() -> void:
 		var v = get(p)
 		if v == null: continue
 		if v is NodePath and !v.is_absolute():
-			print("sono %s con valore %s"%[p,v])
 			v=get_node(v).get_path()
 		set_blackboard_property(p, v)
 	
@@ -182,7 +181,7 @@ func get_overridable_property_list()->Array[Dictionary]:
 	var ret : Array[Dictionary]
 	for bb_var in behavior_graph.blackboard:
 		if bb_var.export_variable:
-			var name :String = "%s/%s"%[BG.OBP,bb_var.name]
+			var name :String = BG.OBP+"/"+bb_var.name
 			if name not in bb_props.keys():
 				bb_props[name] = bb_var._value
 				

@@ -18,12 +18,11 @@ extends Node2D
 
 func _ready() -> void:
 	reset_actors()
-	
+
 	actor_a.set(&"waypoints",[%WaypointA1, %WaypointA2, %WaypointA3])
 	actor_b.set(&"waypoints",[%WaypointB1, %WaypointB2, %WaypointB3])
 	actor_c.set(&"waypoints",[%WaypointC1, %WaypointC2, %WaypointC3, %WaypointC4])
 	actor_d.set(&"waypoints",[%WaypointD1, %WaypointD2, %WaypointD3, %WaypointD4])
-		
 	
 func _draw() -> void:
 	reset_button_node.pressed.connect(reset_actors)

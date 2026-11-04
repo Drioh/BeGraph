@@ -37,30 +37,15 @@ station_color = Color(0.2, 0.75, 0.35, 1)
 
 [node name="ActorA" parent="." unique_id=532875850 instance=ExtResource("3_u0ds0")]
 position = Vector2(-260, -90)
-overridable_blackboard_properties/mode = 0
-overridable_blackboard_properties/ParticleEmitter = NodePath("")
-overridable_blackboard_properties/self = NodePath("../..")
-overridable_blackboard_properties/statusLabel = NodePath("")
 
 [node name="ActorB" parent="." unique_id=1693127382 instance=ExtResource("3_u0ds0")]
 position = Vector2(-267, 133)
-overridable_blackboard_properties/mode = 1
-overridable_blackboard_properties/ParticleEmitter = NodePath("")
-overridable_blackboard_properties/self = NodePath("../..")
-overridable_blackboard_properties/statusLabel = NodePath("")
 
 [node name="ActorC" parent="." unique_id=949426406 instance=ExtResource("3_u0ds0")]
 position = Vector2(120, -120)
-overridable_blackboard_properties/ParticleEmitter = NodePath("")
-overridable_blackboard_properties/self = NodePath("../..")
-overridable_blackboard_properties/statusLabel = NodePath("")
 
 [node name="ActorD" parent="." unique_id=1592504572 instance=ExtResource("3_u0ds0")]
 position = Vector2(120, 60)
-overridable_blackboard_properties/mode = 3
-overridable_blackboard_properties/ParticleEmitter = NodePath("")
-overridable_blackboard_properties/self = NodePath("../..")
-overridable_blackboard_properties/statusLabel = NodePath("")
 
 [node name="ResetButtonNode" type="Node2D" parent="." unique_id=319958608]
 position = Vector2(200, -320)
