@@ -23,9 +23,8 @@ allowed_list = Dictionary[StringName, bool]({
 &"overridable_blackboard_properties/moving": false,
 &"overridable_blackboard_properties/self": false,
 &"overridable_blackboard_properties/statusLabel": false,
-&"overridable_blackboard_properties/waypoints": true
+&"overridable_blackboard_properties/waypoints": false
 })
-overridable_blackboard_properties/waypoints = []
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1445763016]
 shape = SubResource("CircleShape2D_a")

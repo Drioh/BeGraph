@@ -36,18 +36,24 @@ func _get_property_list() -> Array[Dictionary]:
 
 func _get(property: StringName) -> Variant:
 	if behavior_agent == null: return null
-	var key : StringName = property if property.begins_with(BG.OBP) else BG.OBP+"/"+property
+	
+	var key : StringName = BG.dirty_key(property)
+	if !behavior_agent.bb_props.has(key): return null
+	
 	return behavior_agent.bb_props.get(key) #returns either the value or null, if the key "property" does not exist in bb_props
 
 func _set(property: StringName, value: Variant) -> bool:
 	if behavior_agent == null : return false
 	
-	var key : StringName = property if property.begins_with(BG.OBP) else BG.OBP+"/"+property
-	print(key)
+	var key : StringName = BG.dirty_key(property)
 	if !behavior_agent.bb_props.has(key): return false
+	
 	if value is NodePath:
 		value = behavior_agent.get_path_to(get_node(value)) #getting a path relative to the agent, for node resolution purposes
-	behavior_agent.bb_props[key]=value
+	if Engine.is_editor_hint():
+		behavior_agent.bb_props[key]=value
+	else:
+		behavior_agent.set_blackboard_property(key,value)
 	return true
 #endregion
 

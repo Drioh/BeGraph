@@ -27,7 +27,7 @@ signal behavior_signal(args: Array)
 		_starting_point_idx = 0
 		if behavior_graph != null:
 			notify_property_list_changed.call_deferred()
-var _behavior_graph : BehaviorGraph
+var _behavior_graph : BehaviorGraph #duplicate
 
 ## Which loop drives this agent's ticking. Setting this to [constant ProcessThread.MANUAL] also disables [member enabled], since manual mode expects [method tick] to be called explicitly by user code.
 @export var graph_process_mode: ProcessThread = ProcessThread.IDLE:
@@ -84,7 +84,6 @@ func _set(property: StringName, value: Variant) -> bool:
 		return true
 	
 	if not property.begins_with(BG.OBP): return false
-	
 	bb_props[property] = value
 	return true
 
