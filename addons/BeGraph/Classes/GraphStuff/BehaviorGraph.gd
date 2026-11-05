@@ -105,7 +105,6 @@ func set_blackboard_value(key: StringName, value: Variant) -> void:
 	if prop == null:
 		push_error("BehaviorGraph: key '%s' not found inside blackboard" % key)
 		return
-
 	if prop.value != value:
 		prop.value = value
 		blackboard_value_changed.emit(key, value)

@@ -1,11 +1,10 @@
 @tool
 extends Node2D
 
-
-@onready var waypoint_a1: Node2D = $WaypointA1
-@onready var waypoint_b1: Node2D = $WaypointB1
-@onready var waypoint_c1: Node2D = $WaypointC1
-@onready var waypoint_d1: Node2D = $WaypointD1
+@onready var waypoint_a1: Node2D = $WaypointsA/WaypointA1
+@onready var waypoint_b1: Node2D = $WaypointsB/WaypointB1
+@onready var waypoint_c1: Node2D = $WaypointsC/WaypointC1
+@onready var waypoint_d1: Node2D = $WaypointsD/WaypointD1
 @onready var actor_a: Node2D = $ActorA
 @onready var actor_b: Node2D = $ActorB
 @onready var actor_c: Node2D = $ActorC
@@ -19,10 +18,10 @@ extends Node2D
 func _ready() -> void:
 	reset_actors()
 
-	actor_a.set(&"waypoints",[$WaypointA1, $WaypointA2, $WaypointA3])
-	actor_b.set(&"waypoints",[$WaypointB1, $WaypointB2, $WaypointB3])
-	actor_c.set(&"waypoints",[$WaypointC1, $WaypointC2, $WaypointC3, $WaypointC4])
-	actor_d.set(&"waypoints",[$WaypointD1, $WaypointD2, $WaypointD3, $WaypointD4])
+	actor_a.behavior_agent.set_blackboard_property(&"waypoints",$WaypointsA.get_path())
+	actor_b.behavior_agent.set_blackboard_property(&"waypoints",$WaypointsB.get_path())
+	actor_c.behavior_agent.set_blackboard_property(&"waypoints",$WaypointsC.get_path())
+	actor_d.behavior_agent.set_blackboard_property(&"waypoints",$WaypointsD.get_path())
 	
 func _draw() -> void:
 	reset_button_node.pressed.connect(reset_actors)

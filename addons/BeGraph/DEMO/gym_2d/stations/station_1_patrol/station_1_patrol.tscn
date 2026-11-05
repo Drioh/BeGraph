@@ -68,44 +68,52 @@ text = "Reset
 Station"
 flat = true
 
-[node name="WaypointA1" type="Node2D" parent="." unique_id=1929009780]
+[node name="WaypointsA" type="Node2D" parent="." unique_id=904602768]
+
+[node name="WaypointA1" type="Node2D" parent="WaypointsA" unique_id=1929009780]
 position = Vector2(-260, -90)
 
-[node name="WaypointA2" type="Node2D" parent="." unique_id=36464328]
+[node name="WaypointA2" type="Node2D" parent="WaypointsA" unique_id=36464328]
 position = Vector2(-170, -40)
 
-[node name="WaypointA3" type="Node2D" parent="." unique_id=57663387]
+[node name="WaypointA3" type="Node2D" parent="WaypointsA" unique_id=57663387]
 position = Vector2(-70, -90)
 
-[node name="WaypointB1" type="Node2D" parent="." unique_id=558475384]
-position = Vector2(-267, 133)
-
-[node name="WaypointB2" type="Node2D" parent="." unique_id=1532071992]
-position = Vector2(-186, 74)
-
-[node name="WaypointB3" type="Node2D" parent="." unique_id=712036188]
-position = Vector2(-128, 148)
-
-[node name="WaypointC1" type="Node2D" parent="." unique_id=784272022]
-position = Vector2(120, -120)
-
-[node name="WaypointC2" type="Node2D" parent="." unique_id=1718475096]
-position = Vector2(250, -120)
-
-[node name="WaypointC3" type="Node2D" parent="." unique_id=1796804001]
-position = Vector2(250, -20)
-
-[node name="WaypointC4" type="Node2D" parent="." unique_id=1952765702]
+[node name="WaypointC4" type="Node2D" parent="WaypointsA" unique_id=1952765702]
 position = Vector2(120, -20)
 
-[node name="WaypointD1" type="Node2D" parent="." unique_id=551745238]
+[node name="WaypointsB" type="Node2D" parent="." unique_id=1111134654]
+
+[node name="WaypointB1" type="Node2D" parent="WaypointsB" unique_id=558475384]
+position = Vector2(-267, 133)
+
+[node name="WaypointB2" type="Node2D" parent="WaypointsB" unique_id=1532071992]
+position = Vector2(-186, 74)
+
+[node name="WaypointB3" type="Node2D" parent="WaypointsB" unique_id=712036188]
+position = Vector2(-128, 148)
+
+[node name="WaypointsC" type="Node2D" parent="." unique_id=2040272413]
+
+[node name="WaypointC1" type="Node2D" parent="WaypointsC" unique_id=784272022]
+position = Vector2(120, -120)
+
+[node name="WaypointC2" type="Node2D" parent="WaypointsC" unique_id=1718475096]
+position = Vector2(250, -120)
+
+[node name="WaypointC3" type="Node2D" parent="WaypointsC" unique_id=1796804001]
+position = Vector2(250, -20)
+
+[node name="WaypointsD" type="Node2D" parent="." unique_id=874988531]
+
+[node name="WaypointD1" type="Node2D" parent="WaypointsD" unique_id=551745238]
 position = Vector2(120, 60)
 
-[node name="WaypointD2" type="Node2D" parent="." unique_id=1623825884]
+[node name="WaypointD2" type="Node2D" parent="WaypointsD" unique_id=1623825884]
 position = Vector2(220, 100)
 
-[node name="WaypointD3" type="Node2D" parent="." unique_id=355256464]
+[node name="WaypointD3" type="Node2D" parent="WaypointsD" unique_id=355256464]
 position = Vector2(220, 160)
 
-[node name="WaypointD4" type="Node2D" parent="." unique_id=307818638]
+[node name="WaypointD4" type="Node2D" parent="WaypointsD" unique_id=307818638]
 position = Vector2(120, 190)

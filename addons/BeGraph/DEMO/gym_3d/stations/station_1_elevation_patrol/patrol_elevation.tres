@@ -28,7 +28,6 @@ mutable = true
 resource_name = "PatrolClimb"
 script = ExtResource("5_patrol")
 node = NodePath(".")
-waypoints = [NodePath("../Waypoint1"), NodePath("../Waypoint2"), NodePath("../Waypoint3")]
 mode = 2
 speed = 4.0
 instruction = "Patrol {node} ({mode}, speed {speed})"

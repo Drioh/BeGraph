@@ -38,13 +38,13 @@ bb_props = Dictionary[StringName, Variant]({
 &"overridable_blackboard_properties/moving": true,
 &"overridable_blackboard_properties/self": NodePath(".."),
 &"overridable_blackboard_properties/statusLabel": NodePath("../StatusLabel"),
-&"overridable_blackboard_properties/waypoints": []
+&"overridable_blackboard_properties/waypoints": NodePath("")
 })
 behavior_graph = ExtResource("3_42xkt")
 starting_point = 0
 overridable_blackboard_properties/moving = true
 overridable_blackboard_properties/mode = 2
-overridable_blackboard_properties/waypoints = []
+overridable_blackboard_properties/waypoints = NodePath("")
 overridable_blackboard_properties/ParticleEmitter = NodePath("../CPUParticles2D")
 overridable_blackboard_properties/self = NodePath("..")
 overridable_blackboard_properties/statusLabel = NodePath("../StatusLabel")

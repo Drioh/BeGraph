@@ -455,6 +455,7 @@ func _get(property: StringName) -> Variant:
 	return graph.get_blackboard_property(key).value
 
 func _set(property: StringName, value: Variant) -> bool:
+	
 	var key : StringName = _blackboard_bindings.get(property, &"")
 	if key == &"":
 		return false
@@ -665,6 +666,7 @@ func _resolve_node(value: Variant) -> Node:
 		if resolved == null:
 			push_error("BehaviorNode %s: node not found at path '%s'" % [resource_name, value])
 		return resolved
+		
 	return value as Node
 
 

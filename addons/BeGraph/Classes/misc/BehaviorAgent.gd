@@ -106,11 +106,11 @@ func _ready() -> void:
 		return
 		
 	add_to_group(DEBUG_GROUP)
-	
 	for p in bb_props:
 		var v = get(p)
 		if v == null: continue
-		if v is NodePath and !v.is_absolute():
+
+		if v is NodePath and !v.is_absolute() and !v==^"":
 			v=get_node(v).get_path()
 		set_blackboard_property(p, v)
 	
@@ -181,7 +181,7 @@ func get_overridable_property_list()->Array[Dictionary]:
 	for bb_var in behavior_graph.blackboard:
 		if bb_var.export_variable:
 			var name :String = BG.OBP+"/"+bb_var.name
-			if name not in bb_props.keys():
+			if name not in bb_props.keys() or typeof(bb_props[name]) != typeof(bb_var._value):
 				bb_props[name] = bb_var._value
 				
 			ret.append({
@@ -198,11 +198,11 @@ func get_overridable_property_list()->Array[Dictionary]:
 
 func set_blackboard_property(key: StringName, value: Variant) -> bool:
 	var graph : BehaviorGraph = _behavior_graph if _behavior_graph != null else behavior_graph
-	
 	var clean_key:StringName = BG.clean_key(key)
 
 	if graph == null or graph.get_blackboard_property(clean_key) == null:
 		return false
+	
 	graph.set_blackboard_value(clean_key, value)
 	return true
 
