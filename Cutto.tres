@@ -6,17 +6,11 @@
 [ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="4_f7umo"]
 [ext_resource type="Script" uid="uid://d0mfdrfqf2l3d" path="res://addons/BeGraph/Classes/Nodes/Actions/Camera/Camera Zoom.gd" id="4_h7p2p"]
 
-[sub_resource type="Resource" id="Resource_vy5gx"]
-resource_name = "_GraphNode_75481"
-script = ExtResource("3_wa3i5")
-node_category = "access_point_node"
-output = true
-is_starting_node = true
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"_GraphNode_29096"])
-breakpointable = true
-mutable = true
+[sub_resource type="Resource" id="Resource_b3khx"]
+resource_name = "Se cambio il nome"
+script = ExtResource("1_vy5gx")
+value = null
+metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_wa3i5"]
 resource_name = "_GraphNode_29096"
@@ -31,8 +25,21 @@ _graph_ref = Object(WeakRef,"script":null)
 breakpointable = true
 mutable = true
 
+[sub_resource type="Resource" id="Resource_vy5gx"]
+resource_name = "_GraphNode_75481"
+script = ExtResource("3_wa3i5")
+node_category = "access_point_node"
+output = true
+is_starting_node = true
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"_GraphNode_29096"])
+breakpointable = true
+mutable = true
+
 [resource]
 script = ExtResource("4_f7umo")
+blackboard = Array[ExtResource("1_vy5gx")]([SubResource("Resource_b3khx")])
 nodes = Dictionary[StringName, ExtResource("2_h7p2p")]({
 &"_GraphNode_29096": SubResource("Resource_wa3i5"),
 &"_GraphNode_75481": SubResource("Resource_vy5gx")

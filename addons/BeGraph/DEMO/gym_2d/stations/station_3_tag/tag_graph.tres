@@ -7,18 +7,20 @@
 [ext_resource type="Script" uid="uid://3i4fdxhablja" path="res://addons/BeGraph/Classes/Nodes/Flow/Comparators/Condition.gd" id="7_cond"]
 [ext_resource type="Script" uid="uid://dm5elean4ukgt" path="res://addons/BeGraph/Classes/Nodes/Flow/Comparators/Distance.gd" id="8_dist"]
 [ext_resource type="Script" uid="uid://c0cpvex1340bu" path="res://addons/BeGraph/Classes/Nodes/Actions/Movement/Navigate To.gd" id="9_nav"]
-[ext_resource type="Script" uid="uid://b0sc0g6pmwp4q" path="res://addons/BeGraph/Classes/Nodes/Actions/Time/Wait.gd" id="10_lw1ib"]
+[ext_resource type="Script" uid="uid://dc3xdjgtnutmf" path="res://addons/BeGraph/Classes/Nodes/Actions/Misc/Set Text Property.gd" id="10_lw1ib"]
 [ext_resource type="Script" uid="uid://bhduga4xd8gmu" path="res://addons/BeGraph/Classes/Nodes/Actions/Misc/Set Property.gd" id="11_prop"]
 [ext_resource type="Script" uid="uid://bt3sox16shfd2" path="res://addons/BeGraph/Classes/Nodes/Actions/Misc/Set Blackboard Variable.gd" id="12_setbb"]
 [ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="13_graph"]
 
 [sub_resource type="Resource" id="SubResource_bb_flee"]
+resource_name = "is_fleeing"
 script = ExtResource("1_bb")
 name = &"is_fleeing"
 export_variable = true
 value = false
 
 [sub_resource type="Resource" id="Resource_niuvk"]
+resource_name = "player"
 script = ExtResource("1_bb")
 name = &"player"
 export_variable = true
@@ -26,34 +28,46 @@ value = NodePath("")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_gdbl6"]
+resource_name = "CollisionShape"
 script = ExtResource("1_bb")
 name = &"CollisionShape"
 export_variable = true
-value = NodePath("")
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Station3_Tag/ArenaZone/CollisionShape2D")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_iuwqy"]
+resource_name = "EscapeTarget"
 script = ExtResource("1_bb")
 name = &"EscapeTarget"
 export_variable = true
-value = NodePath("")
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Station3_Tag/EscapeTarget")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_57hyn"]
+resource_name = "ArenaZone"
 script = ExtResource("1_bb")
 name = &"ArenaZone"
-value = NodePath("")
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Station3_Tag/ArenaZone")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_lw1ib"]
+resource_name = "TagActor"
 script = ExtResource("1_bb")
 name = &"TagActor"
-value = NodePath("")
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Station3_Tag/TagActor")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_747d8"]
+resource_name = "NavigationAgent"
 script = ExtResource("1_bb")
 name = &"NavigationAgent"
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Station3_Tag/TagActor/NavigationAgent2D")
+metadata/_custom_type_script = "uid://da0t4052e3fsp"
+
+[sub_resource type="Resource" id="Resource_2wtov"]
+resource_name = "StatusLabel"
+script = ExtResource("1_bb")
+name = &"StatusLabel"
 value = NodePath("")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
@@ -201,10 +215,9 @@ instruction = "Set BB var {variable_name} = {value}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(2500, 260)
+position_in_graph = Vector2(2920, 260)
 _graph_ref = Object(WeakRef,"script":null)
 
-_next_ref = Array[StringName]([&"_GraphNode_20094"])
 breakpointable = true
 mutable = true
 
@@ -221,7 +234,7 @@ output = true
 position_in_graph = Vector2(1880, 240)
 _graph_ref = Object(WeakRef,"script":null)
 
-_next_ref = Array[StringName]([&"SetChaserBB"])
+_next_ref = Array[StringName]([&"_GraphNode_60009"])
 _blackboard_bindings = Dictionary[StringName, StringName]({
 &"node": &"TagActor"
 })
@@ -237,10 +250,9 @@ instruction = "Set BB var {variable_name} = {value}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(2320, 840)
+position_in_graph = Vector2(2920, 820)
 _graph_ref = Object(WeakRef,"script":null)
 
-_next_ref = Array[StringName]([&"_GraphNode_20094"])
 breakpointable = true
 mutable = true
 
@@ -257,7 +269,7 @@ output = true
 position_in_graph = Vector2(1720, 820)
 _graph_ref = Object(WeakRef,"script":null)
 
-_next_ref = Array[StringName]([&"SetFleeBB"])
+_next_ref = Array[StringName]([&"_GraphNode_46847"])
 _blackboard_bindings = Dictionary[StringName, StringName]({
 &"node": &"TagActor"
 })
@@ -306,62 +318,44 @@ breakpointable = true
 mutable = true
 
 [sub_resource type="Resource" id="Resource_df827"]
-resource_name = "_GraphNode_20094"
-script = ExtResource("11_prop")
-node = NodePath("TagActor/CollisionShape2D")
-property = "disabled"
-value = true
-instruction = "Set {node}'s {property} value: {value}"
+resource_name = "_GraphNode_60009"
+script = ExtResource("10_lw1ib")
+value = "CHASER"
+instruction = "Set {node}'s {property}: {value} ({mode})"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(3180, 440)
+position_in_graph = Vector2(2400, 200)
 _graph_ref = Object(WeakRef,"script":null)
 
-_next_ref = Array[StringName]([&"_GraphNode_27172"])
+_next_ref = Array[StringName]([&"SetChaserBB"])
 _blackboard_bindings = Dictionary[StringName, StringName]({
-&"node": &"CollisionShape"
+&"node": &"StatusLabel"
 })
 breakpointable = true
 mutable = true
 
-[sub_resource type="Resource" id="Resource_2wtov"]
-resource_name = "_GraphNode_27172"
-script = ExtResource("10_lw1ib")
-seconds = 0.5
-instruction = "Wait {seconds}s"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(3720, 500)
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"_GraphNode_78665"])
-breakpointable = true
-mutable = true
-
 [sub_resource type="Resource" id="Resource_4q0ch"]
-resource_name = "_GraphNode_78665"
-script = ExtResource("11_prop")
-node = NodePath(".")
-property = "disabled"
-value = false
-instruction = "Set {node}'s {property} value: {value}"
+resource_name = "_GraphNode_46847"
+script = ExtResource("10_lw1ib")
+value = "RUNNER"
+instruction = "Set {node}'s {property}: {value} ({mode})"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(4260, 440)
+position_in_graph = Vector2(2320, 920)
 _graph_ref = Object(WeakRef,"script":null)
 
+_next_ref = Array[StringName]([&"SetFleeBB"])
 _blackboard_bindings = Dictionary[StringName, StringName]({
-&"node": &"CollisionShape"
+&"node": &"StatusLabel"
 })
 breakpointable = true
 mutable = true
 
 [resource]
 script = ExtResource("13_graph")
-blackboard = Array[ExtResource("1_bb")]([SubResource("SubResource_bb_flee"), SubResource("Resource_niuvk"), SubResource("Resource_gdbl6"), SubResource("Resource_iuwqy"), SubResource("Resource_57hyn"), SubResource("Resource_lw1ib"), SubResource("Resource_747d8")])
+blackboard = Array[ExtResource("1_bb")]([SubResource("SubResource_bb_flee"), SubResource("Resource_niuvk"), SubResource("Resource_gdbl6"), SubResource("Resource_iuwqy"), SubResource("Resource_57hyn"), SubResource("Resource_lw1ib"), SubResource("Resource_747d8"), SubResource("Resource_2wtov")])
 nodes = Dictionary[StringName, ExtResource("2_node")]({
 &"AccessPoint": SubResource("SubResource_ap"),
 &"AreaDetect": SubResource("SubResource_area"),
@@ -375,9 +369,8 @@ nodes = Dictionary[StringName, ExtResource("2_node")]({
 &"SetFleeColor": SubResource("SubResource_set_flee_col"),
 &"SetIdleColor": SubResource("SubResource_idle"),
 &"_GraphNode_14138": SubResource("Resource_rh8ck"),
-&"_GraphNode_20094": SubResource("Resource_df827"),
-&"_GraphNode_27172": SubResource("Resource_2wtov"),
-&"_GraphNode_78665": SubResource("Resource_4q0ch")
+&"_GraphNode_46847": SubResource("Resource_4q0ch"),
+&"_GraphNode_60009": SubResource("Resource_df827")
 })
 connections = Array[Dictionary]([{
 "from_node": &"AccessPoint",
@@ -422,12 +415,6 @@ connections = Array[Dictionary]([{
 "to_node": &"SetChaserColor",
 "to_port": 0
 }, {
-"from_node": &"SetChaserColor",
-"from_port": 0,
-"keep_alive": false,
-"to_node": &"SetChaserBB",
-"to_port": 0
-}, {
 "from_node": &"_GraphNode_14138",
 "from_port": 1,
 "keep_alive": false,
@@ -440,12 +427,6 @@ connections = Array[Dictionary]([{
 "to_node": &"SetFleeColor",
 "to_port": 0
 }, {
-"from_node": &"SetFleeColor",
-"from_port": 0,
-"keep_alive": false,
-"to_node": &"SetFleeBB",
-"to_port": 0
-}, {
 "from_node": &"FleeDistCheck",
 "from_port": 1,
 "keep_alive": false,
@@ -458,28 +439,28 @@ connections = Array[Dictionary]([{
 "to_node": &"RunFleeAction",
 "to_port": 0
 }, {
-"from_node": &"_GraphNode_20094",
+"from_node": &"SetFleeColor",
 "from_port": 0,
 "keep_alive": false,
-"to_node": &"_GraphNode_27172",
+"to_node": &"_GraphNode_46847",
 "to_port": 0
 }, {
-"from_node": &"_GraphNode_27172",
+"from_node": &"_GraphNode_46847",
 "from_port": 0,
 "keep_alive": false,
-"to_node": &"_GraphNode_78665",
+"to_node": &"SetFleeBB",
 "to_port": 0
 }, {
-"from_node": &"SetFleeBB",
+"from_node": &"SetChaserColor",
 "from_port": 0,
 "keep_alive": false,
-"to_node": &"_GraphNode_20094",
+"to_node": &"_GraphNode_60009",
 "to_port": 0
 }, {
-"from_node": &"SetChaserBB",
+"from_node": &"_GraphNode_60009",
 "from_port": 0,
 "keep_alive": false,
-"to_node": &"_GraphNode_20094",
+"to_node": &"SetChaserBB",
 "to_port": 0
 }])
 _agent_ref = Object(WeakRef,"script":null)

@@ -8,6 +8,7 @@ signal value_changed(new_value: Variant)
 @export var name: StringName = &"":
 	set(v):
 		name = v
+		resource_name = String(v)
 		name_changed.emit(name)
 @export var export_variable : bool = false
 

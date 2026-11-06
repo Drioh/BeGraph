@@ -15,3 +15,4 @@ func _ready() -> void:
 
 	behavior_agent.set_blackboard_property(&"Self", ambient_actor.get_path())
 	behavior_agent.set_blackboard_property(&"StatusLabel", status_label.get_path())
+	behavior_agent.set_blackboard_property(&"animating",true)

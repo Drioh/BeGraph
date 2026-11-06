@@ -5,11 +5,12 @@
 [ext_resource type="Script" uid="uid://clgn3v8hpy77y" path="res://addons/BeGraph/DEMO/gym_2d/common/actor_2d.gd" id="3_yllxo"]
 [ext_resource type="Script" uid="uid://cj0fv54i6ere" path="res://addons/BeGraph/Classes/misc/BehaviorAgent.gd" id="4_agent"]
 [ext_resource type="Resource" uid="uid://bkuye57hjau7c" path="res://addons/BeGraph/DEMO/gym_2d/stations/station_3_tag/tag_graph.tres" id="5_tag_graph"]
+[ext_resource type="PackedScene" uid="uid://cmrfvdmqgb40y" path="res://addons/BeGraph/DEMO/gym_2d/common/player.tscn" id="6_747d8"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_zone"]
 size = Vector2(560, 320)
 
-[sub_resource type="NavigationPolygon" id="NavigationPolygon_m4xus"]
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_yllxo"]
 vertices = PackedVector2Array(162, 124, 260, 165, -260, 165, 78, 124, -78, 124, -162, 124, 162, 14, 162, -94, 260, -135, -260, -135, 78, -94, 50, 49, 50, -19, 78, 16, -78, 14, -78, -94, -50, -19, -50, 49, -162, 16, -78, 16, -162, 14, -162, -94, 162, 16, 78, 14)
 polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3), PackedInt32Array(4, 3, 2), PackedInt32Array(5, 4, 2), PackedInt32Array(6, 7, 8, 1), PackedInt32Array(9, 8, 7, 10), PackedInt32Array(11, 12, 13, 3), PackedInt32Array(14, 15, 16, 17), PackedInt32Array(5, 2, 9, 18), PackedInt32Array(11, 3, 4, 17), PackedInt32Array(17, 4, 19), PackedInt32Array(14, 17, 19), PackedInt32Array(20, 14, 19, 18), PackedInt32Array(20, 18, 9), PackedInt32Array(21, 20, 9), PackedInt32Array(12, 16, 15, 10), PackedInt32Array(1, 0, 22), PackedInt32Array(6, 1, 22), PackedInt32Array(23, 6, 22, 13), PackedInt32Array(23, 13, 12), PackedInt32Array(10, 23, 12), PackedInt32Array(9, 10, 15), PackedInt32Array(21, 9, 15)])
 outlines = Array[PackedVector2Array]([PackedVector2Array(-260, -135, 260, -135, 260, 165, -260, 165), PackedVector2Array(-162, -94, -78, -94, -78, 14, -162, 14), PackedVector2Array(78, -94, 162, -94, 162, 14, 78, 14), PackedVector2Array(-162, 16, -78, 16, -78, 124, -162, 124), PackedVector2Array(78, 16, 162, 16, 162, 124, 78, 124), PackedVector2Array(-50, -19, 50, -19, 50, 49, -50, 49)])
@@ -55,7 +56,7 @@ collision_layer = 0
 shape = SubResource("RectangleShape2D_zone")
 
 [node name="NavigationRegion2D" type="NavigationRegion2D" parent="." unique_id=2132208720]
-navigation_polygon = SubResource("NavigationPolygon_m4xus")
+navigation_polygon = SubResource("NavigationPolygon_yllxo")
 
 [node name="EscapeTarget" type="Node2D" parent="." unique_id=2085519575]
 position = Vector2(-210, -100)
@@ -138,7 +139,7 @@ color = Color(0.3, 0.35, 0.45, 1)
 [node name="TagActor" type="CharacterBody2D" parent="." unique_id=323192059 node_paths=PackedStringArray("behavior_agent")]
 position = Vector2(0, 80)
 collision_layer = 4
-collision_mask = 2
+collision_mask = 3
 script = ExtResource("3_yllxo")
 behavior_agent = NodePath("BehaviorAgent")
 
@@ -156,6 +157,7 @@ script = ExtResource("4_agent")
 bb_props = Dictionary[StringName, Variant]({
 &"overridable_blackboard_properties/CollisionShape": NodePath("../../ArenaZone/CollisionShape2D"),
 &"overridable_blackboard_properties/EscapeTarget": NodePath("../../EscapeTarget"),
+&"overridable_blackboard_properties/StatusLabel": NodePath(""),
 &"overridable_blackboard_properties/is_fleeing": false,
 &"overridable_blackboard_properties/player": NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym2D/Player")
 })
@@ -165,6 +167,7 @@ overridable_blackboard_properties/is_fleeing = false
 overridable_blackboard_properties/player = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym2D/Player")
 overridable_blackboard_properties/CollisionShape = NodePath("../../ArenaZone/CollisionShape2D")
 overridable_blackboard_properties/EscapeTarget = NodePath("../../EscapeTarget")
+overridable_blackboard_properties/StatusLabel = NodePath("")
 
 [node name="StatusLabel" type="Label" parent="TagActor" unique_id=241065516]
 offset_left = -60.0
@@ -174,3 +177,7 @@ offset_bottom = -16.0
 theme_override_font_sizes/font_size = 10
 text = "CHASER"
 horizontal_alignment = 1
+
+[node name="Player" parent="." unique_id=2087504719 instance=ExtResource("6_747d8")]
+position = Vector2(-851, 301)
+collision_mask = 6

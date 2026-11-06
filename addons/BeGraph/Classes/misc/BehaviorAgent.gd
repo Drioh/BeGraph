@@ -104,7 +104,7 @@ func _ready() -> void:
 		push_error("Starting Node not set for Behavior Agent %s" % self)
 		process_mode = Node.PROCESS_MODE_DISABLED
 		return
-		
+
 	add_to_group(DEBUG_GROUP)
 	for p in bb_props:
 		var v = get(p)

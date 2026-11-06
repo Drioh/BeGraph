@@ -62,6 +62,7 @@ func load_graph(object: BehaviorGraph):
 		EditorInterface.edit_resource(null)
 		return
 	refresh_label()
+	EditorInterface.edit_resource(loaded_graph)
 	
 	graph_container.visible = true
 	intro_container.visible = false

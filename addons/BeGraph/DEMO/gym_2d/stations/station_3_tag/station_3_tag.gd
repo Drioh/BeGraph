@@ -9,7 +9,6 @@ extends Node2D
 @onready var collision_shape: CollisionShape2D = get_node_or_null("ArenaZone/CollisionShape2D")
 @onready var arena_zone: Area2D = $ArenaZone
 
-
 var player: Node2D = null
 
 @export var behavior_agent : BehaviorAgent
@@ -52,6 +51,9 @@ func _push_blackboard() -> void:
 		behavior_agent.set_blackboard_property(&"TagActor", actor.get_path())
 	if navigation_agent_2d:
 		behavior_agent.set_blackboard_property(&"NavigationAgent", navigation_agent_2d.get_path())
+	if status_lbl:
+		behavior_agent.set_blackboard_property(&"StatusLabel", status_lbl.get_path())
+		
 
 func _build_navigation_mesh() -> void:
 	var nav_poly := NavigationPolygon.new()
