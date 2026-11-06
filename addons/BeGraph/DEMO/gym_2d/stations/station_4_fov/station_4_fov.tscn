@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://p6173yl3kri7"]
 
+[ext_resource type="Script" uid="uid://ckx6exyc7501d" path="res://addons/BeGraph/DEMO/gym_2d/stations/station_4_fov/station_4_fov.gd" id="1_5irce"]
 [ext_resource type="PackedScene" uid="uid://c2qpefnnwufdt" path="res://addons/BeGraph/DEMO/gym_2d/common/station_billboard.tscn" id="1_billboard"]
 [ext_resource type="Script" uid="uid://iownh40pwdqt" path="res://addons/BeGraph/DEMO/gym_2d/stations/station_4_fov/fov_actor.gd" id="2_fov_actor"]
 [ext_resource type="Script" uid="uid://cj0fv54i6ere" path="res://addons/BeGraph/Classes/misc/BehaviorAgent.gd" id="3_agent"]
@@ -9,6 +10,7 @@
 radius = 18.0
 
 [node name="Station4_FOV" type="Node2D" unique_id=1142710202]
+script = ExtResource("1_5irce")
 
 [node name="StationBillboard" parent="." unique_id=86876338 instance=ExtResource("1_billboard")]
 position = Vector2(0, -220)
@@ -34,9 +36,8 @@ behavior_agent = NodePath("BehaviorAgent")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="FOVActor" unique_id=483039531]
 shape = SubResource("CircleShape2D_f")
 
-[node name="BehaviorAgent" type="Node" parent="FOVActor" unique_id=1266420050 node_paths=PackedStringArray("actor")]
+[node name="BehaviorAgent" type="Node" parent="FOVActor" unique_id=1266420050]
 script = ExtResource("3_agent")
-actor = NodePath("..")
 behavior_graph = ExtResource("4_fov_graph")
 starting_point = 0
 

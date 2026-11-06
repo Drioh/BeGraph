@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://6sqknnriouhm"]
 
+[ext_resource type="Script" uid="uid://j0148qjyaot7" path="res://addons/BeGraph/DEMO/gym_2d/stations/station_2_sentry/station_2_sentry.gd" id="1_58k8u"]
 [ext_resource type="PackedScene" uid="uid://c2qpefnnwufdt" path="res://addons/BeGraph/DEMO/gym_2d/common/station_billboard.tscn" id="1_billboard"]
 [ext_resource type="Script" uid="uid://clgn3v8hpy77y" path="res://addons/BeGraph/DEMO/gym_2d/common/actor_2d.gd" id="2_actor"]
 [ext_resource type="Script" uid="uid://cj0fv54i6ere" path="res://addons/BeGraph/Classes/misc/BehaviorAgent.gd" id="3_agent"]
@@ -16,6 +17,7 @@ size = Vector2(28, 140)
 size = Vector2(160, 28)
 
 [node name="Station2_Sentry" type="Node2D" unique_id=2020230602]
+script = ExtResource("1_58k8u")
 
 [node name="StationBillboard" parent="." unique_id=718683900 instance=ExtResource("1_billboard")]
 position = Vector2(0, -220)

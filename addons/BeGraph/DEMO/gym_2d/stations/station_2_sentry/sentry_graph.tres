@@ -11,6 +11,36 @@
 [ext_resource type="Script" uid="uid://b0sc0g6pmwp4q" path="res://addons/BeGraph/Classes/Nodes/Actions/Time/Wait.gd" id="10_wait"]
 [ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="11_graph"]
 
+[sub_resource type="Resource" id="Resource_qxy3u"]
+script = ExtResource("1_bb")
+name = &"Self"
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym2D/Stations/Station2_Sentry/SentryActor")
+metadata/_custom_type_script = "uid://da0t4052e3fsp"
+
+[sub_resource type="Resource" id="Resource_khdqs"]
+script = ExtResource("1_bb")
+name = &"Player"
+value = NodePath("")
+metadata/_custom_type_script = "uid://da0t4052e3fsp"
+
+[sub_resource type="Resource" id="Resource_bsyw5"]
+script = ExtResource("1_bb")
+name = &"RayCast"
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym2D/Stations/Station2_Sentry/SentryActor/RayCast2D")
+metadata/_custom_type_script = "uid://da0t4052e3fsp"
+
+[sub_resource type="Resource" id="Resource_07xm7"]
+script = ExtResource("1_bb")
+name = &"AudioPlayer"
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym2D/Stations/Station2_Sentry/SentryActor/AudioStreamPlayer")
+metadata/_custom_type_script = "uid://da0t4052e3fsp"
+
+[sub_resource type="Resource" id="Resource_8v6nm"]
+script = ExtResource("1_bb")
+name = &"ProjectilesParent"
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym2D/Stations/Station2_Sentry/ProjectilesContainer")
+metadata/_custom_type_script = "uid://da0t4052e3fsp"
+
 [sub_resource type="Resource" id="SubResource_ap"]
 resource_name = "AccessPoint"
 script = ExtResource("3_ap")
@@ -47,6 +77,10 @@ input = true
 position_in_graph = Vector2(-420, -180)
 _graph_ref = Object(WeakRef,"script":null)
 
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node_a": &"Self",
+&"node_b": &"Player"
+})
 breakpointable = true
 mutable = true
 
@@ -80,6 +114,11 @@ position_in_graph = Vector2(2000, 200)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"FireCooldown"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"origin": &"Self",
+&"parent": &"ProjectilesParent",
+&"target": &"Player"
+})
 breakpointable = true
 mutable = true
 
@@ -101,6 +140,10 @@ input = true
 position_in_graph = Vector2(240, 100)
 _graph_ref = Object(WeakRef,"script":null)
 
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"raycast": &"RayCast",
+&"target": &"Player"
+})
 breakpointable = true
 mutable = true
 
@@ -117,6 +160,9 @@ position_in_graph = Vector2(1460, 240)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"FireProjectile"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"player": &"AudioPlayer"
+})
 breakpointable = true
 mutable = true
 
@@ -133,6 +179,9 @@ output = true
 position_in_graph = Vector2(880, -60)
 _graph_ref = Object(WeakRef,"script":null)
 
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"Self"
+})
 breakpointable = true
 mutable = true
 
@@ -150,11 +199,15 @@ position_in_graph = Vector2(880, 180)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"PlayAlertSound"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"Self"
+})
 breakpointable = true
 mutable = true
 
 [resource]
 script = ExtResource("11_graph")
+blackboard = Array[ExtResource("1_bb")]([SubResource("Resource_qxy3u"), SubResource("Resource_khdqs"), SubResource("Resource_bsyw5"), SubResource("Resource_07xm7"), SubResource("Resource_8v6nm")])
 nodes = Dictionary[StringName, ExtResource("2_node")]({
 &"AccessPoint": SubResource("SubResource_ap"),
 &"DistanceCheck": SubResource("SubResource_dist"),

@@ -3,12 +3,23 @@
 [ext_resource type="Script" uid="uid://da0t4052e3fsp" path="res://addons/BeGraph/Classes/misc/BlackboardVariable.gd" id="1_bb"]
 [ext_resource type="Script" uid="uid://ca0cevcqjpnsq" path="res://addons/BeGraph/Classes/misc/BehaviorNode.gd" id="2_node"]
 [ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="3_ap"]
-[ext_resource type="Script" uid="uid://udb6cj1a818n" path="res://addons/BeGraph/Classes/Nodes/Flow/Misc/Repeat.gd" id="4_rep"]
 [ext_resource type="Script" uid="uid://buoorgg5w3x50" path="res://addons/BeGraph/Classes/Nodes/Flow/Classic/Random Selector.gd" id="5_rsel"]
 [ext_resource type="Script" uid="uid://bbgig7yaxqlb0" path="res://addons/BeGraph/Classes/Nodes/Actions/Misc/Tween Property.gd" id="7_tween"]
 [ext_resource type="Script" uid="uid://dc3xdjgtnutmf" path="res://addons/BeGraph/Classes/Nodes/Actions/Misc/Set Text Property.gd" id="8_txt"]
 [ext_resource type="Script" uid="uid://b0sc0g6pmwp4q" path="res://addons/BeGraph/Classes/Nodes/Actions/Time/Wait.gd" id="9_wait"]
 [ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="10_graph"]
+
+[sub_resource type="Resource" id="Resource_b2fp8"]
+script = ExtResource("1_bb")
+name = &"Self"
+value = NodePath("")
+metadata/_custom_type_script = "uid://da0t4052e3fsp"
+
+[sub_resource type="Resource" id="Resource_esob3"]
+script = ExtResource("1_bb")
+name = &"StatusLabel"
+value = NodePath("")
+metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="SubResource_ap"]
 resource_name = "AccessPoint"
@@ -16,23 +27,8 @@ script = ExtResource("3_ap")
 label = "Start"
 node_category = "access_point_node"
 output = true
-position_in_graph = Vector2(-840, -160)
+position_in_graph = Vector2(-360, -80)
 is_starting_node = true
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"InfiniteLoop"])
-breakpointable = true
-mutable = true
-
-[sub_resource type="Resource" id="SubResource_rep"]
-resource_name = "InfiniteLoop"
-script = ExtResource("4_rep")
-times = 0
-instruction = "Repeat {times} times"
-node_category = "control_flow_node"
-input = true
-output = true
-position_in_graph = Vector2(-420, -160)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"RandomPicker"])
@@ -51,9 +47,16 @@ allows_multiple_outputs = true
 position_in_graph = Vector2(240, -100)
 _graph_ref = Object(WeakRef,"script":null)
 
-_next_ref = Array[StringName]([&"TxtSquish", &"TxtColor", &"TxtRest"])
+_next_ref = Array[StringName]([&"TxtColor", &"TxtRest", &"TxtSquish"])
 breakpointable = true
 mutable = true
+decorator = {
+"between_delay": 0.0,
+"count": 0.0,
+"timeout": 0.0,
+"type": "repeater",
+"variant": 0
+}
 
 [sub_resource type="Resource" id="SubResource_tw_col1"]
 resource_name = "TweenCol1"
@@ -61,7 +64,6 @@ script = ExtResource("7_tween")
 node = NodePath(".")
 property = "modulate"
 target_value = Color(1, 0.3, 0.8, 1)
-duration = 0.3
 instruction = "Tween {node}'s {property} to {target_value} over {duration}s"
 node_category = "action_node"
 input = true
@@ -70,6 +72,9 @@ position_in_graph = Vector2(1500, -180)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"TweenCol2"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"Self"
+})
 breakpointable = true
 mutable = true
 
@@ -79,7 +84,6 @@ script = ExtResource("7_tween")
 node = NodePath(".")
 property = "modulate"
 target_value = Color(0.3, 0.9, 1, 1)
-duration = 0.3
 instruction = "Tween {node}'s {property} to {target_value} over {duration}s"
 node_category = "action_node"
 input = true
@@ -88,6 +92,9 @@ position_in_graph = Vector2(2100, -180)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"TweenCol3"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"Self"
+})
 breakpointable = true
 mutable = true
 
@@ -97,7 +104,6 @@ script = ExtResource("7_tween")
 node = NodePath(".")
 property = "modulate"
 target_value = Color(1, 1, 1, 1)
-duration = 0.3
 instruction = "Tween {node}'s {property} to {target_value} over {duration}s"
 node_category = "action_node"
 input = true
@@ -106,6 +112,9 @@ position_in_graph = Vector2(2660, -180)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"WaitCol"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"Self"
+})
 breakpointable = true
 mutable = true
 
@@ -115,7 +124,6 @@ script = ExtResource("7_tween")
 node = NodePath(".")
 property = "scale"
 target_value = Vector2(1.35, 0.7)
-duration = 0.2
 instruction = "Tween {node}'s {property} to {target_value} over {duration}s"
 node_category = "action_node"
 input = true
@@ -124,6 +132,9 @@ position_in_graph = Vector2(2020, -780)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"TweenSquish2"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"Self"
+})
 breakpointable = true
 mutable = true
 
@@ -133,7 +144,6 @@ script = ExtResource("7_tween")
 node = NodePath(".")
 property = "scale"
 target_value = Vector2(0.75, 1.35)
-duration = 0.2
 instruction = "Tween {node}'s {property} to {target_value} over {duration}s"
 node_category = "action_node"
 input = true
@@ -142,6 +152,9 @@ position_in_graph = Vector2(2680, -740)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"TweenSquish3"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"Self"
+})
 breakpointable = true
 mutable = true
 
@@ -151,7 +164,6 @@ script = ExtResource("7_tween")
 node = NodePath(".")
 property = "scale"
 target_value = Vector2(1, 1)
-duration = 0.2
 instruction = "Tween {node}'s {property} to {target_value} over {duration}s"
 node_category = "action_node"
 input = true
@@ -160,6 +172,9 @@ position_in_graph = Vector2(3300, -740)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"WaitSquish"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"Self"
+})
 breakpointable = true
 mutable = true
 
@@ -176,6 +191,9 @@ position_in_graph = Vector2(1000, -160)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"TweenCol1"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"StatusLabel"
+})
 breakpointable = true
 mutable = true
 
@@ -192,6 +210,9 @@ position_in_graph = Vector2(840, 180)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"WaitRest"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"StatusLabel"
+})
 breakpointable = true
 mutable = true
 
@@ -208,6 +229,9 @@ position_in_graph = Vector2(1400, -740)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"TweenSquish1"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"StatusLabel"
+})
 breakpointable = true
 mutable = true
 
@@ -255,9 +279,9 @@ mutable = true
 
 [resource]
 script = ExtResource("10_graph")
+blackboard = Array[ExtResource("1_bb")]([SubResource("Resource_b2fp8"), SubResource("Resource_esob3")])
 nodes = Dictionary[StringName, ExtResource("2_node")]({
 &"AccessPoint": SubResource("SubResource_ap"),
-&"InfiniteLoop": SubResource("SubResource_rep"),
 &"RandomPicker": SubResource("SubResource_rsel"),
 &"TweenCol1": SubResource("SubResource_tw_col1"),
 &"TweenCol2": SubResource("SubResource_tw_col2"),
@@ -295,12 +319,6 @@ connections = Array[Dictionary]([{
 "from_port": 0,
 "keep_alive": false,
 "to_node": &"WaitSquish",
-"to_port": 0
-}, {
-"from_node": &"RandomPicker",
-"from_port": 0,
-"keep_alive": false,
-"to_node": &"TxtSquish",
 "to_port": 0
 }, {
 "from_node": &"TxtColor",
@@ -345,13 +363,13 @@ connections = Array[Dictionary]([{
 "to_node": &"WaitRest",
 "to_port": 0
 }, {
-"from_node": &"AccessPoint",
+"from_node": &"RandomPicker",
 "from_port": 0,
 "keep_alive": false,
-"to_node": &"InfiniteLoop",
+"to_node": &"TxtSquish",
 "to_port": 0
 }, {
-"from_node": &"InfiniteLoop",
+"from_node": &"AccessPoint",
 "from_port": 0,
 "keep_alive": false,
 "to_node": &"RandomPicker",
