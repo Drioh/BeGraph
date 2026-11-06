@@ -110,6 +110,8 @@ var last_status : int = -1
 var last_tick_time : int = -1
 ## Index of the condition branch chosen on this node's last tick_condition() call, or -1 if never ticked via conditions. Used by the debugger to highlight only the traversed slot.
 var last_ticked_condition : int = -1
+## Weak reference to a [BehaviorFrame] in sequence mode for which this node is the entry point, set at runtime by [method BehaviorFrame.setup_sequence].
+var _sequence_frame_entry : WeakRef = null
 
 #region Decorator
 
@@ -505,6 +507,11 @@ func _manual_successor_propagation() -> bool:
 ## Public entry point used to actually run this node: calls the concrete [method tick] implementation, then records [member last_status]/[member last_tick_time] and emits [signal ticked].[br]
 ## [method tick_next] and [method tick_condition] call this (instead of [method tick] directly) to reach a successor, and [BehaviorAgent] calls this on the graph's starting node - so every tick anywhere in the graph passes through here exactly once. This is what lets external tools (like the live graph debugger) track each node's status without any individual [BehaviorNode] subclass having to report it itself.
 func do_tick(delta: float) -> Status:
+	if _sequence_frame_entry != null:
+		var seq_frame := _sequence_frame_entry.get_ref() as BehaviorFrame
+		if seq_frame != null and seq_frame.is_sequence and not seq_frame._is_ticking_sequence:
+			return seq_frame.tick_sequence(delta)
+
 	if breakpoint_enabled:
 		breakpoint
 	

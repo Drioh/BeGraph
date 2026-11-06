@@ -47,7 +47,6 @@ offset_right = 460.0
 offset_bottom = 90.0
 size_flags_horizontal = 4
 size_flags_vertical = 4
-mouse_filter = 2
 theme_override_icons/port = ExtResource("1_bbj7d")
 theme_override_styles/panel = SubResource("StyleBoxFlat_kmv4x")
 theme_override_styles/panel_selected = SubResource("StyleBoxFlat_y0ctl")
@@ -87,12 +86,14 @@ script = ExtResource("1_y0ctl")
 unique_name_in_owner = true
 custom_minimum_size = Vector2(420, 0)
 layout_mode = 2
+mouse_filter = 1
 
 [node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=338220705]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
+mouse_filter = 1
 theme_override_constants/separation = 12
 
 [node name="HSeparator" type="HSeparator" parent="HBoxContainer" unique_id=664201502]

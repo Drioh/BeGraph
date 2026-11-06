@@ -28,7 +28,7 @@ metadata/_custom_type_script = "uid://da0t4052e3fsp"
 resource_name = "animating"
 script = ExtResource("1_bb")
 name = &"animating"
-value = false
+value = true
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="SubResource_ap"]
@@ -287,37 +287,6 @@ _next_ref = Array[StringName]([&"_GraphNode_83512"])
 breakpointable = true
 mutable = true
 
-[sub_resource type="Resource" id="Resource_5l6d1"]
-resource_name = "_GraphNode_28804"
-script = ExtResource("8_b2fp8")
-variable_name = &"animating"
-value = false
-instruction = "Set BB var {variable_name} = {value}"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(760, -700)
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"TxtSquish"])
-breakpointable = true
-mutable = true
-
-[sub_resource type="Resource" id="Resource_g8vli"]
-resource_name = "_GraphNode_83512"
-script = ExtResource("8_b2fp8")
-variable_name = &"animating"
-value = true
-instruction = "Set BB var {variable_name} = {value}"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(4450.571, -660.3245)
-_graph_ref = Object(WeakRef,"script":null)
-
-breakpointable = true
-mutable = true
-
 [sub_resource type="Resource" id="Resource_c8uh7"]
 resource_name = "_GraphNode_14393"
 script = ExtResource("8_b2fp8")
@@ -349,6 +318,52 @@ _graph_ref = Object(WeakRef,"script":null)
 breakpointable = true
 mutable = true
 
+[sub_resource type="Resource" id="Resource_1u0pp"]
+resource_name = "_GraphNode_23410"
+script = ExtResource("8_b2fp8")
+variable_name = &"animating"
+value = true
+instruction = "Set BB var {variable_name} = {value}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(2251.256, 387.01715)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="Resource_5l6d1"]
+resource_name = "_GraphNode_28804"
+script = ExtResource("8_b2fp8")
+variable_name = &"animating"
+value = false
+instruction = "Set BB var {variable_name} = {value}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(760, -700)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"TxtSquish"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="Resource_g8vli"]
+resource_name = "_GraphNode_83512"
+script = ExtResource("8_b2fp8")
+variable_name = &"animating"
+value = true
+instruction = "Set BB var {variable_name} = {value}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(4450.571, -660.3245)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
 [sub_resource type="Resource" id="Resource_v82k5"]
 resource_name = "_GraphNode_83950"
 script = ExtResource("8_b2fp8")
@@ -362,21 +377,6 @@ position_in_graph = Vector2(375.74323, 392.87357)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"TxtRest"])
-breakpointable = true
-mutable = true
-
-[sub_resource type="Resource" id="Resource_1u0pp"]
-resource_name = "_GraphNode_23410"
-script = ExtResource("8_b2fp8")
-variable_name = &"animating"
-value = true
-instruction = "Set BB var {variable_name} = {value}"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(2251.256, 387.01715)
-_graph_ref = Object(WeakRef,"script":null)
-
 breakpointable = true
 mutable = true
 

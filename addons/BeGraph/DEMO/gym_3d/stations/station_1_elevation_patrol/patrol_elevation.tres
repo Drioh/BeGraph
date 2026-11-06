@@ -10,6 +10,30 @@
 [ext_resource type="Script" uid="uid://b0sc0g6pmwp4q" path="res://addons/BeGraph/Classes/Nodes/Actions/Time/Wait.gd" id="8_wait"]
 [ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="9_graph"]
 
+[sub_resource type="Resource" id="Resource_bb_self"]
+resource_name = "Self"
+script = ExtResource("1_bb")
+name = &"Self"
+export_variable = true
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Stations/Station1_ElevationPatrol/ClimberActor")
+metadata/_custom_type_script = "uid://da0t4052e3fsp"
+
+[sub_resource type="Resource" id="Resource_bb_waypoints"]
+resource_name = "Waypoints"
+script = ExtResource("1_bb")
+name = &"Waypoints"
+export_variable = true
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Stations/Station1_ElevationPatrol/Waypoints")
+metadata/_custom_type_script = "uid://da0t4052e3fsp"
+
+[sub_resource type="Resource" id="Resource_bb_particles"]
+resource_name = "ParticleEmitter"
+script = ExtResource("1_bb")
+name = &"ParticleEmitter"
+export_variable = true
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Stations/Station1_ElevationPatrol/ClimberActor/CPUParticles3D")
+metadata/_custom_type_script = "uid://da0t4052e3fsp"
+
 [sub_resource type="Resource" id="SubResource_ap"]
 resource_name = "AccessPoint"
 script = ExtResource("3_ap")
@@ -28,15 +52,18 @@ mutable = true
 resource_name = "PatrolClimb"
 script = ExtResource("5_patrol")
 node = NodePath(".")
-mode = 2
 speed = 4.0
-instruction = "Patrol {node} ({mode}, speed {speed})"
+instruction = "Patrol {node} between {waypoints}'s children ({mode}, speed {speed})"
 node_category = "action_node"
 input = true
 output = true
 position_in_graph = Vector2(200, -100)
 _graph_ref = Object(WeakRef,"script":null)
 
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"Self",
+&"waypoints": &"Waypoints"
+})
 breakpointable = true
 mutable = true
 
@@ -51,6 +78,9 @@ output = true
 position_in_graph = Vector2(200, 100)
 _graph_ref = Object(WeakRef,"script":null)
 
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"ParticleEmitter"
+})
 breakpointable = true
 mutable = true
 
@@ -83,6 +113,9 @@ output = true
 position_in_graph = Vector2(200, 0)
 _graph_ref = Object(WeakRef,"script":null)
 
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"Self"
+})
 breakpointable = true
 mutable = true
 
@@ -102,6 +135,7 @@ mutable = true
 
 [resource]
 script = ExtResource("9_graph")
+blackboard = Array[ExtResource("1_bb")]([SubResource("Resource_bb_self"), SubResource("Resource_bb_waypoints"), SubResource("Resource_bb_particles")])
 nodes = Dictionary[StringName, ExtResource("2_node")]({
 &"AccessPoint": SubResource("SubResource_ap"),
 &"PatrolClimb": SubResource("SubResource_patrol"),

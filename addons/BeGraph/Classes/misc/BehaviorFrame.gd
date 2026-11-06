@@ -1,11 +1,13 @@
 @tool
-## Persistent description of a frame ([GraphFrame]) inside a [BehaviorGraph]: it only groups other nodes visually and is never ticked.
+## Persistent description of a frame ([GraphFrame]) inside a [BehaviorGraph].
+## When [member is_sequence] is [code]false[/code], it only groups other nodes visually and is never ticked.
+## When [member is_sequence] is [code]true[/code], it executes its attached nodes in sequence order (with optional [member memory]), returning the sequence's overall [enum BehaviorNode.Status] to the caller of its entry node.
 class_name BehaviorFrame
 extends BehaviorNode
 
 const DISPLAY_NAME : String = "Frame"
 const DISPLAY_ICON : String = "res://addons/BeGraph/Icons/comment_node_icon.svg"
-const DISPLAY_INFO : String = "Visual-only frame that groups other nodes. Never ticked during execution."
+const DISPLAY_INFO : String = "Frame that groups other nodes visually, or executes them as a Sequence when Sequence mode is enabled."
 
 @export var frame_title : String = ""
 @export var tint_color : Color = Color(0.28, 0.4, 0.62, 0.7)
@@ -14,6 +16,142 @@ const DISPLAY_INFO : String = "Visual-only frame that groups other nodes. Never 
 @export var frame_size : Vector2 = Vector2(600, 400)
 ## Names of the nodes attached to this frame.
 @export var attached_nodes : Array[StringName] = []
+## If true, attached nodes inside this frame are executed sequentially like a Sequence node.
+@export var is_sequence : bool = false
+## When [member is_sequence] is true, remembers the index of the currently RUNNING node across ticks.
+@export var memory : bool = false
+
+var _sequence_nodes : Array[BehaviorNode] = []
+var _position : int = 0
+var _is_ticking_sequence : bool = false
+
+func setup_sequence(graph: BehaviorGraph) -> void:
+	_sequence_nodes.clear()
+	_position = 0
+	_is_ticking_sequence = false
+	if not is_sequence or graph == null or attached_nodes.is_empty():
+		return
+
+	var in_frame : Dictionary = {} # StringName -> BehaviorNode
+	for n_name in attached_nodes:
+		var bn : BehaviorNode = graph.nodes.get(n_name, null)
+		if bn != null and bn is not BehaviorFrame and bn.node_category != "access_point_node":
+			in_frame[n_name] = bn
+
+	if in_frame.is_empty():
+		return
+
+	var internal_next : Dictionary = {} # StringName -> Array[StringName]
+	var in_degree : Dictionary = {} # StringName -> int
+	var has_external_in : Dictionary = {} # StringName -> bool
+	for n_name in in_frame:
+		internal_next[n_name] = [] as Array[StringName]
+		in_degree[n_name] = 0
+		has_external_in[n_name] = false
+
+	for c in graph.connections:
+		var from_n := StringName(c["from_node"])
+		var to_n := StringName(c["to_node"])
+		if in_frame.has(from_n) and in_frame.has(to_n):
+			if not (internal_next[from_n] as Array).has(to_n):
+				(internal_next[from_n] as Array[StringName]).append(to_n)
+				in_degree[to_n] = int(in_degree[to_n]) + 1
+		elif not in_frame.has(from_n) and in_frame.has(to_n):
+			has_external_in[to_n] = true
+
+	var sort_spatial := func(a_name: StringName, b_name: StringName) -> bool:
+		var a : BehaviorNode = in_frame[a_name]
+		var b : BehaviorNode = in_frame[b_name]
+		if not is_equal_approx(a.position_in_graph.y, b.position_in_graph.y):
+			return a.position_in_graph.y < b.position_in_graph.y
+		return a.position_in_graph.x < b.position_in_graph.x
+
+	# Sort internal outgoing edges spatially for deterministic traversal
+	for n_name in internal_next:
+		(internal_next[n_name] as Array[StringName]).sort_custom(sort_spatial)
+
+	# Roots: nodes with no incoming internal edges, prioritizing those with an external incoming connection
+	var roots : Array[StringName] = []
+	for n_name in in_frame:
+		if int(in_degree[n_name]) == 0:
+			roots.append(n_name)
+	roots.sort_custom(func(a_name: StringName, b_name: StringName) -> bool:
+		var ext_a : bool = bool(has_external_in[a_name])
+		var ext_b : bool = bool(has_external_in[b_name])
+		if ext_a != ext_b:
+			return ext_a
+		return sort_spatial.call(a_name, b_name)
+	)
+
+	var visited : Dictionary = {}
+	var order : Array[StringName] = []
+	var visit_chain : Callable
+	visit_chain = func(curr: StringName) -> void:
+		if visited.has(curr):
+			return
+		visited[curr] = true
+		order.append(curr)
+		for nxt in internal_next[curr]:
+			visit_chain.call(nxt)
+
+	for r in roots:
+		visit_chain.call(r)
+
+	# Fallback for any remaining nodes (e.g. cycles) sorted spatially
+	var remaining : Array[StringName] = []
+	for n_name in in_frame:
+		if not visited.has(n_name):
+			remaining.append(n_name)
+	remaining.sort_custom(sort_spatial)
+	for rem in remaining:
+		visit_chain.call(rem)
+
+	for n_name in order:
+		var bn : BehaviorNode = in_frame[n_name]
+		_sequence_nodes.append(bn)
+		# Strip internal frame targets from _next_ref on linear nodes so BehaviorNode.do_tick()
+		# doesn't auto-fire the next node in the frame prematurely; the frame drives them in order.
+		if bn.output and not bn.allows_multiple_outputs and bn.conditions.is_empty():
+			for i in range(bn._next_ref.size() - 1, -1, -1):
+				if in_frame.has(bn._next_ref[i]):
+					bn._next_ref.remove_at(i)
+
+	if not _sequence_nodes.is_empty():
+		_sequence_nodes[0]._sequence_frame_entry = weakref(self)
+
+func tick_sequence(delta: float) -> Status:
+	var count : int = _sequence_nodes.size()
+	if count == 0:
+		return Status.SUCCESS
+
+	if not memory or _position >= count:
+		_position = 0
+
+	_is_ticking_sequence = true
+	var i : int = _position
+	while i < count:
+		var child : BehaviorNode = _sequence_nodes[i]
+		var status : Status = child.do_tick(delta)
+		match status:
+			Status.RUNNING:
+				_position = i if memory else 0
+				_is_ticking_sequence = false
+				last_status = Status.RUNNING
+				last_tick_time = Time.get_ticks_msec()
+				return Status.RUNNING
+			Status.FAILURE, Status.ERROR:
+				_position = 0
+				_is_ticking_sequence = false
+				last_status = status
+				last_tick_time = Time.get_ticks_msec()
+				return status
+		i += 1
+
+	_position = 0
+	_is_ticking_sequence = false
+	last_status = Status.SUCCESS
+	last_tick_time = Time.get_ticks_msec()
+	return Status.SUCCESS
 
 func set_instruction() -> String: return ""
 func tick(delta:float) -> Status: return Status.FAILURE

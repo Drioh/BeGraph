@@ -102,3 +102,9 @@ func set_node_color(category: String) -> void:
 func set_framed(framed: bool) -> void:
 	if free_from_frame_button:
 		free_from_frame_button.visible = framed
+
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+		accept_event()
+		if graph_edit:
+			graph_edit.show_node_context_menu(self)

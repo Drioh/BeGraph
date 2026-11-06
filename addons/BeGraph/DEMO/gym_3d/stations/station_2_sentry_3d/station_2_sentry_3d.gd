@@ -21,6 +21,8 @@ func _find_player() -> void:
 	if not player or not is_instance_valid(player):
 		player = get_tree().get_first_node_in_group("player") if get_tree() else null
 	if not player:
+		player = get_node_or_null("../../Player3D")
+	if not player:
 		player = get_node_or_null("../Player3D")
 
 func _push_blackboard() -> void:

@@ -31,6 +31,9 @@ var _node_popup: PopupMenu
 
 ## Node that gets update when connection_to_empty gets fired
 var _pending_connection_from: Dictionary = {}
+
+## Local graph coordinates where the last right-click popup was opened.
+var _last_popup_local_pos: Vector2 = Vector2.ZERO
 #endregion
 
 ## Emitted whenever the selection changes to a single [BehaviorGraphNodeBase]; carries its
@@ -61,6 +64,35 @@ func _ready() -> void:
 	if !Engine.is_editor_hint(): return
 		
 	undo_redo = EditorInterface.get_editor_undo_redo()
+
+func _shortcut_input(event: InputEvent) -> void:
+	if not is_visible_in_tree() or current_graph == null:
+		return
+	if not (event is InputEventKey and event.pressed and not event.echo):
+		return
+	var key_event := event as InputEventKey
+	if not key_event.ctrl_pressed or key_event.alt_pressed or key_event.shift_pressed:
+		return
+
+	var focus_owner := get_viewport().gui_get_focus_owner() if get_viewport() else null
+	if focus_owner is LineEdit or focus_owner is TextEdit:
+		return
+
+	var graph_focused : bool = (focus_owner != null and (focus_owner == self or is_ancestor_of(focus_owner)))
+	var mouse_inside : bool = Rect2(Vector2.ZERO, size).has_point(get_local_mouse_position())
+	if not graph_focused and not mouse_inside:
+		return
+
+	match key_event.keycode:
+		KEY_C:
+			copy_selected_nodes()
+			get_viewport().set_input_as_handled()
+		KEY_X:
+			_on_cut_nodes_request()
+			get_viewport().set_input_as_handled()
+		KEY_V:
+			_on_paste_nodes_request()
+			get_viewport().set_input_as_handled()
 #endregion
 
 
@@ -177,7 +209,7 @@ func prune_invalid_connections_from(graph_node: BehaviorGraphNodeBase) -> void:
 ## only once even if both endpoints are deleted together), and - for a frame - detaches whatever it
 ## still has attached before removing it. Undo restores everything: the resources themselves are
 ## kept alive by the arguments below (never duplicated), so identity/data is exact.
-func _on_delete_nodes_request(nodes: Array[StringName]) -> void:
+func _on_delete_nodes_request(nodes: Array[StringName], action_verb: String = "Delete") -> void:
 	var to_delete : Array[StringName] = []
 	for n in nodes:
 		var element := get_node_or_null(NodePath(n))
@@ -211,7 +243,7 @@ func _on_delete_nodes_request(nodes: Array[StringName]) -> void:
 
 	var frame_snapshots : Dictionary = {} # frame name -> snapshot dict, built below
 
-	var action_name : String = "Delete Node" if to_delete.size() == 1 else "Delete %d Nodes" % to_delete.size()
+	var action_name : String = "%s Node" % action_verb if to_delete.size() == 1 else "%s %d Nodes" % [action_verb, to_delete.size()]
 	undo_redo.create_action(action_name, UndoRedo.MERGE_DISABLE, current_graph)
 
 	undo_redo.add_do_method(self, &"_do_disconnect_many", touched_connections)
@@ -228,6 +260,8 @@ func _on_delete_nodes_request(nodes: Array[StringName]) -> void:
 				"position": frame.frame.position_in_graph,
 				"size": frame.frame.frame_size,
 				"autoshrink": frame.frame.autoshrink,
+				"is_sequence": frame.frame.is_sequence,
+				"memory": frame.frame.memory,
 				"attached": get_attached_nodes_of_frame(n).duplicate(),
 			}
 			frame_snapshots[n] = snapshot
@@ -280,6 +314,8 @@ func _do_recreate_frame(snapshot: Dictionary) -> void:
 	frame_resource.position_in_graph = snapshot["position"]
 	frame_resource.frame_size = snapshot["size"]
 	frame_resource.autoshrink = snapshot["autoshrink"]
+	frame_resource.is_sequence = snapshot.get("is_sequence", false)
+	frame_resource.memory = snapshot.get("memory", false)
 	frame_resource.attached_nodes = (snapshot["attached"] as Array).duplicate()
 	current_graph.add_node(frame_resource)
 	load_frame(frame_resource)
@@ -410,11 +446,57 @@ func _complete_pending_connection(new_node: BehaviorGraphNodeBase) -> void:
 	connect_nodes(from_node, from_port, new_node.name, 0)
 #endregion
 
-#region Node-creation popup
-## Builds and opens the node-creation popup at the current mouse position.
+#region Node-creation & Context popups
+## Builds and opens either the node context menu (when right-clicking a node) or the node-creation popup.
 func _on_popup_request(at_position: Vector2) -> void:
 	_pending_connection_from = {}
+	var clicked_node := _get_graph_node_at(at_position)
+	if clicked_node != null:
+		show_node_context_menu(clicked_node)
+		return
+	_last_popup_local_pos = at_position
 	_show_node_creation_popup()
+
+## Returns the topmost [BehaviorGraphNodeBase] whose bounding rect in local coordinates contains [param local_pos], or [code]null[/code].
+func _get_graph_node_at(local_pos: Vector2) -> BehaviorGraphNodeBase:
+	var children := get_children()
+	for i in range(children.size() - 1, -1, -1):
+		var graph_node := children[i] as BehaviorGraphNodeBase
+		if graph_node == null or not graph_node.visible:
+			continue
+		if Rect2(graph_node.position, graph_node.size).has_point(local_pos):
+			return graph_node
+	return null
+
+## Opens the context menu (Copy, Cut, Frame) for [param clicked_node] and the current selection without opening the graph creation popup.
+func show_node_context_menu(clicked_node: BehaviorGraphNodeBase) -> void:
+	if current_graph == null or clicked_node == null:
+		return
+	if not clicked_node.selected:
+		_deselect_all()
+		clicked_node.selected = true
+		selected_node_changed.emit(clicked_node.node)
+
+	var menu := PopupMenu.new()
+	menu.add_item("Copy", 0)
+	menu.add_item("Cut", 1)
+	menu.add_separator()
+	menu.add_item("Frame", 2)
+
+	menu.id_pressed.connect(func(id: int):
+		match id:
+			0: copy_selected_nodes()
+			1: _on_cut_nodes_request()
+			2: create_frame_from_selection()
+	)
+	menu.popup_hide.connect(func():
+		if is_instance_valid(menu):
+			menu.queue_free()
+	, CONNECT_ONE_SHOT | CONNECT_DEFERRED)
+
+	add_child(menu)
+	menu.position = DisplayServer.mouse_get_position()
+	menu.popup()
 
 func _show_node_creation_popup() -> void:
 	_node_popup = _build_node_popup(NODE_PATH)
@@ -425,6 +507,15 @@ func _show_node_creation_popup() -> void:
 		_node_popup.id_pressed.connect(_on_node_popup_id_pressed.bind(_node_popup))
 
 	_append_custom_node_paths(_node_popup)
+
+	if _pending_connection_from.is_empty():
+		_node_popup.add_separator()
+		var paste_id : int = _node_popup.item_count
+		_node_popup.add_item("Paste", paste_id)
+		_node_popup.set_item_metadata(paste_id, "__paste__")
+		var has_clipboard : bool = not _clipboard.get("nodes", []).is_empty()
+		_node_popup.set_item_disabled(paste_id, not has_clipboard)
+
 	add_child(_node_popup)
 
 	_node_popup.popup_hide.connect(_on_node_popup_closed.bind(_node_popup), CONNECT_ONE_SHOT | CONNECT_DEFERRED)
@@ -532,10 +623,14 @@ func _build_node_popup(path: String) -> PopupMenu:
 	popup.id_pressed.connect(_on_node_popup_id_pressed.bind(popup))
 	return popup
 
-## Creates a node from the script path stored in the selected item's metadata.
+## Creates a node from the script path stored in the selected item's metadata (or pastes when Paste is selected).
 func _on_node_popup_id_pressed(id: int, popup: PopupMenu) -> void:
 	var script_path = popup.get_item_metadata(id)
 	if script_path == null: return
+	if script_path == "__paste__":
+		var offset : Vector2 = (_last_popup_local_pos + scroll_offset) / zoom - _snapshot_origin(_clipboard)
+		_paste_snapshot(_clipboard, offset)
+		return
 	
 	_complete_pending_connection(add_node(script_path))
 
@@ -575,7 +670,7 @@ func _on_cut_nodes_request() -> void:
 		names.append(graph_node.name)
 	if names.is_empty(): return
 	
-	_on_delete_nodes_request(names)
+	_on_delete_nodes_request(names, "Cut")
 
 ## Pastes the clipboard with its top-left corner at the mouse (or slightly offset from the originals if the mouse is outside the graph).
 func _on_paste_nodes_request() -> void:

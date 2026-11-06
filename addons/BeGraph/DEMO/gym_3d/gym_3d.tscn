@@ -94,19 +94,19 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 [node name="Stations" type="Node3D" parent="." unique_id=1624096721]
 
 [node name="Station1_ElevationPatrol" parent="Stations" unique_id=834219193 instance=ExtResource("3_st1")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25, 0, -25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25, 0.01, -25)
 
 [node name="Station2_Sentry3D" parent="Stations" unique_id=1334582337 instance=ExtResource("4_st2")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 0, -25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 0.01, -25)
 
 [node name="Station3_PhysicsImpulse" parent="Stations" unique_id=392425981 instance=ExtResource("5_st3")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25, 0, 25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25, 0.01, 25)
 
 [node name="Station4_DroneOrbit" parent="Stations" unique_id=1319857719 instance=ExtResource("6_st4")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 0, 25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 0.01, 25)
 
 [node name="Station5_AcrobatJump" parent="Stations" unique_id=1931506948 instance=ExtResource("7_st5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 38)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 38)
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=1435057079]
 

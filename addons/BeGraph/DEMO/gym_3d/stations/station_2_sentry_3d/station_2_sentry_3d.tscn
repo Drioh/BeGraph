@@ -1,5 +1,6 @@
 [gd_scene format=3]
 
+[ext_resource type="Script" path="res://addons/BeGraph/DEMO/gym_3d/stations/station_2_sentry_3d/station_2_sentry_3d.gd" id="1_st2_gd"]
 [ext_resource type="PackedScene" path="res://addons/BeGraph/DEMO/gym_3d/common/station_billboard_3d.tscn" id="1_bb"]
 [ext_resource type="Script" uid="uid://cw01p0ypvtv25" path="res://addons/BeGraph/DEMO/gym_3d/common/actor_3d.gd" id="2_act"]
 [ext_resource type="Script" uid="uid://cj0fv54i6ere" path="res://addons/BeGraph/Classes/misc/BehaviorAgent.gd" id="3_agent"]
@@ -48,6 +49,7 @@ size = Vector3(4, 1.2, 1)
 size = Vector3(4, 1.2, 1)
 
 [node name="Station2_Sentry3D" type="Node3D"]
+script = ExtResource("1_st2_gd")
 
 [node name="StationBillboard3D" parent="." instance=ExtResource("1_bb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, -7.5)
@@ -96,10 +98,10 @@ spot_angle = 35.0
 stream = ExtResource("5_snd")
 volume_db = -6.0
 
-[node name="BehaviorAgent" type="Node" parent="SentryActor3D" node_paths=PackedStringArray("actor")]
+[node name="BehaviorAgent" type="Node" parent="SentryActor3D"]
 script = ExtResource("3_agent")
-actor = NodePath("..")
 behavior_graph = ExtResource("4_sentry_graph")
+starting_point = 0
 
 [node name="Projectiles3D" type="Node3D" parent="."]
 

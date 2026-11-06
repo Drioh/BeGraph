@@ -317,24 +317,6 @@ _blackboard_bindings = Dictionary[StringName, StringName]({
 breakpointable = true
 mutable = true
 
-[sub_resource type="Resource" id="Resource_df827"]
-resource_name = "_GraphNode_60009"
-script = ExtResource("10_lw1ib")
-value = "CHASER"
-instruction = "Set {node}'s {property}: {value} ({mode})"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(2400, 200)
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"SetChaserBB"])
-_blackboard_bindings = Dictionary[StringName, StringName]({
-&"node": &"StatusLabel"
-})
-breakpointable = true
-mutable = true
-
 [sub_resource type="Resource" id="Resource_4q0ch"]
 resource_name = "_GraphNode_46847"
 script = ExtResource("10_lw1ib")
@@ -347,6 +329,24 @@ position_in_graph = Vector2(2320, 920)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"SetFleeBB"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"StatusLabel"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="Resource_df827"]
+resource_name = "_GraphNode_60009"
+script = ExtResource("10_lw1ib")
+value = "CHASER"
+instruction = "Set {node}'s {property}: {value} ({mode})"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(2400, 200)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"SetChaserBB"])
 _blackboard_bindings = Dictionary[StringName, StringName]({
 &"node": &"StatusLabel"
 })

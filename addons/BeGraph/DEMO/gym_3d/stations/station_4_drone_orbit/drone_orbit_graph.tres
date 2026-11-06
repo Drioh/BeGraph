@@ -3,13 +3,45 @@
 [ext_resource type="Script" uid="uid://da0t4052e3fsp" path="res://addons/BeGraph/Classes/misc/BlackboardVariable.gd" id="1_bb"]
 [ext_resource type="Script" uid="uid://ca0cevcqjpnsq" path="res://addons/BeGraph/Classes/misc/BehaviorNode.gd" id="2_node"]
 [ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="3_ap"]
-[ext_resource type="Script" uid="uid://bhj1hc7733pwg" path="res://addons/BeGraph/Classes/Nodes/Flow/Comparators/Field Of View.gd" id="4_fov"]
+[ext_resource type="Script" uid="uid://lm5p5pupyhdf" path="res://addons/BeGraph/Classes/Nodes/Flow/Comparators/Detect Bodies in Area.gd" id="4_area"]
 [ext_resource type="Script" uid="uid://bucm3hk7h14de" path="res://addons/BeGraph/Classes/Nodes/Flow/Classic/Sequence.gd" id="5_seq"]
 [ext_resource type="Script" uid="uid://clrsjv6q4uf7d" path="res://addons/BeGraph/Classes/Nodes/Actions/Movement/Orbit.gd" id="6_orbit"]
 [ext_resource type="Script" uid="uid://c2x3rmp70yc7h" path="res://addons/BeGraph/Classes/Nodes/Actions/Movement/Keep Distance.gd" id="7_dist"]
 [ext_resource type="Script" uid="uid://yikob6c0d8wi" path="res://addons/BeGraph/Classes/Nodes/Actions/Movement/Rotate Node.gd" id="8_rot"]
 [ext_resource type="Script" uid="uid://bhduga4xd8gmu" path="res://addons/BeGraph/Classes/Nodes/Actions/Misc/Set Property.gd" id="9_prop"]
 [ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="10_graph"]
+
+[sub_resource type="Resource" id="Resource_bb_self"]
+resource_name = "Self"
+script = ExtResource("1_bb")
+name = &"Self"
+export_variable = true
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Station4_DroneOrbit/DroneActor")
+metadata/_custom_type_script = "uid://da0t4052e3fsp"
+
+[sub_resource type="Resource" id="Resource_bb_player"]
+resource_name = "Player"
+script = ExtResource("1_bb")
+name = &"Player"
+export_variable = true
+value = NodePath("")
+metadata/_custom_type_script = "uid://da0t4052e3fsp"
+
+[sub_resource type="Resource" id="Resource_bb_pylon"]
+resource_name = "CenterPylon"
+script = ExtResource("1_bb")
+name = &"CenterPylon"
+export_variable = true
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Station4_DroneOrbit/CenterPylon")
+metadata/_custom_type_script = "uid://da0t4052e3fsp"
+
+[sub_resource type="Resource" id="Resource_bb_arena"]
+resource_name = "ArenaZone"
+script = ExtResource("1_bb")
+name = &"ArenaZone"
+export_variable = true
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Station4_DroneOrbit/ArenaZone")
+metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="SubResource_ap"]
 resource_name = "AccessPoint"
@@ -21,31 +53,30 @@ position_in_graph = Vector2(-280, 0)
 is_starting_node = true
 _graph_ref = Object(WeakRef,"script":null)
 
-_next_ref = Array[StringName]([&"FOVCheck"])
+_next_ref = Array[StringName]([&"ArenaCheck"])
 breakpointable = true
 mutable = true
 
-[sub_resource type="Resource" id="SubResource_fov"]
-resource_name = "FOVCheck"
-script = ExtResource("4_fov")
-node = NodePath(".")
-target = NodePath("../../../Player3D")
-angle = 120.0
-max_distance = 8.0
-forward = 4
-instruction = "Field of view {node} -> {target}"
+[sub_resource type="Resource" id="SubResource_arena"]
+resource_name = "ArenaCheck"
+script = ExtResource("4_area")
+area = NodePath("../ArenaZone")
+instruction = "Check bodies overlapping {area}"
 conditions = Array[Dictionary]([{
 "next": &"StandoffSequence",
-"text": "Target in field of view"
+"text": "Body detected"
 }, {
 "next": &"OrbitSequence",
-"text": "Target not in field of view"
+"text": "No body detected"
 }])
 node_category = "control_flow_node"
 input = true
 position_in_graph = Vector2(-80, 0)
 _graph_ref = Object(WeakRef,"script":null)
 
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"area": &"ArenaZone"
+})
 breakpointable = true
 mutable = true
 
@@ -54,15 +85,20 @@ resource_name = "FacePlayer3D"
 script = ExtResource("8_rot")
 node = NodePath(".")
 mode = 1
-angular_speed = 120.0
+angular_speed = 720.0
 target_node = NodePath("../../../Player3D")
-instruction = "Rotate {node} ({mode})"
+axis_3d = 1
+instruction = "Rotate {node} ({mode}, axis {axis_3d})"
 node_category = "action_node"
 input = true
 output = true
 position_in_graph = Vector2(380, -60)
 _graph_ref = Object(WeakRef,"script":null)
 
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"Self",
+&"target_node": &"Player"
+})
 breakpointable = true
 mutable = true
 
@@ -71,16 +107,20 @@ resource_name = "MaintainDistance"
 script = ExtResource("7_dist")
 node = NodePath(".")
 target = NodePath("../../../Player3D")
-target_distance = 4.5
-tolerance = 0.5
-speed = 4.0
-instruction = "Keep distance {target_distance} from {target}"
+target_distance = 3.5
+tolerance = 0.4
+speed = 4.5
+instruction = "Keep {target_distance} distance between {node} and {target}"
 node_category = "action_node"
 input = true
 output = true
 position_in_graph = Vector2(380, 10)
 _graph_ref = Object(WeakRef,"script":null)
 
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"Self",
+&"target": &"Player"
+})
 breakpointable = true
 mutable = true
 
@@ -91,13 +131,17 @@ node = NodePath(".")
 center = NodePath("../CenterPylon")
 radius = 3.5
 angular_speed = 60.0
-instruction = "Orbit {node} around {center} (radius {radius})"
+instruction = "Orbit {node} around {center} (radius: {radius})"
 node_category = "action_node"
 input = true
 output = true
 position_in_graph = Vector2(380, 170)
 _graph_ref = Object(WeakRef,"script":null)
 
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"center": &"CenterPylon",
+&"node": &"Self"
+})
 breakpointable = true
 mutable = true
 
@@ -129,6 +173,9 @@ output = true
 position_in_graph = Vector2(380, -130)
 _graph_ref = Object(WeakRef,"script":null)
 
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"Self"
+})
 breakpointable = true
 mutable = true
 
@@ -145,6 +192,9 @@ output = true
 position_in_graph = Vector2(380, 100)
 _graph_ref = Object(WeakRef,"script":null)
 
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"Self"
+})
 breakpointable = true
 mutable = true
 
@@ -165,9 +215,10 @@ mutable = true
 
 [resource]
 script = ExtResource("10_graph")
+blackboard = Array[ExtResource("1_bb")]([SubResource("Resource_bb_self"), SubResource("Resource_bb_player"), SubResource("Resource_bb_pylon"), SubResource("Resource_bb_arena")])
 nodes = Dictionary[StringName, ExtResource("2_node")]({
 &"AccessPoint": SubResource("SubResource_ap"),
-&"FOVCheck": SubResource("SubResource_fov"),
+&"ArenaCheck": SubResource("SubResource_arena"),
 &"FacePlayer3D": SubResource("SubResource_rot_player"),
 &"MaintainDistance": SubResource("SubResource_keep_dist"),
 &"OrbitCenterPylon": SubResource("SubResource_orbit_action"),
@@ -180,16 +231,16 @@ connections = Array[Dictionary]([{
 "from_node": &"AccessPoint",
 "from_port": 0,
 "keep_alive": false,
-"to_node": &"FOVCheck",
+"to_node": &"ArenaCheck",
 "to_port": 0
 }, {
-"from_node": &"FOVCheck",
+"from_node": &"ArenaCheck",
 "from_port": 0,
 "keep_alive": false,
 "to_node": &"StandoffSequence",
 "to_port": 0
 }, {
-"from_node": &"FOVCheck",
+"from_node": &"ArenaCheck",
 "from_port": 1,
 "keep_alive": false,
 "to_node": &"OrbitSequence",

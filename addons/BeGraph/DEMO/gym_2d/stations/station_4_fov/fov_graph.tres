@@ -10,24 +10,28 @@
 [ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="9_graph"]
 
 [sub_resource type="Resource" id="Resource_2wtov"]
+resource_name = "Player"
 script = ExtResource("1_bb")
 name = &"Player"
 value = NodePath("")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_df827"]
+resource_name = "StatusLabel"
 script = ExtResource("1_bb")
 name = &"StatusLabel"
 value = NodePath("")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_n03dp"]
+resource_name = "Self"
 script = ExtResource("1_bb")
 name = &"Self"
 value = NodePath("")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_1tv0k"]
+resource_name = "StatusLabel"
 script = ExtResource("1_bb")
 name = &"StatusLabel"
 value = NodePath("")

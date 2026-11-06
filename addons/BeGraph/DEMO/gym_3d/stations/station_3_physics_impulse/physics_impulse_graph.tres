@@ -10,6 +10,30 @@
 [ext_resource type="Script" uid="uid://b0sc0g6pmwp4q" path="res://addons/BeGraph/Classes/Nodes/Actions/Time/Wait.gd" id="8_wait"]
 [ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="9_graph"]
 
+[sub_resource type="Resource" id="Resource_bb_trig"]
+resource_name = "TriggerArea"
+script = ExtResource("1_bb")
+name = &"TriggerArea"
+export_variable = true
+value = NodePath("")
+metadata/_custom_type_script = "uid://da0t4052e3fsp"
+
+[sub_resource type="Resource" id="Resource_bb_crate_a"]
+resource_name = "CrateA"
+script = ExtResource("1_bb")
+name = &"CrateA"
+export_variable = true
+value = NodePath("")
+metadata/_custom_type_script = "uid://da0t4052e3fsp"
+
+[sub_resource type="Resource" id="Resource_bb_crate_b"]
+resource_name = "CrateB"
+script = ExtResource("1_bb")
+name = &"CrateB"
+export_variable = true
+value = NodePath("")
+metadata/_custom_type_script = "uid://da0t4052e3fsp"
+
 [sub_resource type="Resource" id="SubResource_ap"]
 resource_name = "AccessPoint"
 script = ExtResource("3_ap")
@@ -41,6 +65,9 @@ input = true
 position_in_graph = Vector2(-100, 0)
 _graph_ref = Object(WeakRef,"script":null)
 
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"area": &"TriggerArea"
+})
 breakpointable = true
 mutable = true
 
@@ -59,11 +86,29 @@ _next_ref = Array[StringName]([&"LaunchSequence"])
 breakpointable = true
 mutable = true
 
-[sub_resource type="Resource" id="SubResource_imp_a"]
+[sub_resource type="Resource" id="SubResource_imp_a1"]
 resource_name = "LaunchCrateA"
 script = ExtResource("7_imp")
 node = NodePath("../Crate1")
-impulse = Vector3(0, 9, 1.5)
+impulse = Vector3(0, 10, 4.2)
+instruction = "Apply impulse {impulse} to {node}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(500, -240)
+_graph_ref = Object(WeakRef,"script":null)
+
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"CrateA"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_imp_b1"]
+resource_name = "LaunchCrateB"
+script = ExtResource("7_imp")
+node = NodePath("../Crate2")
+impulse = Vector3(0, 8.5, -3.4)
 instruction = "Apply impulse {impulse} to {node}"
 node_category = "action_node"
 input = true
@@ -71,21 +116,9 @@ output = true
 position_in_graph = Vector2(500, -100)
 _graph_ref = Object(WeakRef,"script":null)
 
-breakpointable = true
-mutable = true
-
-[sub_resource type="Resource" id="SubResource_imp_b"]
-resource_name = "LaunchCrateB"
-script = ExtResource("7_imp")
-node = NodePath("../Crate2")
-impulse = Vector3(1.5, 8.5, -1)
-instruction = "Apply impulse {impulse} to {node}"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(500, 40)
-_graph_ref = Object(WeakRef,"script":null)
-
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"CrateB"
+})
 breakpointable = true
 mutable = true
 
@@ -101,14 +134,64 @@ allows_multiple_outputs = true
 position_in_graph = Vector2(300, 0)
 _graph_ref = Object(WeakRef,"script":null)
 
-_next_ref = Array[StringName]([&"LaunchCrateA", &"WaitA", &"LaunchCrateB", &"WaitB"])
+_next_ref = Array[StringName]([&"LaunchCrateA", &"WaitA", &"LaunchCrateB", &"WaitB", &"ReturnCrateA", &"WaitC", &"ReturnCrateB", &"WaitD"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_imp_a2"]
+resource_name = "ReturnCrateA"
+script = ExtResource("7_imp")
+node = NodePath("../Crate1")
+impulse = Vector3(0, 10, -4.2)
+instruction = "Apply impulse {impulse} to {node}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(500, 40)
+_graph_ref = Object(WeakRef,"script":null)
+
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"CrateA"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_imp_b2"]
+resource_name = "ReturnCrateB"
+script = ExtResource("7_imp")
+node = NodePath("../Crate2")
+impulse = Vector3(0, 8.5, 3.4)
+instruction = "Apply impulse {impulse} to {node}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(500, 180)
+_graph_ref = Object(WeakRef,"script":null)
+
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"CrateB"
+})
 breakpointable = true
 mutable = true
 
 [sub_resource type="Resource" id="SubResource_wait_a"]
 resource_name = "WaitA"
 script = ExtResource("8_wait")
-seconds = 1.4
+seconds = 0.9
+instruction = "Wait {seconds}s"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(500, -170)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_wait_b"]
+resource_name = "WaitB"
+script = ExtResource("8_wait")
+seconds = 0.9
 instruction = "Wait {seconds}s"
 node_category = "action_node"
 input = true
@@ -119,10 +202,10 @@ _graph_ref = Object(WeakRef,"script":null)
 breakpointable = true
 mutable = true
 
-[sub_resource type="Resource" id="SubResource_wait_b"]
-resource_name = "WaitB"
+[sub_resource type="Resource" id="SubResource_wait_c"]
+resource_name = "WaitC"
 script = ExtResource("8_wait")
-seconds = 1.4
+seconds = 0.9
 instruction = "Wait {seconds}s"
 node_category = "action_node"
 input = true
@@ -133,17 +216,36 @@ _graph_ref = Object(WeakRef,"script":null)
 breakpointable = true
 mutable = true
 
+[sub_resource type="Resource" id="SubResource_wait_d"]
+resource_name = "WaitD"
+script = ExtResource("8_wait")
+seconds = 0.9
+instruction = "Wait {seconds}s"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(500, 250)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
 [resource]
 script = ExtResource("9_graph")
+blackboard = Array[ExtResource("1_bb")]([SubResource("Resource_bb_trig"), SubResource("Resource_bb_crate_a"), SubResource("Resource_bb_crate_b")])
 nodes = Dictionary[StringName, ExtResource("2_node")]({
 &"AccessPoint": SubResource("SubResource_ap"),
 &"AreaTrigger": SubResource("SubResource_area"),
 &"ImpulseLoop": SubResource("SubResource_rep"),
-&"LaunchCrateA": SubResource("SubResource_imp_a"),
-&"LaunchCrateB": SubResource("SubResource_imp_b"),
+&"LaunchCrateA": SubResource("SubResource_imp_a1"),
+&"LaunchCrateB": SubResource("SubResource_imp_b1"),
 &"LaunchSequence": SubResource("SubResource_seq"),
+&"ReturnCrateA": SubResource("SubResource_imp_a2"),
+&"ReturnCrateB": SubResource("SubResource_imp_b2"),
 &"WaitA": SubResource("SubResource_wait_a"),
-&"WaitB": SubResource("SubResource_wait_b")
+&"WaitB": SubResource("SubResource_wait_b"),
+&"WaitC": SubResource("SubResource_wait_c"),
+&"WaitD": SubResource("SubResource_wait_d")
 })
 connections = Array[Dictionary]([{
 "from_node": &"AccessPoint",
@@ -186,6 +288,30 @@ connections = Array[Dictionary]([{
 "from_port": 3,
 "keep_alive": false,
 "to_node": &"WaitB",
+"to_port": 0
+}, {
+"from_node": &"LaunchSequence",
+"from_port": 4,
+"keep_alive": false,
+"to_node": &"ReturnCrateA",
+"to_port": 0
+}, {
+"from_node": &"LaunchSequence",
+"from_port": 5,
+"keep_alive": false,
+"to_node": &"WaitC",
+"to_port": 0
+}, {
+"from_node": &"LaunchSequence",
+"from_port": 6,
+"keep_alive": false,
+"to_node": &"ReturnCrateB",
+"to_port": 0
+}, {
+"from_node": &"LaunchSequence",
+"from_port": 7,
+"keep_alive": false,
+"to_node": &"WaitD",
 "to_port": 0
 }])
 _agent_ref = Object(WeakRef,"script":null)

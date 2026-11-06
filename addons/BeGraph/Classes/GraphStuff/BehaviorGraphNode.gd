@@ -47,6 +47,7 @@ func set_conditions() -> void:
 	remove_child(decorator_tree)
 	for condition in node.conditions:
 		var container := HFlowContainer.new()
+		container.mouse_filter = Control.MOUSE_FILTER_PASS
 		container.alignment = FlowContainer.ALIGNMENT_END
 		add_child(container)
 		_render_placeholders(condition.text, container, false)

@@ -11,6 +11,7 @@
 [ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="9_1patj"]
 
 [sub_resource type="Resource" id="Resource_a6v5c"]
+resource_name = "moving"
 script = ExtResource("1_xqdap")
 name = &"moving"
 export_variable = true
@@ -18,6 +19,7 @@ value = true
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_rdfje"]
+resource_name = "mode"
 script = ExtResource("1_xqdap")
 name = &"mode"
 export_variable = true
@@ -25,6 +27,7 @@ value = 3
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_pxsmv"]
+resource_name = "waypoints"
 script = ExtResource("1_xqdap")
 name = &"waypoints"
 export_variable = true
@@ -32,6 +35,7 @@ value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplit
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_vumwu"]
+resource_name = "ParticleEmitter"
 script = ExtResource("1_xqdap")
 name = &"ParticleEmitter"
 export_variable = true
@@ -39,6 +43,7 @@ value = NodePath("../CPUParticles2D")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_273ow"]
+resource_name = "self"
 script = ExtResource("1_xqdap")
 name = &"self"
 export_variable = true
@@ -46,6 +51,7 @@ value = NodePath("..")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_eok6o"]
+resource_name = "statusLabel"
 script = ExtResource("1_xqdap")
 name = &"statusLabel"
 export_variable = true

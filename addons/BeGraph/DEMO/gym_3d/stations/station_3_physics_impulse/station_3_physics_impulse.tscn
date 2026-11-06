@@ -1,5 +1,6 @@
 [gd_scene format=3]
 
+[ext_resource type="Script" path="res://addons/BeGraph/DEMO/gym_3d/stations/station_3_physics_impulse/station_3_physics_impulse.gd" id="1_st3_gd"]
 [ext_resource type="PackedScene" path="res://addons/BeGraph/DEMO/gym_3d/common/station_billboard_3d.tscn" id="1_bb"]
 [ext_resource type="Script" uid="uid://cw01p0ypvtv25" path="res://addons/BeGraph/DEMO/gym_3d/common/actor_3d.gd" id="2_act"]
 [ext_resource type="Script" uid="uid://cj0fv54i6ere" path="res://addons/BeGraph/Classes/misc/BehaviorAgent.gd" id="3_agent"]
@@ -16,7 +17,7 @@ size = Vector3(14, 0.4, 14)
 size = Vector3(14, 0.4, 14)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_trig"]
-size = Vector3(16, 4, 16)
+size = Vector3(14, 4, 14)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_cr1"]
 size = Vector3(1.2, 1.2, 1.2)
@@ -55,11 +56,12 @@ bottom_radius = 0.4
 height = 1.2
 
 [node name="Station3_PhysicsImpulse" type="Node3D"]
+script = ExtResource("1_st3_gd")
 
 [node name="StationBillboard3D" parent="." instance=ExtResource("1_bb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, -6.5)
 title = "Station 3: 3D Physics & Impulse Playground"
-summary = "Showcases BeGraph's direct interaction with Godot's 3D physics engine via the Apply Impulse node. The actuator applies directional force vectors to RigidBody3D entities, launching and juggling physical blocks."
+summary = "Showcases BeGraph's direct interaction with Godot's 3D physics engine via the Apply Impulse node. The actuator applies cyclical directional force vectors to RigidBody3D entities, juggling physical blocks back and forth inside the arena."
 nodes_used = PackedStringArray("Access Point", "Area Detect", "Repeat", "Sequence", "Apply Impulse", "Wait")
 station_color = Color(0.95, 0.5, 0.15, 1)
 
@@ -77,15 +79,18 @@ shape = SubResource("BoxShape3D_floor")
 [node name="PitTriggerArea" type="Area3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
 collision_layer = 0
+collision_mask = 5
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="PitTriggerArea"]
 shape = SubResource("BoxShape3D_trig")
 
 [node name="Crate1" type="RigidBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2, 0.8, -1.8)
 collision_layer = 4
 collision_mask = 7
 mass = 2.0
+linear_damp = 1.6
+angular_damp = 1.0
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Crate1"]
 shape = SubResource("BoxShape3D_cr1")
@@ -94,10 +99,12 @@ shape = SubResource("BoxShape3D_cr1")
 mesh = SubResource("BoxMesh_cr1")
 
 [node name="Crate2" type="RigidBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 0.8, 1.8)
 collision_layer = 4
 collision_mask = 7
 mass = 1.5
+linear_damp = 1.6
+angular_damp = 1.0
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Crate2"]
 shape = SubResource("SphereShape3D_cr2")
@@ -106,7 +113,7 @@ shape = SubResource("SphereShape3D_cr2")
 mesh = SubResource("SphereMesh_cr2")
 
 [node name="ActuatorBot" type="CharacterBody3D" parent="." node_paths=PackedStringArray("behavior_agent")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, -2.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, -3.5)
 collision_layer = 2
 collision_mask = 7
 script = ExtResource("2_act")
@@ -118,7 +125,7 @@ shape = SubResource("CylinderShape3D_act")
 [node name="MeshInstance3D" type="MeshInstance3D" parent="ActuatorBot"]
 mesh = SubResource("CylinderMesh_act")
 
-[node name="BehaviorAgent" type="Node" parent="ActuatorBot" node_paths=PackedStringArray("actor")]
+[node name="BehaviorAgent" type="Node" parent="ActuatorBot"]
 script = ExtResource("3_agent")
-actor = NodePath("..")
 behavior_graph = ExtResource("4_graph")
+starting_point = 0

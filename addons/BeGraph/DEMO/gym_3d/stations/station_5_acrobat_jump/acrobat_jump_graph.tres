@@ -11,6 +11,22 @@
 [ext_resource type="Script" uid="uid://b0sc0g6pmwp4q" path="res://addons/BeGraph/Classes/Nodes/Actions/Time/Wait.gd" id="9_wait"]
 [ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="10_graph"]
 
+[sub_resource type="Resource" id="Resource_bb_self"]
+resource_name = "Self"
+script = ExtResource("1_bb")
+name = &"Self"
+export_variable = true
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Stations/Station5_AcrobatJump/AcrobatBot")
+metadata/_custom_type_script = "uid://da0t4052e3fsp"
+
+[sub_resource type="Resource" id="Resource_bb_mesh"]
+resource_name = "MeshInstance"
+script = ExtResource("1_bb")
+name = &"MeshInstance"
+export_variable = true
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Stations/Station5_AcrobatJump/AcrobatBot/MeshInstance3D")
+metadata/_custom_type_script = "uid://da0t4052e3fsp"
+
 [sub_resource type="Resource" id="SubResource_ap"]
 resource_name = "AccessPoint"
 script = ExtResource("3_ap")
@@ -37,6 +53,9 @@ output = true
 position_in_graph = Vector2(350, -140)
 _graph_ref = Object(WeakRef,"script":null)
 
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"Self"
+})
 breakpointable = true
 mutable = true
 
@@ -54,6 +73,9 @@ output = true
 position_in_graph = Vector2(350, 20)
 _graph_ref = Object(WeakRef,"script":null)
 
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"MeshInstance"
+})
 breakpointable = true
 mutable = true
 
@@ -71,6 +93,9 @@ output = true
 position_in_graph = Vector2(350, -60)
 _graph_ref = Object(WeakRef,"script":null)
 
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"MeshInstance"
+})
 breakpointable = true
 mutable = true
 
@@ -131,11 +156,15 @@ output = true
 position_in_graph = Vector2(350, 100)
 _graph_ref = Object(WeakRef,"script":null)
 
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"Self"
+})
 breakpointable = true
 mutable = true
 
 [resource]
 script = ExtResource("10_graph")
+blackboard = Array[ExtResource("1_bb")]([SubResource("Resource_bb_self"), SubResource("Resource_bb_mesh")])
 nodes = Dictionary[StringName, ExtResource("2_node")]({
 &"AccessPoint": SubResource("SubResource_ap"),
 &"DoJump": SubResource("SubResource_jump"),

@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://c82q06qm6p887" path="res://addons/BeGraph/Classes/Nodes/Actions/Print/Print String.gd" id="5_7nfy3"]
 
 [sub_resource type="Resource" id="Resource_7nxv6"]
+resource_name = "Self"
 script = ExtResource("1_srmox")
 name = &"Self"
 export_variable = true
@@ -15,6 +16,7 @@ value = NodePath("")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_cmila"]
+resource_name = "Points"
 script = ExtResource("1_srmox")
 name = &"Points"
 export_variable = true
@@ -22,6 +24,7 @@ value = [NodePath(""), NodePath(""), NodePath("")]
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_7nfy3"]
+resource_name = "loop"
 script = ExtResource("1_srmox")
 name = &"loop"
 export_variable = true
@@ -29,6 +32,7 @@ value = 0
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_s8rxi"]
+resource_name = "UnconnectedProperty"
 script = ExtResource("1_srmox")
 name = &"UnconnectedProperty"
 value = Vector3i(0, 0, 0)

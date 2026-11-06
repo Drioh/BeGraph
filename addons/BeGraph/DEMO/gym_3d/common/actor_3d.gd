@@ -3,6 +3,7 @@ extends CharacterBody3D
 class_name Actor3D
 
 @export var behavior_agent: BehaviorAgent
+@export var use_gravity: bool = false
 
 @export var actor_color: Color = Color.WHITE:
 	set(v):
@@ -11,36 +12,14 @@ class_name Actor3D
 
 var _mat_instance: StandardMaterial3D = null
 
-func _get_property_list() -> Array[Dictionary]:
-	if behavior_agent:
-		return behavior_agent.get_overridable_property_list()
-	return []
-
-func _get(property: StringName) -> Variant:
-	if property == "actor_color":
-		return actor_color
-	if behavior_agent and behavior_agent.is_overridable_blackboard_property(property):
-		return behavior_agent.get_overridable_blackboard_property(property)
-	return null
-
-func _set(property: StringName, value: Variant) -> bool:
-	if property == "actor_color":
-		actor_color = value
-		return true
-	if behavior_agent and behavior_agent.is_overridable_blackboard_property(property):
-		return behavior_agent.set_overridable_blackboard_property(property, value, self)
-	return false
-
 func _ready() -> void:
-	if behavior_agent:
-		behavior_agent.actor = self
 	_apply_color(actor_color)
-	if not Engine.is_editor_hint():
+	if not Engine.is_editor_hint() and use_gravity:
 		# Settle on floor immediately so is_on_floor() is true before BehaviorAgent ticks
 		move_and_slide()
 
 func _physics_process(delta: float) -> void:
-	if Engine.is_editor_hint():
+	if Engine.is_editor_hint() or not use_gravity:
 		return
 	if not is_on_floor():
 		var g := float(ProjectSettings.get_setting("physics/3d/default_gravity", 9.8))

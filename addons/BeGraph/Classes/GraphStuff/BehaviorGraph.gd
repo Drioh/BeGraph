@@ -129,3 +129,6 @@ func setup_runtime(agent: Node) -> void:
 		from_node.add_next(to_node, c["from_port"])
 	for node in nodes.values():
 		node._graph_ref = weakref(self)
+	for node in nodes.values():
+		if node is BehaviorFrame and node.is_sequence:
+			node.setup_sequence(self)

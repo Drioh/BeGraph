@@ -31,7 +31,7 @@ func _ready() -> void:
 	var btn_switch_3d := get_node_or_null("%BtnSwitch3D") as Button
 	if btn_switch_3d:
 		btn_switch_3d.pressed.connect(func():
-			get_tree().change_scene_to_file("res://gym_3d/gym_3d.tscn")
+			get_tree().change_scene_to_file("res://addons/BeGraph/DEMO/gym_3d/gym_3d.tscn")
 		)
 
 func _teleport_player(pos: Vector2) -> void:
