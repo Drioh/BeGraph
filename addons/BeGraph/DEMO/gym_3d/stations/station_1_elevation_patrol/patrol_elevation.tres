@@ -3,11 +3,10 @@
 [ext_resource type="Script" uid="uid://da0t4052e3fsp" path="res://addons/BeGraph/Classes/misc/BlackboardVariable.gd" id="1_bb"]
 [ext_resource type="Script" uid="uid://ca0cevcqjpnsq" path="res://addons/BeGraph/Classes/misc/BehaviorNode.gd" id="2_node"]
 [ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="3_ap"]
-[ext_resource type="Script" uid="uid://bucm3hk7h14de" path="res://addons/BeGraph/Classes/Nodes/Flow/Classic/Sequence.gd" id="4_seq"]
 [ext_resource type="Script" uid="uid://cqtl1rxtl657i" path="res://addons/BeGraph/Classes/Nodes/Actions/Movement/Patrol.gd" id="5_patrol"]
 [ext_resource type="Script" uid="uid://bhduga4xd8gmu" path="res://addons/BeGraph/Classes/Nodes/Actions/Misc/Set Property.gd" id="6_prop"]
+[ext_resource type="Script" uid="uid://bt3sox16shfd2" path="res://addons/BeGraph/Classes/Nodes/Actions/Misc/Set Blackboard Variable.gd" id="7_epjpq"]
 [ext_resource type="Script" uid="uid://cxt57klv15md2" path="res://addons/BeGraph/Classes/Nodes/Actions/Particle System/Restart Particles.gd" id="7_part"]
-[ext_resource type="Script" uid="uid://b0sc0g6pmwp4q" path="res://addons/BeGraph/Classes/Nodes/Actions/Time/Wait.gd" id="8_wait"]
 [ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="9_graph"]
 
 [sub_resource type="Resource" id="Resource_bb_self"]
@@ -34,17 +33,24 @@ export_variable = true
 value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Stations/Station1_ElevationPatrol/ClimberActor/CPUParticles3D")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
+[sub_resource type="Resource" id="Resource_xqdap"]
+resource_name = "arrived"
+script = ExtResource("1_bb")
+name = &"arrived"
+value = false
+metadata/_custom_type_script = "uid://da0t4052e3fsp"
+
 [sub_resource type="Resource" id="SubResource_ap"]
 resource_name = "AccessPoint"
 script = ExtResource("3_ap")
 label = "Start"
 node_category = "access_point_node"
 output = true
-position_in_graph = Vector2(-250, 0)
+position_in_graph = Vector2(-1420, -60)
 is_starting_node = true
 _graph_ref = Object(WeakRef,"script":null)
 
-_next_ref = Array[StringName]([&"Sequence"])
+_next_ref = Array[StringName]([&"PatrolClimb"])
 breakpointable = true
 mutable = true
 
@@ -57,15 +63,21 @@ instruction = "Patrol {node} between {waypoints}'s children ({mode}, speed {spee
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(200, -100)
+position_in_graph = Vector2(-240, -440)
 _graph_ref = Object(WeakRef,"script":null)
 
+_next_ref = Array[StringName]([&"SetSummitColor"])
 _blackboard_bindings = Dictionary[StringName, StringName]({
 &"node": &"Self",
 &"waypoints": &"Waypoints"
 })
 breakpointable = true
 mutable = true
+decorator = {
+"blackboard_key": &"arrived",
+"condition_expected": 1.0,
+"type": "condition"
+}
 
 [sub_resource type="Resource" id="SubResource_part"]
 resource_name = "PlaySummitParticles"
@@ -75,28 +87,13 @@ instruction = "Restart particles {node}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(200, 100)
+position_in_graph = Vector2(1000, -360)
 _graph_ref = Object(WeakRef,"script":null)
 
+_next_ref = Array[StringName]([&"_GraphNode_24843"])
 _blackboard_bindings = Dictionary[StringName, StringName]({
 &"node": &"ParticleEmitter"
 })
-breakpointable = true
-mutable = true
-
-[sub_resource type="Resource" id="SubResource_seq"]
-resource_name = "Sequence"
-script = ExtResource("4_seq")
-memory = true
-instruction = "Sequence (memory: {memory})"
-node_category = "control_flow_node"
-input = true
-output = true
-allows_multiple_outputs = true
-position_in_graph = Vector2(-50, 0)
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"PatrolClimb", &"SetSummitColor", &"PlaySummitParticles", &"WaitAtSummit"])
 breakpointable = true
 mutable = true
 
@@ -110,24 +107,26 @@ instruction = "Set {node}'s {property} value: {value}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(200, 0)
+position_in_graph = Vector2(420, -420)
 _graph_ref = Object(WeakRef,"script":null)
 
+_next_ref = Array[StringName]([&"PlaySummitParticles"])
 _blackboard_bindings = Dictionary[StringName, StringName]({
 &"node": &"Self"
 })
 breakpointable = true
 mutable = true
 
-[sub_resource type="Resource" id="SubResource_wait"]
-resource_name = "WaitAtSummit"
-script = ExtResource("8_wait")
-seconds = 99999.0
-instruction = "Wait {seconds}s"
+[sub_resource type="Resource" id="Resource_1sux7"]
+resource_name = "_GraphNode_24843"
+script = ExtResource("7_epjpq")
+variable_name = &"arrived"
+value = true
+instruction = "Set BB var {variable_name} = {value}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(200, 200)
+position_in_graph = Vector2(1560, -380)
 _graph_ref = Object(WeakRef,"script":null)
 
 breakpointable = true
@@ -135,44 +134,37 @@ mutable = true
 
 [resource]
 script = ExtResource("9_graph")
-blackboard = Array[ExtResource("1_bb")]([SubResource("Resource_bb_self"), SubResource("Resource_bb_waypoints"), SubResource("Resource_bb_particles")])
+blackboard = Array[ExtResource("1_bb")]([SubResource("Resource_bb_self"), SubResource("Resource_bb_waypoints"), SubResource("Resource_bb_particles"), SubResource("Resource_xqdap")])
 nodes = Dictionary[StringName, ExtResource("2_node")]({
 &"AccessPoint": SubResource("SubResource_ap"),
 &"PatrolClimb": SubResource("SubResource_patrol"),
 &"PlaySummitParticles": SubResource("SubResource_part"),
-&"Sequence": SubResource("SubResource_seq"),
 &"SetSummitColor": SubResource("SubResource_prop"),
-&"WaitAtSummit": SubResource("SubResource_wait")
+&"_GraphNode_24843": SubResource("Resource_1sux7")
 })
 connections = Array[Dictionary]([{
-"from_node": &"AccessPoint",
+"from_node": &"PatrolClimb",
 "from_port": 0,
 "keep_alive": false,
-"to_node": &"Sequence",
+"to_node": &"SetSummitColor",
 "to_port": 0
 }, {
-"from_node": &"Sequence",
+"from_node": &"SetSummitColor",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"PlaySummitParticles",
+"to_port": 0
+}, {
+"from_node": &"AccessPoint",
 "from_port": 0,
 "keep_alive": false,
 "to_node": &"PatrolClimb",
 "to_port": 0
 }, {
-"from_node": &"Sequence",
-"from_port": 1,
+"from_node": &"PlaySummitParticles",
+"from_port": 0,
 "keep_alive": false,
-"to_node": &"SetSummitColor",
-"to_port": 0
-}, {
-"from_node": &"Sequence",
-"from_port": 2,
-"keep_alive": false,
-"to_node": &"PlaySummitParticles",
-"to_port": 0
-}, {
-"from_node": &"Sequence",
-"from_port": 3,
-"keep_alive": false,
-"to_node": &"WaitAtSummit",
+"to_node": &"_GraphNode_24843",
 "to_port": 0
 }])
 _agent_ref = Object(WeakRef,"script":null)

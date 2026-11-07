@@ -4,7 +4,6 @@
 [ext_resource type="Script" uid="uid://ca0cevcqjpnsq" path="res://addons/BeGraph/Classes/misc/BehaviorNode.gd" id="2_node"]
 [ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="3_ap"]
 [ext_resource type="Script" uid="uid://udb6cj1a818n" path="res://addons/BeGraph/Classes/Nodes/Flow/Misc/Repeat.gd" id="4_rep"]
-[ext_resource type="Script" uid="uid://bucm3hk7h14de" path="res://addons/BeGraph/Classes/Nodes/Flow/Classic/Sequence.gd" id="5_seq"]
 [ext_resource type="Script" uid="uid://cq8g3r4itu5p0" path="res://addons/BeGraph/Classes/Nodes/Actions/Movement/Jump.gd" id="6_jump"]
 [ext_resource type="Script" uid="uid://yikob6c0d8wi" path="res://addons/BeGraph/Classes/Nodes/Actions/Movement/Rotate Node.gd" id="7_rot"]
 [ext_resource type="Script" uid="uid://bbgig7yaxqlb0" path="res://addons/BeGraph/Classes/Nodes/Actions/Misc/Tween Property.gd" id="8_tween"]
@@ -33,7 +32,7 @@ script = ExtResource("3_ap")
 label = "Start"
 node_category = "access_point_node"
 output = true
-position_in_graph = Vector2(-280, 0)
+position_in_graph = Vector2(-1120, 0)
 is_starting_node = true
 _graph_ref = Object(WeakRef,"script":null)
 
@@ -50,9 +49,10 @@ instruction = "Jump {node} (height: {jump_height})"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(350, -140)
+position_in_graph = Vector2(520, -300)
 _graph_ref = Object(WeakRef,"script":null)
 
+_next_ref = Array[StringName]([&"LandingSquash"])
 _blackboard_bindings = Dictionary[StringName, StringName]({
 &"node": &"Self"
 })
@@ -70,9 +70,10 @@ instruction = "Tween {node}'s {property} to {target_value} over {duration}s"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(350, 20)
+position_in_graph = Vector2(580, 140)
 _graph_ref = Object(WeakRef,"script":null)
 
+_next_ref = Array[StringName]([&"SpinTurn"])
 _blackboard_bindings = Dictionary[StringName, StringName]({
 &"node": &"MeshInstance"
 })
@@ -90,9 +91,10 @@ instruction = "Tween {node}'s {property} to {target_value} over {duration}s"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(350, -60)
+position_in_graph = Vector2(560, -160)
 _graph_ref = Object(WeakRef,"script":null)
 
+_next_ref = Array[StringName]([&"LandingReset"])
 _blackboard_bindings = Dictionary[StringName, StringName]({
 &"node": &"MeshInstance"
 })
@@ -107,26 +109,10 @@ instruction = "Repeat {times} times"
 node_category = "control_flow_node"
 input = true
 output = true
-position_in_graph = Vector2(-100, 0)
+position_in_graph = Vector2(-720, 0)
 _graph_ref = Object(WeakRef,"script":null)
 
-_next_ref = Array[StringName]([&"ParkourSequence"])
-breakpointable = true
-mutable = true
-
-[sub_resource type="Resource" id="SubResource_seq"]
-resource_name = "ParkourSequence"
-script = ExtResource("5_seq")
-memory = true
-instruction = "Sequence (memory: {memory})"
-node_category = "control_flow_node"
-input = true
-output = true
-allows_multiple_outputs = true
-position_in_graph = Vector2(100, 0)
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"DoJump", &"LandingSquash", &"LandingReset", &"SpinTurn", &"RestBetweenJumps"])
+_next_ref = Array[StringName]([&"DoJump"])
 breakpointable = true
 mutable = true
 
@@ -137,7 +123,7 @@ instruction = "Wait {seconds}s"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(350, 180)
+position_in_graph = Vector2(580, 720)
 _graph_ref = Object(WeakRef,"script":null)
 
 breakpointable = true
@@ -153,9 +139,10 @@ instruction = "Rotate {node} ({mode})"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(350, 100)
+position_in_graph = Vector2(580, 500)
 _graph_ref = Object(WeakRef,"script":null)
 
+_next_ref = Array[StringName]([&"RestBetweenJumps"])
 _blackboard_bindings = Dictionary[StringName, StringName]({
 &"node": &"Self"
 })
@@ -171,7 +158,6 @@ nodes = Dictionary[StringName, ExtResource("2_node")]({
 &"LandingReset": SubResource("SubResource_squash_reset"),
 &"LandingSquash": SubResource("SubResource_squash"),
 &"LoopForever": SubResource("SubResource_rep"),
-&"ParkourSequence": SubResource("SubResource_seq"),
 &"RestBetweenJumps": SubResource("SubResource_rest"),
 &"SpinTurn": SubResource("SubResource_spin")
 })
@@ -185,35 +171,29 @@ connections = Array[Dictionary]([{
 "from_node": &"LoopForever",
 "from_port": 0,
 "keep_alive": false,
-"to_node": &"ParkourSequence",
-"to_port": 0
-}, {
-"from_node": &"ParkourSequence",
-"from_port": 0,
-"keep_alive": false,
 "to_node": &"DoJump",
 "to_port": 0
 }, {
-"from_node": &"ParkourSequence",
-"from_port": 1,
+"from_node": &"DoJump",
+"from_port": 0,
 "keep_alive": false,
 "to_node": &"LandingSquash",
 "to_port": 0
 }, {
-"from_node": &"ParkourSequence",
-"from_port": 2,
+"from_node": &"LandingSquash",
+"from_port": 0,
 "keep_alive": false,
 "to_node": &"LandingReset",
 "to_port": 0
 }, {
-"from_node": &"ParkourSequence",
-"from_port": 3,
+"from_node": &"LandingReset",
+"from_port": 0,
 "keep_alive": false,
 "to_node": &"SpinTurn",
 "to_port": 0
 }, {
-"from_node": &"ParkourSequence",
-"from_port": 4,
+"from_node": &"SpinTurn",
+"from_port": 0,
 "keep_alive": false,
 "to_node": &"RestBetweenJumps",
 "to_port": 0

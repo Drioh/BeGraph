@@ -65,7 +65,7 @@ func _ready() -> void:
 		
 	undo_redo = EditorInterface.get_editor_undo_redo()
 
-func _shortcut_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
 	if not is_visible_in_tree() or current_graph == null:
 		return
 	if not (event is InputEventKey and event.pressed and not event.echo):
@@ -512,9 +512,10 @@ func _show_node_creation_popup() -> void:
 		_node_popup.add_separator()
 		var paste_id : int = _node_popup.item_count
 		_node_popup.add_item("Paste", paste_id)
-		_node_popup.set_item_metadata(paste_id, "__paste__")
+		var paste_idx : int = _node_popup.get_item_index(paste_id)
+		_node_popup.set_item_metadata(paste_idx, "__paste__")
 		var has_clipboard : bool = not _clipboard.get("nodes", []).is_empty()
-		_node_popup.set_item_disabled(paste_id, not has_clipboard)
+		_node_popup.set_item_disabled(paste_idx, not has_clipboard)
 
 	add_child(_node_popup)
 
@@ -625,7 +626,9 @@ func _build_node_popup(path: String) -> PopupMenu:
 
 ## Creates a node from the script path stored in the selected item's metadata (or pastes when Paste is selected).
 func _on_node_popup_id_pressed(id: int, popup: PopupMenu) -> void:
-	var script_path = popup.get_item_metadata(id)
+	var idx : int = popup.get_item_index(id)
+	if idx < 0: return
+	var script_path = popup.get_item_metadata(idx)
 	if script_path == null: return
 	if script_path == "__paste__":
 		var offset : Vector2 = (_last_popup_local_pos + scroll_offset) / zoom - _snapshot_origin(_clipboard)
@@ -709,23 +712,34 @@ func _paste_snapshot(snapshot : Dictionary, offset : Vector2) -> void:
 
 	_deselect_all()
 
+	var valid_bb_keys : Array[StringName] = []
+	for v in current_graph.blackboard:
+		if v != null:
+			valid_bb_keys.append(StringName(v.name))
+
 	var name_map : Dictionary = {} # old name -> new name
 	var copies : Array[BehaviorNode] = []
 	for source : BehaviorNode in nodes:
 		var copy : BehaviorNode = _clone_behavior_node(source)
 		var new_name : StringName = _generate_unique_node_name()
+		while name_map.values().has(new_name):
+			new_name = _generate_unique_node_name()
 		name_map[StringName(source.resource_name)] = new_name
 		copy.resource_name = new_name
 		copy.position_in_graph = source.position_in_graph + offset
-		_unbind_blackboard_properties(copy, current_graph.blackboard.map(func(v): return v.name))
+		_unbind_blackboard_properties(copy, valid_bb_keys)
 		copies.append(copy)
 
 	var new_connections : Array[Dictionary] = []
 	for c in snapshot["connections"]:
+		var from_orig := StringName(c["from_node"])
+		var to_orig := StringName(c["to_node"])
+		if not name_map.has(from_orig) or not name_map.has(to_orig):
+			continue
 		new_connections.append({
-			"from_node": name_map[StringName(c["from_node"])],
+			"from_node": name_map[from_orig],
 			"from_port": c["from_port"],
-			"to_node": name_map[StringName(c["to_node"])],
+			"to_node": name_map[to_orig],
 			"to_port": c["to_port"],
 		})
 
@@ -733,17 +747,22 @@ func _paste_snapshot(snapshot : Dictionary, offset : Vector2) -> void:
 	for copy in copies:
 		pasted_names.append(StringName(copy.resource_name))
 
-	var action_name : String = "Paste Node" if copies.size() == 1 else "Paste %d Nodes" % copies.size()
-	undo_redo.create_action(action_name, UndoRedo.MERGE_DISABLE, current_graph)
+	_do_load_nodes(copies)
+	_do_connect_many(new_connections)
+	_do_select_nodes(pasted_names)
 
-	undo_redo.add_do_method(self, &"_do_load_nodes", copies)
-	undo_redo.add_do_method(self, &"_do_connect_many", new_connections)
-	undo_redo.add_do_method(self, &"_do_select_nodes", pasted_names)
+	if undo_redo != null:
+		var action_name : String = "Paste Node" if copies.size() == 1 else "Paste %d Nodes" % copies.size()
+		undo_redo.create_action(action_name, UndoRedo.MERGE_DISABLE, current_graph)
 
-	undo_redo.add_undo_method(self, &"_do_disconnect_many", new_connections)
-	undo_redo.add_undo_method(self, &"_do_remove_nodes", copies)
+		undo_redo.add_do_method(self, &"_do_load_nodes", copies)
+		undo_redo.add_do_method(self, &"_do_connect_many", new_connections)
+		undo_redo.add_do_method(self, &"_do_select_nodes", pasted_names)
 
-	undo_redo.commit_action()
+		undo_redo.add_undo_method(self, &"_do_disconnect_many", new_connections)
+		undo_redo.add_undo_method(self, &"_do_remove_nodes", copies)
+
+		undo_redo.commit_action(false)
 
 ## Loads every not-yet-present node in [param copies] (shared by paste/duplicate's redo and by
 ## embed_graph's redo: on first commit the nodes are already loaded live by the caller, so this
@@ -777,6 +796,7 @@ func _generate_unique_node_name(prefix : String = "_GraphNode_") -> StringName:
 ## Deep-copies [param source] and strips everything tied to the graph it belonged to (successors), so the copy can be wired up from scratch.
 func _clone_behavior_node(source : BehaviorNode) -> BehaviorNode:
 	var copy : BehaviorNode = source.duplicate_deep(Resource.DEEP_DUPLICATE_ALL) as BehaviorNode
+	copy._sequence_frame_entry = null
 	copy._next_ref.clear()
 	for condition in copy.conditions:
 		condition["next"] = null
@@ -800,8 +820,8 @@ func _get_selected_nodes() -> Array[BehaviorGraphNodeBase]:
 	return ret
 
 func _deselect_all() -> void:
-	for child: GraphElement in get_children():
-		var element : GraphElement= child 
+	for child in get_children():
+		var element := child as GraphElement
 		if element == null: continue
 		
 		element.selected = false
@@ -1002,9 +1022,13 @@ func _sync_frame_attachments() -> void:
 
 func _unbind_blackboard_properties(node: BehaviorNode, keep_if_in: Array[StringName] = []) -> void:
 	for prop in node._blackboard_bindings.keys().duplicate():
-		if keep_if_in.has(node._blackboard_bindings[prop]): continue
+		if keep_if_in.has(StringName(node._blackboard_bindings[prop])): continue
 		
 		node.set_node_property_blackboard_key(prop)
+	if node.decorator.has("blackboard_key"):
+		var dec_key := StringName(node.decorator.get("blackboard_key", &""))
+		if dec_key != &"" and not keep_if_in.has(dec_key):
+			node.decorator["blackboard_key"] = &""
 
 func _graph_display_name(graph: BehaviorGraph) -> String:
 	if graph.resource_name != "": return graph.resource_name
@@ -1178,8 +1202,8 @@ var _move_start_positions : Dictionary = {}
 
 func _on_begin_node_move() -> void:
 	_move_start_positions.clear()
-	for child: GraphElement in get_children():
-		var element :GraphElement= child
+	for child in get_children():
+		var element := child as GraphElement
 		if element == null or !element.selected: continue
 		
 		_move_start_positions[StringName(element.name)] = element.position_offset

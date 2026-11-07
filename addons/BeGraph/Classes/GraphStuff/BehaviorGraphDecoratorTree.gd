@@ -71,9 +71,9 @@ const DECORATOR_ROWS: Array[Dictionary] = [
 		"type": "condition",
 		"label": "Condition",
 		"tooltip": "Gates the action behind a boolean Blackboard variable. \n
-		Drag a boolean variable from the blackboard panel onto the Value column to bind it:\n
-		while bound and true, the action ticks normally; \n
-		while bound and false, this node returns FAILURE immediately without ticking it. \n
+		Select a boolean variable from the Value column and choose whether it must be True or False in the \"Expected\" row:\n
+		while bound and matching the expected value, the action ticks normally; \n
+		while bound and not matching, this node returns FAILURE immediately without ticking it. \n
 		Unbound, the action always ticks normally."
 	},
 ]
@@ -194,7 +194,10 @@ func _build_decorator_tree() -> void:
 			"condition":
 				_setup_enum_cell(item, 2, "(none)")
 				item.set_metadata(2, &"blackboard_key")
-				item.set_tooltip_text(2, "Gates the action behind a boolean Blackboard variable, chosen from this dropdown (scanned from the graph's blackboard; only boolean variables are listed).\n(none): the action always ticks normally.\nSelecting a variable: while it's true, the action ticks normally; while false, this node returns FAILURE immediately without ticking it.")
+				item.set_tooltip_text(2, "Gates the action behind a boolean Blackboard variable, chosen from this dropdown (scanned from the graph's blackboard; only boolean variables are listed).\n(none): the action always ticks normally.\nSelecting a variable: while it matches the \"Expected\" value below, the action ticks normally; otherwise, this node returns FAILURE immediately without ticking it.")
+				var expected_child := _create_enum_child(item, "Expected", &"condition_expected", "True,False")
+				expected_child.set_tooltip_text(1, "Which boolean value the bound Blackboard variable must have for the action to execute.\nTrue: ticks the action when the variable is true (returns FAILURE when false).\nFalse: ticks the action when the variable is false (returns FAILURE when true).")
+				expected_child.set_tooltip_text(2, expected_child.get_tooltip_text(1))
 	_refresh_decorator_tree()
 
 func _setup_range_cell(item: TreeItem, column: int, meta_key: StringName, min_v: float = 0.0, step: float = 0.01) -> void:
@@ -265,6 +268,7 @@ func _refresh_decorator_tree() -> void:
 			var key : String = str(dec.get("blackboard_key", &""))
 			var idx : int = names.find(key)
 			item.set_range(2, idx + 1 if idx != -1 else 0)
+			item.get_child(0).set_range(2, int(dec.get("condition_expected", 0)))
 
 	_decorator_syncing = false
 

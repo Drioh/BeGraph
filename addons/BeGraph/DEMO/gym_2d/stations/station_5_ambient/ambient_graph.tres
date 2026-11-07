@@ -5,7 +5,7 @@
 [ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="3_ap"]
 [ext_resource type="Script" uid="uid://buoorgg5w3x50" path="res://addons/BeGraph/Classes/Nodes/Flow/Classic/Random Selector.gd" id="5_rsel"]
 [ext_resource type="Script" uid="uid://bbgig7yaxqlb0" path="res://addons/BeGraph/Classes/Nodes/Actions/Misc/Tween Property.gd" id="7_tween"]
-[ext_resource type="Script" uid="uid://bt3sox16shfd2" path="res://addons/BeGraph/Classes/Nodes/Actions/Misc/Set Blackboard Variable.gd" id="8_b2fp8"]
+[ext_resource type="Script" uid="uid://cs6p0qd255j4q" path="res://addons/BeGraph/Classes/misc/BehaviorFrame.gd" id="8_b2fp8"]
 [ext_resource type="Script" uid="uid://dc3xdjgtnutmf" path="res://addons/BeGraph/Classes/Nodes/Actions/Misc/Set Text Property.gd" id="8_txt"]
 [ext_resource type="Script" uid="uid://b0sc0g6pmwp4q" path="res://addons/BeGraph/Classes/Nodes/Actions/Time/Wait.gd" id="9_wait"]
 [ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="10_graph"]
@@ -14,14 +14,14 @@
 resource_name = "Self"
 script = ExtResource("1_bb")
 name = &"Self"
-value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Station5_Ambient/AmbientActor")
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym2D/Stations/Station5_Ambient/AmbientActor")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_esob3"]
 resource_name = "StatusLabel"
 script = ExtResource("1_bb")
 name = &"StatusLabel"
-value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Station5_Ambient/AmbientActor/StatusLabel")
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym2D/Stations/Station5_Ambient/AmbientActor/StatusLabel")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_lw1ib"]
@@ -57,7 +57,7 @@ allows_multiple_outputs = true
 position_in_graph = Vector2(-340, -360)
 _graph_ref = Object(WeakRef,"script":null)
 
-_next_ref = Array[StringName]([&"_GraphNode_28804", &"_GraphNode_14393", &"_GraphNode_83950"])
+_next_ref = Array[StringName]([&"TxtSquish", &"TxtColor", &"TxtRest"])
 breakpointable = true
 mutable = true
 decorator = {
@@ -75,7 +75,7 @@ instruction = "Tween {node}'s {property} to {target_value} over {duration}s"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1500, -180)
+position_in_graph = Vector2(1480, -120)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"TweenCol2"])
@@ -95,7 +95,7 @@ instruction = "Tween {node}'s {property} to {target_value} over {duration}s"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(2100, -180)
+position_in_graph = Vector2(2080, -120)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"TweenCol3"])
@@ -115,7 +115,7 @@ instruction = "Tween {node}'s {property} to {target_value} over {duration}s"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(2660, -180)
+position_in_graph = Vector2(2640, -120)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"WaitCol"])
@@ -135,7 +135,7 @@ instruction = "Tween {node}'s {property} to {target_value} over {duration}s"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(2020, -780)
+position_in_graph = Vector2(1620, -620)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"TweenSquish2"])
@@ -155,7 +155,7 @@ instruction = "Tween {node}'s {property} to {target_value} over {duration}s"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(2680, -740)
+position_in_graph = Vector2(2280, -580)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"TweenSquish3"])
@@ -175,7 +175,7 @@ instruction = "Tween {node}'s {property} to {target_value} over {duration}s"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(3300, -740)
+position_in_graph = Vector2(2900, -580)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"WaitSquish"])
@@ -194,7 +194,7 @@ instruction = "Set {node}'s {property}: {value} ({mode})"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1000, -160)
+position_in_graph = Vector2(980, -100)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"TweenCol1"])
@@ -213,7 +213,7 @@ instruction = "Set {node}'s {property}: {value} ({mode})"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1000, 180)
+position_in_graph = Vector2(1020, 460)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"WaitRest"])
@@ -232,7 +232,7 @@ instruction = "Set {node}'s {property}: {value} ({mode})"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1400, -740)
+position_in_graph = Vector2(1000, -580)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"TweenSquish1"])
@@ -250,10 +250,9 @@ instruction = "Wait {seconds}s"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(3220, -100)
+position_in_graph = Vector2(3200, -40)
 _graph_ref = Object(WeakRef,"script":null)
 
-_next_ref = Array[StringName]([&"_GraphNode_18687"])
 breakpointable = true
 mutable = true
 
@@ -265,10 +264,9 @@ instruction = "Wait {seconds}s"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1640, 280)
+position_in_graph = Vector2(1660, 560)
 _graph_ref = Object(WeakRef,"script":null)
 
-_next_ref = Array[StringName]([&"_GraphNode_23410"])
 breakpointable = true
 mutable = true
 
@@ -280,103 +278,54 @@ instruction = "Wait {seconds}s"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(3860, -640)
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"_GraphNode_83512"])
-breakpointable = true
-mutable = true
-
-[sub_resource type="Resource" id="Resource_c8uh7"]
-resource_name = "_GraphNode_14393"
-script = ExtResource("8_b2fp8")
-variable_name = &"animating"
-value = false
-instruction = "Set BB var {variable_name} = {value}"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(400, -200)
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"TxtColor"])
-breakpointable = true
-mutable = true
-
-[sub_resource type="Resource" id="Resource_45os6"]
-resource_name = "_GraphNode_18687"
-script = ExtResource("8_b2fp8")
-variable_name = &"animating"
-value = true
-instruction = "Set BB var {variable_name} = {value}"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(3840, -160)
-_graph_ref = Object(WeakRef,"script":null)
-
-breakpointable = true
-mutable = true
-
-[sub_resource type="Resource" id="Resource_1u0pp"]
-resource_name = "_GraphNode_23410"
-script = ExtResource("8_b2fp8")
-variable_name = &"animating"
-value = true
-instruction = "Set BB var {variable_name} = {value}"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(2251.256, 387.01715)
+position_in_graph = Vector2(3460, -480)
 _graph_ref = Object(WeakRef,"script":null)
 
 breakpointable = true
 mutable = true
 
 [sub_resource type="Resource" id="Resource_5l6d1"]
-resource_name = "_GraphNode_28804"
+resource_name = "_GraphFrame_68027"
 script = ExtResource("8_b2fp8")
-variable_name = &"animating"
-value = false
-instruction = "Set BB var {variable_name} = {value}"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(760, -700)
+frame_title = "Frame"
+frame_size = Vector2(3031.0002, 448.00012)
+attached_nodes = Array[StringName]([&"TweenSquish1", &"TweenSquish2", &"TweenSquish3", &"WaitSquish", &"TxtSquish"])
+is_sequence = true
+memory = true
+node_category = "frame_node"
+position_in_graph = Vector2(960, -674)
 _graph_ref = Object(WeakRef,"script":null)
 
-_next_ref = Array[StringName]([&"TxtSquish"])
 breakpointable = true
 mutable = true
 
 [sub_resource type="Resource" id="Resource_g8vli"]
-resource_name = "_GraphNode_83512"
+resource_name = "_GraphFrame_94544"
 script = ExtResource("8_b2fp8")
-variable_name = &"animating"
-value = true
-instruction = "Set BB var {variable_name} = {value}"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(4450.571, -660.3245)
+frame_title = "Frame"
+frame_size = Vector2(2791.0002, 378.00003)
+attached_nodes = Array[StringName]([&"TweenCol1", &"TweenCol2", &"TweenCol3", &"TxtColor", &"WaitCol"])
+is_sequence = true
+memory = true
+node_category = "frame_node"
+position_in_graph = Vector2(940, -174)
 _graph_ref = Object(WeakRef,"script":null)
 
 breakpointable = true
 mutable = true
 
-[sub_resource type="Resource" id="Resource_v82k5"]
-resource_name = "_GraphNode_83950"
+[sub_resource type="Resource" id="Resource_c8uh7"]
+resource_name = "_GraphFrame_67680"
 script = ExtResource("8_b2fp8")
-variable_name = &"animating"
-value = false
-instruction = "Set BB var {variable_name} = {value}"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(375.74323, 392.87357)
+frame_title = "Frame"
+frame_size = Vector2(1211, 358)
+attached_nodes = Array[StringName]([&"TxtRest", &"WaitRest"])
+is_sequence = true
+memory = true
+node_category = "frame_node"
+position_in_graph = Vector2(980, 406)
 _graph_ref = Object(WeakRef,"script":null)
 
-_next_ref = Array[StringName]([&"TxtRest"])
 breakpointable = true
 mutable = true
 
@@ -398,12 +347,9 @@ nodes = Dictionary[StringName, ExtResource("2_node")]({
 &"WaitCol": SubResource("SubResource_wait_col"),
 &"WaitRest": SubResource("SubResource_wait_rest"),
 &"WaitSquish": SubResource("SubResource_wait_sq"),
-&"_GraphNode_14393": SubResource("Resource_c8uh7"),
-&"_GraphNode_18687": SubResource("Resource_45os6"),
-&"_GraphNode_23410": SubResource("Resource_1u0pp"),
-&"_GraphNode_28804": SubResource("Resource_5l6d1"),
-&"_GraphNode_83512": SubResource("Resource_g8vli"),
-&"_GraphNode_83950": SubResource("Resource_v82k5")
+&"_GraphFrame_67680": SubResource("Resource_c8uh7"),
+&"_GraphFrame_68027": SubResource("Resource_5l6d1"),
+&"_GraphFrame_94544": SubResource("Resource_g8vli")
 })
 connections = Array[Dictionary]([{
 "from_node": &"TxtSquish",
@@ -469,55 +415,19 @@ connections = Array[Dictionary]([{
 "from_node": &"RandomPicker",
 "from_port": 0,
 "keep_alive": false,
-"to_node": &"_GraphNode_28804",
-"to_port": 0
-}, {
-"from_node": &"_GraphNode_28804",
-"from_port": 0,
-"keep_alive": false,
 "to_node": &"TxtSquish",
 "to_port": 0
 }, {
-"from_node": &"WaitSquish",
-"from_port": 0,
-"keep_alive": false,
-"to_node": &"_GraphNode_83512",
-"to_port": 0
-}, {
 "from_node": &"RandomPicker",
-"from_port": 0,
-"keep_alive": false,
-"to_node": &"_GraphNode_14393",
-"to_port": 0
-}, {
-"from_node": &"_GraphNode_14393",
 "from_port": 0,
 "keep_alive": false,
 "to_node": &"TxtColor",
 "to_port": 0
 }, {
-"from_node": &"WaitCol",
-"from_port": 0,
-"keep_alive": false,
-"to_node": &"_GraphNode_18687",
-"to_port": 0
-}, {
 "from_node": &"RandomPicker",
 "from_port": 0,
 "keep_alive": false,
-"to_node": &"_GraphNode_83950",
-"to_port": 0
-}, {
-"from_node": &"_GraphNode_83950",
-"from_port": 0,
-"keep_alive": false,
 "to_node": &"TxtRest",
-"to_port": 0
-}, {
-"from_node": &"WaitRest",
-"from_port": 0,
-"keep_alive": false,
-"to_node": &"_GraphNode_23410",
 "to_port": 0
 }])
 _agent_ref = Object(WeakRef,"script":null)

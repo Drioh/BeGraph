@@ -62,14 +62,14 @@ func reset_actors() -> void:
 		actor_b.modulate = Color.WHITE
 		actor_b.behavior_agent.set_blackboard_property(&"moving",true)
 		if label_b:
-			label_b.text = "Patrol: Ping-Pong"
+			label_b.text = "Patrol: Loop"
 	
 	if actor_c and waypoint_c1:
 		actor_c.global_position = waypoint_c1.global_position
 		actor_c.modulate = Color.WHITE
 		actor_c.behavior_agent.set_blackboard_property(&"moving",true)
 		if label_c:
-			label_c.text = "Patrol: Loop"
+			label_c.text = "Patrol: Ping-Pong"
 	
 	if actor_d and waypoint_d1:
 		actor_d.global_position = waypoint_d1.global_position

@@ -126,7 +126,8 @@ var _sequence_frame_entry : WeakRef = null
 ## - [code]on_timeout[/code]: [code]time_limit[/code] child - 0 Abort / 1 Let Run.[br]
 ## - [code]cooldown_mode[/code]: [code]cooldown[/code] child - 0 Always / 1 On Success.[br]
 ## - [code]delay_mode[/code]: [code]delay[/code] child - 0 Before / 1 After.[br]
-## - [code]blackboard_key[/code]: [code]condition[/code] - name of the (boolean) [BlackboardVariable] dropped onto it.
+## - [code]blackboard_key[/code]: [code]condition[/code] - name of the (boolean) [BlackboardVariable] dropped onto it.[br]
+## - [code]condition_expected[/code]: [code]condition[/code] child - 0 True / 1 False.
 @export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE) var decorator : Dictionary = {
 	"type": "none",
 	"variant": 0,
@@ -138,6 +139,7 @@ var _sequence_frame_entry : WeakRef = null
 	"cooldown_mode": 0,
 	"delay_mode": 0,
 	"blackboard_key": &"",
+	"condition_expected": 0,
 }
 
 ## Every valid value for [code]decorator.type[/code] (the order the Tree UI lists them in, "none" aside).
@@ -152,7 +154,7 @@ const DECORATOR_DEFAULTS : Dictionary = {
 	"time_limit": {"seconds": 5.0, "on_timeout": 0},
 	"cooldown": {"seconds": 2.0, "cooldown_mode": 0},
 	"delay": {"seconds": 1.0, "delay_mode": 0},
-	"condition": {"blackboard_key": &""},
+	"condition": {"blackboard_key": &"", "condition_expected": 0},
 }
 
 ## Emitted whenever [member decorator] changes (type or a single field), so the node's Tree UI can re-sync itself.
@@ -341,7 +343,7 @@ func _decorator_delay(delta: float) -> Status:
 	_dec_elapsed = 0.0
 	return Status.RUNNING
 
-## Condition: reads the boolean [BlackboardVariable] bound to [code]decorator.blackboard_key[/code] (same drag-and-drop binding as a regular behavior property, restricted to [constant TYPE_BOOL]). Unbound passes through to [method tick] unmodified; bound and [code]false[/code] returns FAILURE without ticking the action; bound and [code]true[/code] ticks the action normally.
+## Condition: reads the boolean [BlackboardVariable] bound to [code]decorator.blackboard_key[/code] (restricted to [constant TYPE_BOOL]) and compares it against [code]decorator.condition_expected[/code] (0 True / 1 False). Unbound passes through to [method tick] unmodified; bound and not matching the expected value returns FAILURE without ticking the action; bound and matching ticks the action normally.
 func _decorator_condition(delta: float) -> Status:
 	var key : StringName = decorator.get("blackboard_key", &"") as StringName
 	if key == &"":
@@ -355,7 +357,8 @@ func _decorator_condition(delta: float) -> Status:
 	if variable == null or typeof(variable.value) != TYPE_BOOL:
 		return abort("decorator: blackboard variable '%s' not found or not boolean" % key)
 
-	if not bool(variable.value):
+	var expected : bool = (int(decorator.get("condition_expected", 0)) == 0)
+	if bool(variable.value) != expected:
 		return Status.FAILURE
 	return tick(delta)
 

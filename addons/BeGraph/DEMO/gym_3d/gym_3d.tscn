@@ -2,10 +2,10 @@
 
 [ext_resource type="Script" uid="uid://cx0csr3ribtir" path="res://addons/BeGraph/DEMO/gym_3d/gym_3d.gd" id="1_gym"]
 [ext_resource type="PackedScene" path="res://addons/BeGraph/DEMO/gym_3d/common/player_3d.tscn" id="2_player"]
-[ext_resource type="PackedScene" path="res://addons/BeGraph/DEMO/gym_3d/stations/station_1_elevation_patrol/station_1_elevation_patrol.tscn" id="3_st1"]
+[ext_resource type="PackedScene" uid="uid://cofdudtpduq7y" path="res://addons/BeGraph/DEMO/gym_3d/stations/station_1_elevation_patrol/station_1_elevation_patrol.tscn" id="3_st1"]
 [ext_resource type="PackedScene" path="res://addons/BeGraph/DEMO/gym_3d/stations/station_2_sentry_3d/station_2_sentry_3d.tscn" id="4_st2"]
 [ext_resource type="PackedScene" path="res://addons/BeGraph/DEMO/gym_3d/stations/station_3_physics_impulse/station_3_physics_impulse.tscn" id="5_st3"]
-[ext_resource type="PackedScene" path="res://addons/BeGraph/DEMO/gym_3d/stations/station_4_drone_orbit/station_4_drone_orbit.tscn" id="6_st4"]
+[ext_resource type="PackedScene" uid="uid://8kh861ciropl" path="res://addons/BeGraph/DEMO/gym_3d/stations/station_4_drone_orbit/station_4_drone_orbit.tscn" id="6_st4"]
 [ext_resource type="PackedScene" path="res://addons/BeGraph/DEMO/gym_3d/stations/station_5_acrobat_jump/station_5_acrobat_jump.tscn" id="7_st5"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]

@@ -95,6 +95,7 @@ breakpointable = true
 mutable = true
 decorator = {
 "blackboard_key": &"moving",
+"condition_expected": 0,
 "type": "condition"
 }
 

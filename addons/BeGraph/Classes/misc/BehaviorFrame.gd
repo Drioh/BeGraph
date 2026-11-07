@@ -85,17 +85,8 @@ func setup_sequence(graph: BehaviorGraph) -> void:
 
 	var visited : Dictionary = {}
 	var order : Array[StringName] = []
-	var visit_chain : Callable
-	visit_chain = func(curr: StringName) -> void:
-		if visited.has(curr):
-			return
-		visited[curr] = true
-		order.append(curr)
-		for nxt in internal_next[curr]:
-			visit_chain.call(nxt)
-
 	for r in roots:
-		visit_chain.call(r)
+		_visit_sequence_chain(r, internal_next, visited, order)
 
 	# Fallback for any remaining nodes (e.g. cycles) sorted spatially
 	var remaining : Array[StringName] = []
@@ -104,7 +95,7 @@ func setup_sequence(graph: BehaviorGraph) -> void:
 			remaining.append(n_name)
 	remaining.sort_custom(sort_spatial)
 	for rem in remaining:
-		visit_chain.call(rem)
+		_visit_sequence_chain(rem, internal_next, visited, order)
 
 	for n_name in order:
 		var bn : BehaviorNode = in_frame[n_name]
@@ -118,6 +109,14 @@ func setup_sequence(graph: BehaviorGraph) -> void:
 
 	if not _sequence_nodes.is_empty():
 		_sequence_nodes[0]._sequence_frame_entry = weakref(self)
+
+func _visit_sequence_chain(curr: StringName, internal_next: Dictionary, visited: Dictionary, order: Array[StringName]) -> void:
+	if visited.has(curr):
+		return
+	visited[curr] = true
+	order.append(curr)
+	for nxt in internal_next[curr]:
+		_visit_sequence_chain(nxt, internal_next, visited, order)
 
 func tick_sequence(delta: float) -> Status:
 	var count : int = _sequence_nodes.size()

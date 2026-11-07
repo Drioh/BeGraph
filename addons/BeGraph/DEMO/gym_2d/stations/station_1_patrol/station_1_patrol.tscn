@@ -79,9 +79,6 @@ position = Vector2(-170, -40)
 [node name="WaypointA3" type="Node2D" parent="WaypointsA" unique_id=57663387]
 position = Vector2(-70, -90)
 
-[node name="WaypointC4" type="Node2D" parent="WaypointsA" unique_id=1952765702]
-position = Vector2(120, -20)
-
 [node name="WaypointsB" type="Node2D" parent="." unique_id=1111134654]
 
 [node name="WaypointB1" type="Node2D" parent="WaypointsB" unique_id=558475384]
@@ -103,6 +100,9 @@ position = Vector2(250, -120)
 
 [node name="WaypointC3" type="Node2D" parent="WaypointsC" unique_id=1796804001]
 position = Vector2(250, -20)
+
+[node name="WaypointC4" type="Node2D" parent="WaypointsC" unique_id=1952765702]
+position = Vector2(120, -20)
 
 [node name="WaypointsD" type="Node2D" parent="." unique_id=874988531]
 

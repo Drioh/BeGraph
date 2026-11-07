@@ -1,7 +1,7 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://cofdudtpduq7y"]
 
-[ext_resource type="Script" path="res://addons/BeGraph/DEMO/gym_3d/stations/station_1_elevation_patrol/station_1_elevation_patrol.gd" id="1_st1_gd"]
 [ext_resource type="PackedScene" path="res://addons/BeGraph/DEMO/gym_3d/common/station_billboard_3d.tscn" id="1_bb"]
+[ext_resource type="Script" uid="uid://bboljyge4i848" path="res://addons/BeGraph/DEMO/gym_3d/stations/station_1_elevation_patrol/station_1_elevation_patrol.gd" id="1_st1_gd"]
 [ext_resource type="Script" uid="uid://cw01p0ypvtv25" path="res://addons/BeGraph/DEMO/gym_3d/common/actor_3d.gd" id="2_act"]
 [ext_resource type="Script" uid="uid://cj0fv54i6ere" path="res://addons/BeGraph/Classes/misc/BehaviorAgent.gd" id="3_agent"]
 [ext_resource type="Resource" uid="uid://dkd7jxnlf4pln" path="res://addons/BeGraph/DEMO/gym_3d/stations/station_1_elevation_patrol/patrol_elevation.tres" id="4_graph"]
@@ -38,6 +38,10 @@ size = Vector3(3, 0.4, 4.924)
 radius = 0.4
 height = 1.2
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_i5bgf"]
+albedo_color = Color(0.95, 0.55, 0.15, 1)
+roughness = 0.4
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_actor"]
 albedo_color = Color(0.95, 0.55, 0.15, 1)
 roughness = 0.4
@@ -57,93 +61,99 @@ material = SubResource("StandardMaterial3D_part")
 radius = 0.1
 height = 0.2
 
-[node name="Station1_ElevationPatrol" type="Node3D"]
+[node name="Station1_ElevationPatrol" type="Node3D" unique_id=202355292]
 script = ExtResource("1_st1_gd")
 
-[node name="StationBillboard3D" parent="." instance=ExtResource("1_bb")]
+[node name="StationBillboard3D" parent="." unique_id=776370605 instance=ExtResource("1_bb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, -6.5)
 title = "Station 1: 3D Elevation Patrol"
 summary = "Demonstrates 3D waypoint patrol mechanics across varying elevations and ramp inclines. Actor A climbs the terrace using Patrol (Once mode); on reaching the summit, it shifts its material color and triggers a 3D particle fountain via Restart Particles."
 nodes_used = PackedStringArray("Access Point", "Sequence", "Patrol", "Set Property", "Restart Particles", "Wait")
 station_color = Color(0.2, 0.8, 0.4, 1)
 
-[node name="Floor" type="StaticBody3D" parent="."]
+[node name="Floor" type="StaticBody3D" parent="." unique_id=1536872998]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
 collision_layer = 2
 collision_mask = 7
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Floor"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Floor" unique_id=346670776]
 mesh = SubResource("BoxMesh_floor")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor" unique_id=229625740]
 shape = SubResource("BoxShape3D_floor")
 
-[node name="RaisedPlatform" type="StaticBody3D" parent="."]
+[node name="RaisedPlatform" type="StaticBody3D" parent="." unique_id=380833086]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, -4)
 collision_layer = 2
 collision_mask = 7
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="RaisedPlatform"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RaisedPlatform" unique_id=1776086620]
 mesh = SubResource("BoxMesh_plat")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="RaisedPlatform"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RaisedPlatform" unique_id=936466918]
 shape = SubResource("BoxShape3D_plat")
 
-[node name="Ramp" type="StaticBody3D" parent="."]
+[node name="Ramp" type="StaticBody3D" parent="." unique_id=1833820328]
 transform = Transform3D(1, 0, 0, 0, 0.913812, -0.406138, 0, 0.406138, 0.913812, 0, 0.8172, 0.3312)
 collision_layer = 2
 collision_mask = 7
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Ramp"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Ramp" unique_id=661994749]
 mesh = SubResource("BoxMesh_ramp")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Ramp"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ramp" unique_id=948521747]
 shape = SubResource("BoxShape3D_ramp")
 
-[node name="Waypoints" type="Node3D" parent="."]
+[node name="Waypoints" type="Node3D" parent="." unique_id=1029028746]
 
-[node name="Waypoint1" type="Node3D" parent="Waypoints"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 4.0)
+[node name="Waypoint1" type="Node3D" parent="Waypoints" unique_id=186848853]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 4)
 
-[node name="Waypoint2" type="Node3D" parent="Waypoints"]
+[node name="Waypoint2" type="Node3D" parent="Waypoints" unique_id=509639180]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 2.5)
 
-[node name="Waypoint3" type="Node3D" parent="Waypoints"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6, -2.0)
+[node name="Waypoint3" type="Node3D" parent="Waypoints" unique_id=2062872223]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6, -2)
 
-[node name="Waypoint4" type="Node3D" parent="Waypoints"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6, -4.0)
+[node name="Waypoint4" type="Node3D" parent="Waypoints" unique_id=733780994]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6, -4)
 
-[node name="ClimberActor" type="CharacterBody3D" parent="." node_paths=PackedStringArray("behavior_agent")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 4.0)
+[node name="ClimberActor" type="CharacterBody3D" parent="." unique_id=60428775 node_paths=PackedStringArray("behavior_agent")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 4)
 collision_layer = 4
 collision_mask = 3
 script = ExtResource("2_act")
 behavior_agent = NodePath("BehaviorAgent")
-use_gravity = false
 actor_color = Color(0.95, 0.55, 0.15, 1)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="ClimberActor"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ClimberActor" unique_id=775829402]
 shape = SubResource("CapsuleShape3D_act")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="ClimberActor"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="ClimberActor" unique_id=1787784619]
+material_override = SubResource("StandardMaterial3D_i5bgf")
 mesh = SubResource("CapsuleMesh_act")
 
-[node name="BehaviorAgent" type="Node" parent="ClimberActor"]
+[node name="BehaviorAgent" type="Node" parent="ClimberActor" unique_id=55552672]
 script = ExtResource("3_agent")
+bb_props = Dictionary[StringName, Variant]({
+&"overridable_blackboard_properties/ParticleEmitter": NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Stations/Station1_ElevationPatrol/ClimberActor/CPUParticles3D"),
+&"overridable_blackboard_properties/Self": NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Stations/Station1_ElevationPatrol/ClimberActor"),
+&"overridable_blackboard_properties/Waypoints": NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Stations/Station1_ElevationPatrol/Waypoints")
+})
 behavior_graph = ExtResource("4_graph")
 starting_point = 0
+overridable_blackboard_properties/Self = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Stations/Station1_ElevationPatrol/ClimberActor")
+overridable_blackboard_properties/Waypoints = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Stations/Station1_ElevationPatrol/Waypoints")
+overridable_blackboard_properties/ParticleEmitter = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Stations/Station1_ElevationPatrol/ClimberActor/CPUParticles3D")
 
-[node name="CPUParticles3D" type="CPUParticles3D" parent="ClimberActor"]
+[node name="CPUParticles3D" type="CPUParticles3D" parent="ClimberActor" unique_id=206985930]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
 emitting = false
 amount = 25
-lifetime = 1.0
 one_shot = true
 explosiveness = 0.95
 mesh = SubResource("SphereMesh_part")
 direction = Vector3(0, 1, 0)
 spread = 60.0
-gravity = Vector3(0, -9.8, 0)
 initial_velocity_min = 4.0
 initial_velocity_max = 7.0
