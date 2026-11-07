@@ -3,10 +3,10 @@
 [ext_resource type="Script" uid="uid://da0t4052e3fsp" path="res://addons/BeGraph/Classes/misc/BlackboardVariable.gd" id="1_bb"]
 [ext_resource type="Script" uid="uid://ca0cevcqjpnsq" path="res://addons/BeGraph/Classes/misc/BehaviorNode.gd" id="2_node"]
 [ext_resource type="Script" uid="uid://dl8x3nwnp3msk" path="res://addons/BeGraph/Classes/Nodes/AccessPointNode.gd" id="3_ap"]
-[ext_resource type="Script" uid="uid://lm5p5pupyhdf" path="res://addons/BeGraph/Classes/Nodes/Flow/Comparators/Detect Bodies in Area.gd" id="4_area"]
+[ext_resource type="Script" uid="uid://lm5p5pupyhdf" path="res://addons/BeGraph/Classes/Nodes/Conditions/Perception/Detect Bodies in Area.gd" id="4_area"]
 [ext_resource type="Script" uid="uid://cs6p0qd255j4q" path="res://addons/BeGraph/Classes/misc/BehaviorFrame.gd" id="7_fk2jh"]
 [ext_resource type="Script" uid="uid://b5qh72hlrsv4u" path="res://addons/BeGraph/Classes/Nodes/Actions/Physics/Apply Impulse.gd" id="7_imp"]
-[ext_resource type="Script" uid="uid://b0sc0g6pmwp4q" path="res://addons/BeGraph/Classes/Nodes/Actions/Time/Wait.gd" id="8_wait"]
+[ext_resource type="Script" uid="uid://b0sc0g6pmwp4q" path="res://addons/BeGraph/Classes/Nodes/Flow/Wait/Wait.gd" id="8_wait"]
 [ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="9_graph"]
 
 [sub_resource type="Resource" id="Resource_bb_trig"]
