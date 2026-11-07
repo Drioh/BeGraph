@@ -10,6 +10,15 @@ enum Mode { THRESHOLD, ALL }
 @export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+"Threshold,All", PROPERTY_USAGE_DEFAULT) var mode : Mode = Mode.THRESHOLD
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var required_successes : int = 1
 
+func _abort_remaining_children() -> void:
+	var graph := get_graph()
+	if graph == null:
+		return
+	for next_name in _next_ref:
+		var child : BehaviorNode = graph.nodes.get(next_name, null)
+		if child != null:
+			child.abort_running()
+
 func tick(delta: float) -> Status:
 	var current_mode : Mode = eval(&"mode") as Mode
 	var required : int = _next_ref.size() if current_mode == Mode.ALL else eval(&"required_successes") as int
@@ -24,14 +33,18 @@ func tick(delta: float) -> Status:
 			Status.FAILURE:
 				failures += 1
 			Status.ERROR:
+				_abort_remaining_children()
 				return Status.ERROR
 				
 		if current_mode == Mode.ALL and status == Status.FAILURE:
+			_abort_remaining_children()
 			return Status.FAILURE
 			
 	if successes >= required:
+		_abort_remaining_children()
 		return Status.SUCCESS
 	if failures > _next_ref.size() - required:
+		_abort_remaining_children()
 		return Status.FAILURE
 		
 	return Status.RUNNING

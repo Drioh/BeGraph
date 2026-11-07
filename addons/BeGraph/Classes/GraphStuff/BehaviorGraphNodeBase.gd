@@ -8,6 +8,8 @@ extends GraphNode
 @export var graph_edit: BehaviorGraphEdit
 ## Titlebar button that removes this node from its frame. Visible only while the node is inside one (see [method set_framed]).
 var free_from_frame_button: Button
+## Titlebar badge showing the 1-based execution order when this node is inside a Sequence Frame.
+var sequence_badge_label: Label
 ## Titlebar button that deletes this node.
 var delete_button: Button
 var breakpoint_button: Button
@@ -29,6 +31,13 @@ func set_node(n: BehaviorNode) -> void:
 	tb.add_theme_constant_override("separation", 0)
 	tb.get_child(0).add_theme_font_size_override("font_size", 12)
 	tb.get_child(0).self_modulate.a = 0.5
+
+	sequence_badge_label = Label.new()
+	sequence_badge_label.visible = false
+	sequence_badge_label.add_theme_font_size_override("font_size", 13)
+	if Engine.is_editor_hint() and EditorInterface.get_editor_settings():
+		sequence_badge_label.modulate = EditorInterface.get_editor_settings().get_setting("interface/theme/accent_color")
+	tb.add_child(sequence_badge_label)
 	
 	free_from_frame_button = Button.new()
 	free_from_frame_button.flat = true
@@ -102,6 +111,17 @@ func set_node_color(category: String) -> void:
 func set_framed(framed: bool) -> void:
 	if free_from_frame_button:
 		free_from_frame_button.visible = framed
+
+## Shows or hides the 1-based execution order badge (#1, #2, ...) when inside a Sequence Frame.
+func set_sequence_index(index: int) -> void:
+	if sequence_badge_label == null:
+		return
+	if index > 0:
+		sequence_badge_label.text = " #%d " % index
+		sequence_badge_label.tooltip_text = "Sequence Frame execution step #%d" % index
+		sequence_badge_label.visible = true
+	else:
+		sequence_badge_label.visible = false
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:

@@ -58,40 +58,21 @@ func _push_blackboard() -> void:
 func _build_navigation_mesh() -> void:
 	var nav_poly := NavigationPolygon.new()
 	nav_poly.agent_radius = 18.0
+	nav_poly.parsed_geometry_type = NavigationPolygon.PARSED_GEOMETRY_STATIC_COLLIDERS
+	nav_poly.parsed_collision_mask = 2
 
-	# 1. Outer arena boundary
+	# Outer arena boundary
 	var outer := PackedVector2Array([
-		Vector2(-260, -135),
-		Vector2(260, -135),
-		Vector2(260, 165),
-		Vector2(-260, 165)
+		Vector2(-265, -140),
+		Vector2(265, -140),
+		Vector2(265, 170),
+		Vector2(-265, 170)
 	])
 	nav_poly.add_outline(outer)
 
-	# 2. Obstacle holes with agent radius padding (18px)
-	var obstacles: Array[Dictionary] = [
-		{"pos": Vector2(-120, -40), "size": Vector2(48, 72)},
-		{"pos": Vector2(120, -40), "size": Vector2(48, 72)},
-		{"pos": Vector2(-120, 70), "size": Vector2(48, 72)},
-		{"pos": Vector2(120, 70), "size": Vector2(48, 72)},
-		{"pos": Vector2(0, 15), "size": Vector2(64, 32)}
-	]
-
-	for obs in obstacles:
-		var p: Vector2 = obs["pos"]
-		var s: Vector2 = obs["size"]
-		var hw: float = s.x * 0.5 + 18.0
-		var hh: float = s.y * 0.5 + 18.0
-		var hole := PackedVector2Array([
-			Vector2(p.x - hw, p.y - hh),
-			Vector2(p.x + hw, p.y - hh),
-			Vector2(p.x + hw, p.y + hh),
-			Vector2(p.x - hw, p.y + hh)
-		])
-		nav_poly.add_outline(hole)
-	
-	
-	nav_poly.make_polygons_from_outlines()
+	var source_geometry := NavigationMeshSourceGeometryData2D.new()
+	NavigationServer2D.parse_source_geometry_data(nav_poly, source_geometry, self)
+	NavigationServer2D.bake_from_source_geometry_data(nav_poly, source_geometry)
 
 	if nav_region:
 		nav_region.navigation_polygon = nav_poly

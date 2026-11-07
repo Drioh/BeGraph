@@ -101,6 +101,8 @@ func set_sequence_enabled(enabled: bool) -> void:
 	frame.is_sequence = enabled
 	_sequence_check.set_pressed_no_signal(enabled)
 	_memory_check.visible = enabled
+	if graph_edit:
+		graph_edit._refresh_frame_buttons()
 
 func set_memory_enabled(enabled: bool) -> void:
 	if frame == null:

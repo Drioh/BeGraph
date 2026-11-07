@@ -265,20 +265,6 @@ _blackboard_bindings = Dictionary[StringName, StringName]({
 breakpointable = true
 mutable = true
 
-[sub_resource type="Resource" id="Resource_0xlxp"]
-resource_name = "_GraphFrame_58020"
-script = ExtResource("11_7ihjp")
-frame_title = "Frame"
-frame_size = Vector2(1291, 388)
-attached_nodes = Array[StringName]([&"DimSpotLight", &"ResetYellowColor"])
-is_sequence = true
-node_category = "frame_node"
-position_in_graph = Vector2(360, -174)
-_graph_ref = Object(WeakRef,"script":null)
-
-breakpointable = true
-mutable = true
-
 [sub_resource type="Resource" id="Resource_gw7vy"]
 resource_name = "_GraphFrame_22309"
 script = ExtResource("11_7ihjp")
@@ -289,6 +275,20 @@ attached_nodes = Array[StringName]([&"BrightenSpotLight", &"PlayAlarmSound", &"S
 is_sequence = true
 node_category = "frame_node"
 position_in_graph = Vector2(360, 326)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="Resource_0xlxp"]
+resource_name = "_GraphFrame_58020"
+script = ExtResource("11_7ihjp")
+frame_title = "Frame"
+frame_size = Vector2(1291, 388)
+attached_nodes = Array[StringName]([&"DimSpotLight", &"ResetYellowColor"])
+is_sequence = true
+node_category = "frame_node"
+position_in_graph = Vector2(360, -174)
 _graph_ref = Object(WeakRef,"script":null)
 
 breakpointable = true

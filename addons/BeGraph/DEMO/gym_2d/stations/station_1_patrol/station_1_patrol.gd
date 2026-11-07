@@ -16,6 +16,10 @@ extends Node2D
 @onready var reset_button_node: Button = $ResetButtonNode/Control/Button
 
 func _ready() -> void:
+	if Engine.is_editor_hint():
+		return
+	if reset_button_node and not reset_button_node.pressed.is_connected(reset_actors):
+		reset_button_node.pressed.connect(reset_actors)
 	reset_actors()
 
 	actor_a.behavior_agent.set_blackboard_property(&"waypoints",$WaypointsA.get_path())
@@ -29,8 +33,6 @@ func _ready() -> void:
 	actor_d.behavior_agent.set_blackboard_property(&"mode",3)
 	
 func _draw() -> void:
-	reset_button_node.pressed.connect(reset_actors)
-	
 	# Draw circuit paths for each patrol variant
 	_draw_path(["WaypointsA/WaypointA1", "WaypointsA/WaypointA2", "WaypointsA/WaypointA3"], Color(0.2, 0.8, 0.4, 0.4))
 	_draw_path(["WaypointsB/WaypointB1", "WaypointsB/WaypointB2", "WaypointsB/WaypointB3"], Color(0.9, 0.6, 0.2, 0.4))

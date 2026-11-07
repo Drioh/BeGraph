@@ -23,14 +23,15 @@ const DISPLAY_INFO : String = "Frame that groups other nodes visually, or execut
 
 var _sequence_nodes : Array[BehaviorNode] = []
 var _position : int = 0
+var _last_running_idx : int = -1
 var _is_ticking_sequence : bool = false
 
-func setup_sequence(graph: BehaviorGraph) -> void:
-	_sequence_nodes.clear()
-	_position = 0
-	_is_ticking_sequence = false
-	if not is_sequence or graph == null or attached_nodes.is_empty():
-		return
+## Computes the deterministic execution order of [member attached_nodes] inside [param graph]:
+## follows internal connections starting from the entry node(s) first, falling back to top-to-bottom / left-to-right spatial order.
+func compute_sequence_order(graph: BehaviorGraph) -> Array[StringName]:
+	var order : Array[StringName] = []
+	if graph == null or attached_nodes.is_empty():
+		return order
 
 	var in_frame : Dictionary = {} # StringName -> BehaviorNode
 	for n_name in attached_nodes:
@@ -39,13 +40,14 @@ func setup_sequence(graph: BehaviorGraph) -> void:
 			in_frame[n_name] = bn
 
 	if in_frame.is_empty():
-		return
+		return order
 
 	var internal_next : Dictionary = {} # StringName -> Array[StringName]
 	var in_degree : Dictionary = {} # StringName -> int
 	var has_external_in : Dictionary = {} # StringName -> bool
 	for n_name in in_frame:
-		internal_next[n_name] = [] as Array[StringName]
+		var next_arr : Array[StringName] = []
+		internal_next[n_name] = next_arr
 		in_degree[n_name] = 0
 		has_external_in[n_name] = false
 
@@ -53,8 +55,9 @@ func setup_sequence(graph: BehaviorGraph) -> void:
 		var from_n := StringName(c["from_node"])
 		var to_n := StringName(c["to_node"])
 		if in_frame.has(from_n) and in_frame.has(to_n):
-			if not (internal_next[from_n] as Array).has(to_n):
-				(internal_next[from_n] as Array[StringName]).append(to_n)
+			var next_arr : Array[StringName] = internal_next[from_n]
+			if not next_arr.has(to_n):
+				next_arr.append(to_n)
 				in_degree[to_n] = int(in_degree[to_n]) + 1
 		elif not in_frame.has(from_n) and in_frame.has(to_n):
 			has_external_in[to_n] = true
@@ -66,11 +69,9 @@ func setup_sequence(graph: BehaviorGraph) -> void:
 			return a.position_in_graph.y < b.position_in_graph.y
 		return a.position_in_graph.x < b.position_in_graph.x
 
-	# Sort internal outgoing edges spatially for deterministic traversal
 	for n_name in internal_next:
 		(internal_next[n_name] as Array[StringName]).sort_custom(sort_spatial)
 
-	# Roots: nodes with no incoming internal edges, prioritizing those with an external incoming connection
 	var roots : Array[StringName] = []
 	for n_name in in_frame:
 		if int(in_degree[n_name]) == 0:
@@ -84,11 +85,9 @@ func setup_sequence(graph: BehaviorGraph) -> void:
 	)
 
 	var visited : Dictionary = {}
-	var order : Array[StringName] = []
 	for r in roots:
 		_visit_sequence_chain(r, internal_next, visited, order)
 
-	# Fallback for any remaining nodes (e.g. cycles) sorted spatially
 	var remaining : Array[StringName] = []
 	for n_name in in_frame:
 		if not visited.has(n_name):
@@ -97,8 +96,28 @@ func setup_sequence(graph: BehaviorGraph) -> void:
 	for rem in remaining:
 		_visit_sequence_chain(rem, internal_next, visited, order)
 
+	return order
+
+func setup_sequence(graph: BehaviorGraph) -> void:
+	_sequence_nodes.clear()
+	_position = 0
+	_last_running_idx = -1
+	_is_ticking_sequence = false
+	if not is_sequence or graph == null or attached_nodes.is_empty():
+		return
+
+	var order : Array[StringName] = compute_sequence_order(graph)
+	if order.is_empty():
+		return
+
+	var in_frame : Dictionary = {}
 	for n_name in order:
-		var bn : BehaviorNode = in_frame[n_name]
+		in_frame[n_name] = true
+
+	for n_name in order:
+		var bn : BehaviorNode = graph.nodes.get(n_name, null)
+		if bn == null:
+			continue
 		_sequence_nodes.append(bn)
 		# Strip internal frame targets from _next_ref on linear nodes so BehaviorNode.do_tick()
 		# doesn't auto-fire the next node in the frame prematurely; the frame drives them in order.
@@ -133,12 +152,18 @@ func tick_sequence(delta: float) -> Status:
 		var status : Status = child.do_tick(delta)
 		match status:
 			Status.RUNNING:
+				if _last_running_idx != -1 and _last_running_idx != i and _last_running_idx < count:
+					_sequence_nodes[_last_running_idx].abort_running()
+				_last_running_idx = i
 				_position = i if memory else 0
 				_is_ticking_sequence = false
 				last_status = Status.RUNNING
 				last_tick_time = Time.get_ticks_msec()
 				return Status.RUNNING
 			Status.FAILURE, Status.ERROR:
+				if _last_running_idx != -1 and _last_running_idx != i and _last_running_idx < count:
+					_sequence_nodes[_last_running_idx].abort_running()
+				_last_running_idx = -1
 				_position = 0
 				_is_ticking_sequence = false
 				last_status = status
@@ -146,11 +171,24 @@ func tick_sequence(delta: float) -> Status:
 				return status
 		i += 1
 
+	_last_running_idx = -1
 	_position = 0
 	_is_ticking_sequence = false
 	last_status = Status.SUCCESS
 	last_tick_time = Time.get_ticks_msec()
 	return Status.SUCCESS
+
+func _on_abort_running(visited: Dictionary) -> void:
+	_position = 0
+	_is_ticking_sequence = false
+	if _last_running_idx >= 0 and _last_running_idx < _sequence_nodes.size():
+		var running_child : BehaviorNode = _sequence_nodes[_last_running_idx]
+		_last_running_idx = -1
+		running_child.abort_running(visited)
+	else:
+		_last_running_idx = -1
+		for child in _sequence_nodes:
+			child.abort_running(visited)
 
 func set_instruction() -> String: return ""
 func tick(delta:float) -> Status: return Status.FAILURE

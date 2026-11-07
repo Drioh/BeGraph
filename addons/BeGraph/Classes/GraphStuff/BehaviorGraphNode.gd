@@ -39,6 +39,54 @@ func _on_node_set() -> void:
 			reset_size.call_deferred()
 			)
 		decorator_tree.setup(node)
+		if not node.decorator_changed.is_connected(_update_decorator_button_visual):
+			node.decorator_changed.connect(_update_decorator_button_visual)
+		_update_decorator_button_visual()
+
+func _update_decorator_button_visual() -> void:
+	if decorator_button == null or node == null:
+		return
+	var dec : Dictionary = node.decorator
+	var dec_type : String = String(dec.get("type", "none"))
+	var active : bool = (dec_type != "none" and dec_type != "")
+	if active:
+		var accent : Color = Color(0.4, 0.7, 1.0)
+		if Engine.is_editor_hint() and EditorInterface.get_editor_settings():
+			accent = EditorInterface.get_editor_settings().get_setting("interface/theme/accent_color")
+		decorator_button.modulate = accent
+		decorator_button.tooltip_text = _format_decorator_summary(dec, dec_type)
+	else:
+		decorator_button.modulate = Color.WHITE
+		decorator_button.tooltip_text = "Configure node decorator (none active)"
+
+func _format_decorator_summary(dec: Dictionary, dec_type: String) -> String:
+	match dec_type:
+		"inverter":
+			return "Active Decorator: Inverter"
+		"force":
+			var res : String = "Success" if int(dec.get("variant", 0)) == 0 else "Failure"
+			return "Active Decorator: Force (%s)" % res
+		"repeater":
+			var v : int = int(dec.get("variant", 0))
+			if v == 0:
+				return "Active Decorator: Repeater (%d times)" % int(dec.get("count", 3))
+			var mode_str : String = "Until Success" if v == 1 else "Until Failure"
+			return "Active Decorator: Repeater (%s)" % mode_str
+		"time_limit":
+			return "Active Decorator: Time Limiter (%.2fs)" % float(dec.get("seconds", 5.0))
+		"cooldown":
+			return "Active Decorator: Cooldown (%.2fs)" % float(dec.get("seconds", 2.0))
+		"delay":
+			var when_str : String = "Before" if int(dec.get("delay_mode", 0)) == 0 else "After"
+			return "Active Decorator: Delay (%.2fs, %s)" % [float(dec.get("seconds", 1.0)), when_str]
+		"condition":
+			var key_str : String = String(dec.get("blackboard_key", &""))
+			if key_str == "":
+				key_str = "(unbound)"
+			var exp_str : String = "True" if int(dec.get("condition_expected", 0)) == 0 else "False"
+			return "Active Decorator: Condition (%s == %s)" % [key_str, exp_str]
+		_:
+			return "Active Decorator: %s" % dec_type
 
 func set_conditions() -> void:
 	h_box_container.visible = node.conditions.size() > 0

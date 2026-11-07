@@ -34,6 +34,11 @@ func tick(delta: float) -> Status:
 func on_end(_status: Status) -> void:
 	_release_runtime_graph()
 
+func _on_abort_running(visited: Dictionary) -> void:
+	if _entry != null:
+		_entry.abort_running(visited)
+	_release_runtime_graph()
+
 func _build_runtime_graph() -> bool:
 	var parent : BehaviorGraph = get_graph()
 	if parent == null:
@@ -61,6 +66,10 @@ func _build_runtime_graph() -> bool:
 			n.last_status = -1
 	else:
 		runtime = source.duplicate_deep(Resource.DEEP_DUPLICATE_ALL) as BehaviorGraph
+		for i in source.blackboard.size():
+			var src_var : BlackboardVariable = source.blackboard[i]
+			if src_var != null and not src_var.resource_path.is_empty() and not src_var.is_built_in():
+				runtime.blackboard[i] = src_var
 		runtime.setup_runtime(agent)
 		_cached_runtime = runtime
 		_cache_key = key
@@ -73,6 +82,7 @@ func _build_runtime_graph() -> bool:
 
 	if eval(&"share_blackboard") == true:
 		_share_blackboard(parent, runtime)
+		runtime._rebuild_blackboard_map()
 
 	_runtime_graph = runtime
 	_entry = entry

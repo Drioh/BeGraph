@@ -284,6 +284,21 @@ _graph_ref = Object(WeakRef,"script":null)
 breakpointable = true
 mutable = true
 
+[sub_resource type="Resource" id="Resource_c8uh7"]
+resource_name = "_GraphFrame_67680"
+script = ExtResource("8_b2fp8")
+frame_title = "Frame"
+frame_size = Vector2(1211, 358)
+attached_nodes = Array[StringName]([&"TxtRest", &"WaitRest"])
+is_sequence = true
+memory = true
+node_category = "frame_node"
+position_in_graph = Vector2(980, 406)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
 [sub_resource type="Resource" id="Resource_5l6d1"]
 resource_name = "_GraphFrame_68027"
 script = ExtResource("8_b2fp8")
@@ -309,21 +324,6 @@ is_sequence = true
 memory = true
 node_category = "frame_node"
 position_in_graph = Vector2(940, -174)
-_graph_ref = Object(WeakRef,"script":null)
-
-breakpointable = true
-mutable = true
-
-[sub_resource type="Resource" id="Resource_c8uh7"]
-resource_name = "_GraphFrame_67680"
-script = ExtResource("8_b2fp8")
-frame_title = "Frame"
-frame_size = Vector2(1211, 358)
-attached_nodes = Array[StringName]([&"TxtRest", &"WaitRest"])
-is_sequence = true
-memory = true
-node_category = "frame_node"
-position_in_graph = Vector2(980, 406)
 _graph_ref = Object(WeakRef,"script":null)
 
 breakpointable = true

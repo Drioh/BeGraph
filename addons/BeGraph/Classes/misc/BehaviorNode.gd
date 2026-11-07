@@ -490,6 +490,12 @@ func get_graph() -> BehaviorGraph:
 ## Returns the value stored under the given key (e.g. [code]"type"[/code], [code]"hint"[/code], [code]"blackboard_key"[/code]) if [param info] is provided. [br]
 ## Returns the full property [Dictionary] otherwise (or if [param info] is not a valid key (check [param behavior_properties] or [method_add_behavior_property])
 func get_node_property_info(property: StringName, info: String = "") -> Variant:
+	for prop in get_behavior_property_list():
+		if prop["name"] != property:
+			continue
+		if info == "":
+			return prop
+		return prop.get(info, null)
 	for prop in get_property_list():
 		if prop["name"] != property: 
 			continue
@@ -506,6 +512,46 @@ func get_node_property_info(property: StringName, info: String = "") -> Variant:
 ## two causes a double tick_next() call.
 func _manual_successor_propagation() -> bool:
 	return false
+
+## Recursively aborts this node and any RUNNING downstream nodes in its branch when preempted by a higher-priority branch (e.g. in a reactive Selector or Parallel node).
+func abort_running(visited: Dictionary = {}) -> void:
+	if _sequence_frame_entry != null:
+		var seq_frame := _sequence_frame_entry.get_ref() as BehaviorFrame
+		if seq_frame != null and seq_frame.is_sequence and not visited.has(seq_frame.resource_name):
+			seq_frame.abort_running(visited)
+
+	if visited.has(resource_name):
+		return
+	visited[resource_name] = true
+
+	if last_status == Status.RUNNING:
+		last_status = Status.FAILURE
+		on_end(Status.FAILURE)
+		_reset_decorator_state()
+		_on_abort_running(visited)
+
+	var graph := get_graph()
+	if graph == null:
+		return
+
+	for next_name in _next_ref:
+		if next_name == &"" or visited.has(next_name):
+			continue
+		var next_node : BehaviorNode = graph.nodes.get(next_name, null)
+		if next_node != null:
+			next_node.abort_running(visited)
+
+	for cond in conditions:
+		var cond_next : StringName = cond["next"] if cond["next"] else &""
+		if cond_next == &"" or visited.has(cond_next):
+			continue
+		var cond_node : BehaviorNode = graph.nodes.get(cond_next, null)
+		if cond_node != null:
+			cond_node.abort_running(visited)
+
+## Override in composite/flow nodes (e.g. Selector, Sequence, Parallel, Run Subgraph, BehaviorFrame) to clean up internal state when aborted externally.
+func _on_abort_running(_visited: Dictionary) -> void:
+	pass
 
 ## Public entry point used to actually run this node: calls the concrete [method tick] implementation, then records [member last_status]/[member last_tick_time] and emits [signal ticked].[br]
 ## [method tick_next] and [method tick_condition] call this (instead of [method tick] directly) to reach a successor, and [BehaviorAgent] calls this on the graph's starting node - so every tick anywhere in the graph passes through here exactly once. This is what lets external tools (like the live graph debugger) track each node's status without any individual [BehaviorNode] subclass having to report it itself.
@@ -527,14 +573,12 @@ func do_tick(delta: float) -> Status:
 	# Node is not in RUNNING state during previous frame
 	if last_status != Status.RUNNING:
 		last_status = -1
-		_connect_blackboard_signals()
 		_reset_decorator_state()
 		on_start()
 		
 		if last_status == Status.ERROR:
 			last_tick_time = Time.get_ticks_msec()
 			on_end(Status.ERROR)
-			_disconnect_blackboard_signals()
 			return Status.ERROR
 
 	var status: Status = _tick_with_decorator(delta)
@@ -551,7 +595,6 @@ func do_tick(delta: float) -> Status:
 
 	if status != Status.RUNNING: # Node just ended (SUCCESS or FAILURE)
 		on_end(status) 
-		_disconnect_blackboard_signals()
 
 	return status
 
@@ -652,7 +695,7 @@ func eval(property_name: StringName, resolve_node: bool = false, fallback_value:
 		return _resolve_node(val)
 	return val
 
-## Accepts either an absolute or relative [NodePath] (resolved through the owning [BehaviorAgent]'s [member BehaviorAgent.actor]) or a direct reference to a [Node] (useful if [param value] is connected to a blackboard variable containing the node).
+## Accepts either an absolute [NodePath] or a direct reference to a [Node] (useful if [param value] is connected to a blackboard variable containing the node). Uses the owning [BehaviorGraph]'s [member BehaviorGraph._resolved_nodes_cache] for O(1) lookup after first resolution.
 func _resolve_node(value: Variant) -> Node:
 	if Engine.is_editor_hint():
 		return null
@@ -661,6 +704,13 @@ func _resolve_node(value: Variant) -> Node:
 		return null
 	
 	if value is NodePath and value != NodePath(""):
+		var graph : BehaviorGraph = get_graph()
+		if graph != null and graph._resolved_nodes_cache.has(value):
+			var cached_ref : WeakRef = graph._resolved_nodes_cache[value]
+			var cached_node : Node = cached_ref.get_ref() as Node if cached_ref != null else null
+			if cached_node != null and is_instance_valid(cached_node):
+				return cached_node
+
 		var agent : BehaviorAgent = get_agent()
 		if agent == null:
 			push_error("BehaviorNode %s: missing agent" % resource_name)
@@ -668,22 +718,30 @@ func _resolve_node(value: Variant) -> Node:
 			
 		var resolved: Node = null
 		if value.is_absolute():
-			var tree =Engine.get_main_loop() as SceneTree
+			var tree := Engine.get_main_loop() as SceneTree
 			resolved = tree.root.get_node_or_null(value)
 		else:
 			push_error("BehaviorNode %s: node path is not absolute '%s'" % [resource_name, value])
 		
 		if resolved == null:
 			push_error("BehaviorNode %s: node not found at path '%s'" % [resource_name, value])
+		elif graph != null:
+			graph._resolved_nodes_cache[value] = weakref(resolved)
 		return resolved
 		
 	return value as Node
 
 
 
+var _cached_behavior_properties : Array[Dictionary] = []
+var _behavior_properties_cached : bool = false
+
 ## Serializable form of node, for debug purposes.
 func to_debug_info() -> Dictionary:
 	var const_map : Dictionary = get_script().get_script_constant_map() if get_script() else {}
+	var cond_texts : Array[String] = []
+	for c in conditions:
+		cond_texts.append(String(c["text"]))
 	return {
 		"name": String(resource_name),
 		"category": node_category,
@@ -691,7 +749,7 @@ func to_debug_info() -> Dictionary:
 		"input": input,
 		"output": output,
 		"position": position_in_graph,
-		"conditions": conditions.map(func(c): return String(c["text"])),
+		"conditions": cond_texts,
 		"instruction": instruction,
 		"behavior_properties": serialize_properties(),
 		"breakpoint_enabled": breakpoint_enabled,
@@ -701,43 +759,46 @@ func to_debug_info() -> Dictionary:
 
 ## Current values of behavior properties.
 func serialize_properties() -> Array:
-	return get_behavior_property_list().map(func(p: Dictionary):
-		var key : StringName = get_blackboard_key(p["name"])
-		var v : Variant = get(p["name"])
-		return {
-			"name": String(p["name"]),
+	var result : Array = []
+	for p : Dictionary in get_behavior_property_list():
+		var prop_name : StringName = StringName(p["name"])
+		var key : StringName = get_blackboard_key(prop_name)
+		var v : Variant = get(prop_name)
+		result.append({
+			"name": String(prop_name),
 			"type": p["type"],
 			"value": v,
 			"blackboard_key": String(key),
-		}
-	)
+		})
+	return result
 
-func has_behavior_properties()->bool:
+func has_behavior_properties() -> bool:
 	return not get_behavior_property_list().is_empty()
 
-func get_behavior_property_list()->Array[Dictionary]:
-	var ret : Array[Dictionary]
+func get_behavior_property_list() -> Array[Dictionary]:
+	if _behavior_properties_cached:
+		return _cached_behavior_properties
+	_cached_behavior_properties.clear()
 	for p in get_property_list():
 		if p["hint_string"].begins_with("BeGraph"):
-			ret.append(p)
-	return ret
+			_cached_behavior_properties.append(p)
+	_behavior_properties_cached = true
+	return _cached_behavior_properties
 
 func _connect_blackboard_signals() -> void:
-	var graph = get_graph()
+	var graph := get_graph()
 	if graph and not graph.blackboard_value_changed.is_connected(_on_blackboard_value_changed):
 		graph.blackboard_value_changed.connect(_on_blackboard_value_changed)
 
 func _disconnect_blackboard_signals() -> void:
-	var graph = get_graph()
+	var graph := get_graph()
 	if graph and graph.blackboard_value_changed.is_connected(_on_blackboard_value_changed):
 		graph.blackboard_value_changed.disconnect(_on_blackboard_value_changed)
 
+## Subclasses may implement [code]func on_blackboard_property_changed(key: StringName) -> void[/code] to react when a bound blackboard variable changes while the node is RUNNING.
 func _on_blackboard_value_changed(key: StringName, _new_value: Variant) -> void:
-	if is_blackboard_reference_enabled_for_key(key):
-		on_blackboard_property_changed(key)
-
-func on_blackboard_property_changed(key: StringName) -> void:
-	pass
+	if last_status == Status.RUNNING and is_blackboard_reference_enabled_for_key(key):
+		call(&"on_blackboard_property_changed", key)
 
 func supports_decorator() -> bool:
 	return node_category != "access_point_node" and output and conditions.is_empty()

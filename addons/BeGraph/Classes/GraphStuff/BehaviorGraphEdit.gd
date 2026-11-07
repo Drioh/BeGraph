@@ -34,6 +34,10 @@ var _pending_connection_from: Dictionary = {}
 
 ## Local graph coordinates where the last right-click popup was opened.
 var _last_popup_local_pos: Vector2 = Vector2.ZERO
+## Cached directory listings for node creation popup: path -> {"dirs": PackedStringArray, "files": PackedStringArray}.
+var _node_catalog_cache: Dictionary = {}
+## Cached script metadata for node creation popup: path -> Dictionary.
+var _script_metadata_cache: Dictionary = {}
 #endregion
 
 ## Emitted whenever the selection changes to a single [BehaviorGraphNodeBase]; carries its
@@ -64,6 +68,13 @@ func _ready() -> void:
 	if !Engine.is_editor_hint(): return
 		
 	undo_redo = EditorInterface.get_editor_undo_redo()
+	var fs := EditorInterface.get_resource_filesystem()
+	if fs and not fs.filesystem_changed.is_connected(_invalidate_node_catalog_cache):
+		fs.filesystem_changed.connect(_invalidate_node_catalog_cache)
+
+func _invalidate_node_catalog_cache() -> void:
+	_node_catalog_cache.clear()
+	_script_metadata_cache.clear()
 
 func _input(event: InputEvent) -> void:
 	if not is_visible_in_tree() or current_graph == null:
@@ -71,8 +82,6 @@ func _input(event: InputEvent) -> void:
 	if not (event is InputEventKey and event.pressed and not event.echo):
 		return
 	var key_event := event as InputEventKey
-	if not key_event.ctrl_pressed or key_event.alt_pressed or key_event.shift_pressed:
-		return
 
 	var focus_owner := get_viewport().gui_get_focus_owner() if get_viewport() else null
 	if focus_owner is LineEdit or focus_owner is TextEdit:
@@ -81,6 +90,15 @@ func _input(event: InputEvent) -> void:
 	var graph_focused : bool = (focus_owner != null and (focus_owner == self or is_ancestor_of(focus_owner)))
 	var mouse_inside : bool = Rect2(Vector2.ZERO, size).has_point(get_local_mouse_position())
 	if not graph_focused and not mouse_inside:
+		return
+
+	if not key_event.ctrl_pressed and not key_event.alt_pressed and not key_event.shift_pressed:
+		if key_event.keycode == KEY_F:
+			focus_selection()
+			get_viewport().set_input_as_handled()
+		return
+
+	if not key_event.ctrl_pressed or key_event.alt_pressed or key_event.shift_pressed:
 		return
 
 	match key_event.keycode:
@@ -93,6 +111,29 @@ func _input(event: InputEvent) -> void:
 		KEY_V:
 			_on_paste_nodes_request()
 			get_viewport().set_input_as_handled()
+		KEY_D:
+			duplicate_selected_nodes()
+			get_viewport().set_input_as_handled()
+
+## Centers [member scroll_offset] on the currently selected [GraphElement]s, or on all [GraphElement]s in the graph if none are selected.
+func focus_selection() -> void:
+	var targets : Array[GraphElement] = []
+	var all_elements : Array[GraphElement] = []
+	for child in get_children():
+		var el := child as GraphElement
+		if el == null or not el.visible:
+			continue
+		all_elements.append(el)
+		if el.selected:
+			targets.append(el)
+	if targets.is_empty():
+		targets = all_elements
+	if targets.is_empty():
+		return
+	var bounds := Rect2(targets[0].position_offset, targets[0].size)
+	for el in targets:
+		bounds = bounds.merge(Rect2(el.position_offset, el.size))
+	scroll_offset = bounds.get_center() * zoom - size * 0.5
 #endregion
 
 
@@ -147,20 +188,21 @@ func load_node(node_to_load : BehaviorNode, register_in_graph : bool = false) ->
 
 #region Node management
 
-## Adds a new [BehaviorGraphNode], assigns it a [BehaviorNode] script, positions it at the mouse, and registers it in [member current_graph].
+## Adds a new [BehaviorGraphNode], assigns it a [BehaviorNode] script, positions it at the initial popup click position, and registers it in [member current_graph].
 func add_node(script_path: String = "") -> BehaviorGraphNodeBase:
 	if script_path == "":
 		push_error("Script path not valid")
 		return null
 
-	var position : Vector2 = (get_local_mouse_position() + scroll_offset) / zoom
+	var position : Vector2 = (_last_popup_local_pos + scroll_offset) / zoom
 	var node_name : StringName = _generate_unique_node_name()
 	var node : BehaviorGraphNodeBase = _instantiate_node(load(script_path).new(), position, node_name)
 
-	undo_redo.create_action("Create %s" % node_name, UndoRedo.MERGE_DISABLE, current_graph)
-	undo_redo.add_do_method(self, &"_do_create_node", script_path, node_name, position)
-	undo_redo.add_undo_method(self, &"_do_remove_node", node_name, node.node)
-	undo_redo.commit_action(false) # already performed above; this only records it
+	if undo_redo != null:
+		undo_redo.create_action("Create %s" % node_name, UndoRedo.MERGE_DISABLE, current_graph)
+		undo_redo.add_do_method(self, &"_do_create_node", script_path, node_name, position)
+		undo_redo.add_undo_method(self, &"_do_remove_node", node_name, node.node)
+		undo_redo.commit_action(false) # already performed above; this only records it
 
 	return node
 
@@ -242,11 +284,7 @@ func _on_delete_nodes_request(nodes: Array[StringName], action_verb: String = "D
 		touched_connections.append(c)
 
 	var frame_snapshots : Dictionary = {} # frame name -> snapshot dict, built below
-
-	var action_name : String = "%s Node" % action_verb if to_delete.size() == 1 else "%s %d Nodes" % [action_verb, to_delete.size()]
-	undo_redo.create_action(action_name, UndoRedo.MERGE_DISABLE, current_graph)
-
-	undo_redo.add_do_method(self, &"_do_disconnect_many", touched_connections)
+	var deleted_behavior_nodes : Dictionary = {} # node name -> BehaviorNode
 
 	for n in to_delete:
 		var element := get_node_or_null(NodePath(n))
@@ -265,25 +303,42 @@ func _on_delete_nodes_request(nodes: Array[StringName], action_verb: String = "D
 				"attached": get_attached_nodes_of_frame(n).duplicate(),
 			}
 			frame_snapshots[n] = snapshot
-			undo_redo.add_do_method(self, &"_do_remove_frame", snapshot)
-		else:
-			undo_redo.add_do_method(self, &"_do_remove_node", n, (element as BehaviorGraphNodeBase).node)
+		elif element is BehaviorGraphNodeBase:
+			deleted_behavior_nodes[n] = (element as BehaviorGraphNodeBase).node
 
-	undo_redo.add_do_method(self, &"_sync_frame_attachments")
-	undo_redo.add_do_method(self, &"_emit_no_selection")
-
-	# Undo order: a node/frame must exist again before any connection touching it is restored.
+	_do_disconnect_many(touched_connections)
 	for n in to_delete:
 		if frame_snapshots.has(n):
-			undo_redo.add_undo_method(self, &"_do_recreate_frame", frame_snapshots[n])
-		else:
-			var element := get_node_or_null(NodePath(n))
-			undo_redo.add_undo_method(self, &"_do_recreate_node", n, (element as BehaviorGraphNodeBase).node)
-	undo_redo.add_undo_method(self, &"_do_connect_many", touched_connections)
-	undo_redo.add_undo_method(self, &"_sync_frame_attachments")
-	undo_redo.add_undo_method(self, &"_emit_no_selection")
+			_do_remove_frame(frame_snapshots[n])
+		elif deleted_behavior_nodes.has(n):
+			_do_remove_node(n, deleted_behavior_nodes[n])
+	_sync_frame_attachments()
+	_emit_no_selection()
 
-	undo_redo.commit_action()
+	if undo_redo != null:
+		var action_name : String = "%s Node" % action_verb if to_delete.size() == 1 else "%s %d Nodes" % [action_verb, to_delete.size()]
+		undo_redo.create_action(action_name, UndoRedo.MERGE_DISABLE, current_graph)
+
+		undo_redo.add_do_method(self, &"_do_disconnect_many", touched_connections)
+		for n in to_delete:
+			if frame_snapshots.has(n):
+				undo_redo.add_do_method(self, &"_do_remove_frame", frame_snapshots[n])
+			elif deleted_behavior_nodes.has(n):
+				undo_redo.add_do_method(self, &"_do_remove_node", n, deleted_behavior_nodes[n])
+		undo_redo.add_do_method(self, &"_sync_frame_attachments")
+		undo_redo.add_do_method(self, &"_emit_no_selection")
+
+		# Undo order: a node/frame must exist again before any connection touching it is restored.
+		for n in to_delete:
+			if frame_snapshots.has(n):
+				undo_redo.add_undo_method(self, &"_do_recreate_frame", frame_snapshots[n])
+			elif deleted_behavior_nodes.has(n):
+				undo_redo.add_undo_method(self, &"_do_recreate_node", n, deleted_behavior_nodes[n])
+		undo_redo.add_undo_method(self, &"_do_connect_many", touched_connections)
+		undo_redo.add_undo_method(self, &"_sync_frame_attachments")
+		undo_redo.add_undo_method(self, &"_emit_no_selection")
+
+		undo_redo.commit_action(false)
 
 ## Emits selected_node_changed(null): a real method (not a closure), required since
 ## add_do_method/add_undo_method on EditorUndoRedoManager take (object, method_name), never a
@@ -361,10 +416,12 @@ func connect_nodes(from_node: StringName, from_port: int, to_node: StringName, t
 		"keep_alive": false
 	}
 
-	undo_redo.create_action("Connect %s -> %s" % [from_node, to_node], UndoRedo.MERGE_DISABLE, current_graph)
-	undo_redo.add_do_method(self, &"_do_connect", c)
-	undo_redo.add_undo_method(self, &"_do_disconnect", c)
-	undo_redo.commit_action()
+	_do_connect(c)
+	if undo_redo != null:
+		undo_redo.create_action("Connect %s -> %s" % [from_node, to_node], UndoRedo.MERGE_DISABLE, current_graph)
+		undo_redo.add_do_method(self, &"_do_connect", c)
+		undo_redo.add_undo_method(self, &"_do_disconnect", c)
+		undo_redo.commit_action(false)
 
 ## Removes a connection: updates the source [BehaviorNode] via [method BehaviorNode.remove_next], [member BehaviorGraph.connections], and the visual connection.
 func disconnect_nodes(from_node: StringName, from_port: int, to_node: StringName, to_port: int) -> void:
@@ -375,10 +432,12 @@ func disconnect_nodes(from_node: StringName, from_port: int, to_node: StringName
 		"to_port": to_port,
 		"keep_alive": false
 	}
-	undo_redo.create_action("Disconnect %s -> %s" % [from_node, to_node], UndoRedo.MERGE_DISABLE, current_graph)
-	undo_redo.add_do_method(self, &"_do_disconnect", c)
-	undo_redo.add_undo_method(self, &"_do_connect", c)
-	undo_redo.commit_action()
+	_do_disconnect(c)
+	if undo_redo != null:
+		undo_redo.create_action("Disconnect %s -> %s" % [from_node, to_node], UndoRedo.MERGE_DISABLE, current_graph)
+		undo_redo.add_do_method(self, &"_do_disconnect", c)
+		undo_redo.add_undo_method(self, &"_do_connect", c)
+		undo_redo.commit_action(false)
 
 ## Shared do/undo primitive for a single connection. Reused by connect/disconnect themselves and
 ## by delete/paste/embed, so there is one source of truth for what "connecting" actually means.
@@ -392,6 +451,7 @@ func _do_connect(c: Dictionary) -> void:
 		current_graph.add_connection(c)
 		
 	connect_node(c["from_node"], c["from_port"], c["to_node"], c["to_port"])
+	_refresh_frame_buttons()
 
 func _do_disconnect(c: Dictionary) -> void:
 	var f_node: BehaviorGraphNodeBase = get_node_or_null(NodePath(c["from_node"]))
@@ -401,6 +461,7 @@ func _do_disconnect(c: Dictionary) -> void:
 	f_node.node.remove_next(t_node.node, c["from_port"])
 	current_graph.remove_connection(c)
 	disconnect_node(c["from_node"], c["from_port"], c["to_node"], c["to_port"])
+	_refresh_frame_buttons()
 
 ## Batched variants of _do_connect/_do_disconnect, used wherever several connections must be
 ## (re)created or severed as part of the same undo/redo step (delete, paste, embed) - one
@@ -432,6 +493,7 @@ func is_connection_from_node_from_port_enabled(from_node: StringName, from_port:
 
 func _on_connection_to_empty(from_node: StringName, from_port: int, release_position: Vector2)->void:
 	_pending_connection_from = {"from_node": from_node, "from_port": from_port}
+	_last_popup_local_pos = release_position
 	_show_node_creation_popup()
 
 func _complete_pending_connection(new_node: BehaviorGraphNodeBase) -> void:
@@ -499,7 +561,7 @@ func show_node_context_menu(clicked_node: BehaviorGraphNodeBase) -> void:
 	menu.popup()
 
 func _show_node_creation_popup() -> void:
-	_node_popup = _build_node_popup(NODE_PATH)
+	_node_popup = _build_node_popup(NODE_PATH, true)
 	if _node_popup == null:
 		_node_popup = PopupMenu.new()
 		_node_popup.allow_search = true
@@ -508,21 +570,22 @@ func _show_node_creation_popup() -> void:
 
 	_append_custom_node_paths(_node_popup)
 
-	if _pending_connection_from.is_empty():
-		_node_popup.add_separator()
-		var paste_id : int = _node_popup.item_count
-		_node_popup.add_item("Paste", paste_id)
-		var paste_idx : int = _node_popup.get_item_index(paste_id)
-		_node_popup.set_item_metadata(paste_idx, "__paste__")
-		var has_clipboard : bool = not _clipboard.get("nodes", []).is_empty()
-		_node_popup.set_item_disabled(paste_idx, not has_clipboard)
-
 	add_child(_node_popup)
 
 	_node_popup.popup_hide.connect(_on_node_popup_closed.bind(_node_popup), CONNECT_ONE_SHOT | CONNECT_DEFERRED)
 
 	_node_popup.position = DisplayServer.mouse_get_position()
 	_node_popup.popup()
+	_focus_popup_search_bar.call_deferred(_node_popup)
+
+func _focus_popup_search_bar(popup: PopupMenu) -> void:
+	if not is_instance_valid(popup):
+		return
+	for child in popup.find_children("*", "LineEdit", true, false):
+		var le := child as LineEdit
+		if le != null and le.is_visible_in_tree():
+			le.grab_focus()
+			break
 
 func _on_node_popup_closed(popup: PopupMenu) -> void:
 	_pending_connection_from = {}
@@ -576,18 +639,37 @@ func _append_custom_node_paths(root_popup: PopupMenu) -> void:
 		if theme and theme.has_icon("Folder", "EditorIcons"):
 			root_popup.set_item_icon(item_idx, theme.get_icon("Folder", "EditorIcons"))
 
-## Recursively mirrors [param path]'s folder structure into a [PopupMenu]: subfolders become submenus (dropped if empty), [code].gd[/code] files become items labeled via [method _script_metadata]. Returns [code]null[/code] if [param path] doesn't exist.
-func _build_node_popup(path: String) -> PopupMenu:
-	if not DirAccess.dir_exists_absolute(path):
-		push_error("Path not valid: %s" % path)
-		return null
+## Recursively mirrors [param path]'s folder structure into a [PopupMenu]: subfolders become submenus (dropped if empty), [code].gd[/code] files become items labeled via [method _script_metadata]. Uses [member _node_catalog_cache] and [member _script_metadata_cache] to avoid repeated disk I/O. Returns [code]null[/code] if [param path] doesn't exist.
+func _build_node_popup(path: String, is_root: bool = false) -> PopupMenu:
+	var dirs : PackedStringArray
+	var files : PackedStringArray
+	if _node_catalog_cache.has(path):
+		var cached_dir : Dictionary = _node_catalog_cache[path]
+		dirs = cached_dir["dirs"]
+		files = cached_dir["files"]
+	else:
+		if not DirAccess.dir_exists_absolute(path):
+			push_error("Path not valid: %s" % path)
+			return null
+		dirs = DirAccess.get_directories_at(path)
+		dirs.sort()
+		files = DirAccess.get_files_at(path)
+		files.sort()
+		_node_catalog_cache[path] = {"dirs": dirs, "files": files}
 	
 	var popup := PopupMenu.new()
 	popup.allow_search = true
 	popup.search_bar_enabled = true
+	var require_input : bool = not _pending_connection_from.is_empty()
 
-	var dirs := DirAccess.get_directories_at(path)
-	dirs.sort()
+	if is_root and _pending_connection_from.is_empty():
+		var paste_id : int = popup.item_count
+		popup.add_item("Paste", paste_id)
+		var paste_idx : int = popup.get_item_index(paste_id)
+		popup.set_item_metadata(paste_idx, "__paste__")
+		var has_clipboard : bool = not _clipboard.get("nodes", []).is_empty()
+		popup.set_item_disabled(paste_idx, not has_clipboard)
+		popup.add_separator()
 	
 	for dir_name in dirs:
 		var sub: PopupMenu = _build_node_popup(path.path_join(dir_name))
@@ -605,21 +687,22 @@ func _build_node_popup(path: String) -> PopupMenu:
 			if theme and theme.has_icon("Folder", "EditorIcons"):
 				popup.set_item_icon(item_idx, theme.get_icon("Folder", "EditorIcons"))
 
-	var files : PackedStringArray = DirAccess.get_files_at(path)
-	files.sort()
 	for file_name in files:
 		if not file_name.ends_with(".gd"): continue
 		
 		var full_path := path.path_join(file_name)
+		var script_metadata : Dictionary = _script_metadata(full_path)
+		if require_input and not bool(script_metadata.get("has_input", true)):
+			continue
+
 		var id := popup.item_count
-		
-		var script_metadata = _script_metadata(full_path)
 		popup.add_item(script_metadata["label"], id)
+		var item_idx := popup.get_item_index(id)
 		
 		if not script_metadata["icon"] == null: 
-			popup.set_item_icon(id, script_metadata["icon"])
-		popup.set_item_tooltip(id,script_metadata["info"])
-		popup.set_item_metadata(id, full_path)
+			popup.set_item_icon(item_idx, script_metadata["icon"])
+		popup.set_item_tooltip(item_idx, script_metadata["info"])
+		popup.set_item_metadata(item_idx, full_path)
 
 	popup.id_pressed.connect(_on_node_popup_id_pressed.bind(popup))
 	return popup
@@ -637,18 +720,29 @@ func _on_node_popup_id_pressed(id: int, popup: PopupMenu) -> void:
 	
 	_complete_pending_connection(add_node(script_path))
 
-## Reads a script's [code]DISPLAY_NAME[/code] and [code]DISPLAY_ICON[/code] constants, falling back to its filename and no icon.
+## Reads (and caches) a script's [code]DISPLAY_NAME[/code] and [code]DISPLAY_ICON[/code] constants and whether it has an input port, falling back to its filename and no icon.
 func _script_metadata(path: String) -> Dictionary:
+	if _script_metadata_cache.has(path):
+		return _script_metadata_cache[path]
+
 	var scr := load(path) as GDScript
-	if scr == null: return {"label": path.get_file().get_basename(), "icon": null}
+	if scr == null:
+		return {"label": path.get_file().get_basename(), "icon": null, "has_input": true}
 	
-	var consts :Dictionary= scr.get_script_constant_map()
-	return {
+	var consts : Dictionary = scr.get_script_constant_map()
+	var has_input : bool = true
+	var temp_instance = scr.new()
+	if temp_instance is BehaviorNode:
+		has_input = (temp_instance as BehaviorNode).input
+	var meta : Dictionary = {
 		"label": consts.get("DISPLAY_NAME", path.get_file().get_basename()),
 		"icon": load(consts["DISPLAY_ICON"]) if consts.has("DISPLAY_ICON") else null,
 		"scene": load(consts["DISPLAY_SCENE"]) if consts.has("DISPLAY_SCENE") else null,
-		"info" : consts.get("DISPLAY_INFO","No info has been provided for this node")
+		"info": consts.get("DISPLAY_INFO","No info has been provided for this node"),
+		"has_input": has_input,
 	}
+	_script_metadata_cache[path] = meta
+	return meta
 
 func _scene_for(n: BehaviorNode) -> PackedScene:
 	var consts: Dictionary = n.get_script().get_script_constant_map()
@@ -898,15 +992,16 @@ func embed_graph(source: BehaviorGraph, include_access_points: bool = false) -> 
 	current_graph.add_node(frame_node)
 	var frame : BehaviorGraphFrame = load_frame(frame_node)
 
-	undo_redo.create_action("Embed %s" % _graph_display_name(source), UndoRedo.MERGE_DISABLE, current_graph)
-	undo_redo.add_do_method(self, &"_do_load_nodes", copies)
-	undo_redo.add_do_method(self, &"_do_connect_many", new_connections)
-	undo_redo.add_do_method(self, &"_do_add_frame_node", frame_node)
+	if undo_redo != null:
+		undo_redo.create_action("Embed %s" % _graph_display_name(source), UndoRedo.MERGE_DISABLE, current_graph)
+		undo_redo.add_do_method(self, &"_do_load_nodes", copies)
+		undo_redo.add_do_method(self, &"_do_connect_many", new_connections)
+		undo_redo.add_do_method(self, &"_do_add_frame_node", frame_node)
 
-	undo_redo.add_undo_method(self, &"_do_remove_frame_node", frame_node)
-	undo_redo.add_undo_method(self, &"_do_disconnect_many", new_connections)
-	undo_redo.add_undo_method(self, &"_do_remove_nodes", copies)
-	undo_redo.commit_action(false)
+		undo_redo.add_undo_method(self, &"_do_remove_frame_node", frame_node)
+		undo_redo.add_undo_method(self, &"_do_disconnect_many", new_connections)
+		undo_redo.add_undo_method(self, &"_do_remove_nodes", copies)
+		undo_redo.commit_action(false)
 
 	return frame
 
@@ -966,10 +1061,11 @@ func _on_elements_linked_to_frame(elements: Array, frame_name: StringName) -> vo
 
 	_link_elements_to_frame(element_names, frame_name)
 
-	undo_redo.create_action("Attach to Frame", UndoRedo.MERGE_DISABLE, current_graph)
-	undo_redo.add_do_method(self, &"_link_elements_to_frame", element_names, frame_name)
-	undo_redo.add_undo_method(self, &"_unlink_elements_from_frame", element_names, previous_frame_of)
-	undo_redo.commit_action(false)
+	if undo_redo != null:
+		undo_redo.create_action("Attach to Frame", UndoRedo.MERGE_DISABLE, current_graph)
+		undo_redo.add_do_method(self, &"_link_elements_to_frame", element_names, frame_name)
+		undo_redo.add_undo_method(self, &"_unlink_elements_from_frame", element_names, previous_frame_of)
+		undo_redo.commit_action(false)
 
 func _link_elements_to_frame(element_names: Array[StringName], frame_name: StringName) -> void:
 	var frame := get_node_or_null(NodePath(frame_name)) as BehaviorGraphFrame
@@ -1072,10 +1168,11 @@ func create_frame_from_selection(frame_title: String = "Frame") -> BehaviorGraph
 	_attach_frame_selection(frame_node, node_names, previous_frame_of, true)
 	var frame : BehaviorGraphFrame = get_node(NodePath(frame_name))
 
-	undo_redo.create_action("Create Frame", UndoRedo.MERGE_DISABLE, current_graph)
-	undo_redo.add_do_method(self, &"_attach_frame_selection", frame_node, node_names, previous_frame_of, false)
-	undo_redo.add_undo_method(self, &"_detach_frame_selection", frame_name, frame_node, node_names, previous_frame_of)
-	undo_redo.commit_action(false)
+	if undo_redo != null:
+		undo_redo.create_action("Create Frame", UndoRedo.MERGE_DISABLE, current_graph)
+		undo_redo.add_do_method(self, &"_attach_frame_selection", frame_node, node_names, previous_frame_of, false)
+		undo_redo.add_undo_method(self, &"_detach_frame_selection", frame_name, frame_node, node_names, previous_frame_of)
+		undo_redo.commit_action(false)
 
 	return frame
 
@@ -1156,10 +1253,11 @@ func _detach_names_from_frame(names: Array[StringName]) -> void:
 
 	_do_detach_names(previous_frame_of)
 
-	undo_redo.create_action("Detach From Frame", UndoRedo.MERGE_DISABLE, current_graph)
-	undo_redo.add_do_method(self, &"_do_detach_names", previous_frame_of)
-	undo_redo.add_undo_method(self, &"_do_reattach_names", previous_frame_of)
-	undo_redo.commit_action(false)
+	if undo_redo != null:
+		undo_redo.create_action("Detach From Frame", UndoRedo.MERGE_DISABLE, current_graph)
+		undo_redo.add_do_method(self, &"_do_detach_names", previous_frame_of)
+		undo_redo.add_undo_method(self, &"_do_reattach_names", previous_frame_of)
+		undo_redo.commit_action(false)
 
 func _do_detach_names(previous_frame_of: Dictionary) -> void:
 	for n in previous_frame_of:
@@ -1184,13 +1282,24 @@ func _do_reattach_names(previous_frame_of: Dictionary) -> void:
 		frame.track(element)
 	_sync_frame_attachments()
 
-## Shows the "free from frame" button only on the nodes that currently belong to a frame.
+## Shows the "free from frame" button on nodes inside a frame and updates Sequence Frame (#1, #2, ...) order badges.
 func _refresh_frame_buttons() -> void:
+	var seq_indices : Dictionary = {}
+	if current_graph != null:
+		for child in get_children():
+			var frame := child as BehaviorGraphFrame
+			if frame == null or frame.frame == null or not frame.frame.is_sequence:
+				continue
+			var order : Array[StringName] = frame.frame.compute_sequence_order(current_graph)
+			for i in order.size():
+				seq_indices[order[i]] = i + 1
+
 	for child in get_children():
 		var graph_node := child as BehaviorGraphNodeBase
 		if graph_node == null: continue
 		
 		graph_node.set_framed(get_element_frame(graph_node.name) != null)
+		graph_node.set_sequence_index(int(seq_indices.get(StringName(graph_node.name), 0)))
 
 #endregion
 
@@ -1225,10 +1334,11 @@ func _on_end_node_move() -> void:
 		moved = true
 	if not moved: return
 
-	undo_redo.create_action("Move", UndoRedo.MERGE_DISABLE, current_graph)
-	undo_redo.add_do_method(self, &"_apply_positions", end)
-	undo_redo.add_undo_method(self, &"_apply_positions", start)
-	undo_redo.commit_action(false) # the drag already moved them; this just records it
+	if undo_redo != null:
+		undo_redo.create_action("Move", UndoRedo.MERGE_DISABLE, current_graph)
+		undo_redo.add_do_method(self, &"_apply_positions", end)
+		undo_redo.add_undo_method(self, &"_apply_positions", start)
+		undo_redo.commit_action(false) # the drag already moved them; this just records it
 
 ## Applies a name -> position_offset map. Relies on position_offset_changed (already connected in
 ## BehaviorGraphNodeBase/BehaviorGraphFrame) to keep node.position_in_graph / frame.position_in_graph
@@ -1238,5 +1348,6 @@ func _apply_positions(positions: Dictionary) -> void:
 		var element := get_node_or_null(NodePath(n)) as GraphElement
 		if element == null: continue
 		element.position_offset = positions[n]
+	_refresh_frame_buttons()
 
 #endregion

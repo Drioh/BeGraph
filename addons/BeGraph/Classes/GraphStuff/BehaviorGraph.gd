@@ -10,6 +10,7 @@ signal blackboard_value_changed(key: StringName, value: Variant)
 	set(v):
 		if v != null:
 			blackboard = v
+			_rebuild_blackboard_map()
 		changed.emit()
 
 @export_group("Graph Properties")
@@ -28,6 +29,11 @@ var connections : Array[Dictionary]
 ##The agent running this graph
 @export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY) 
 var _agent_ref : WeakRef = weakref(null)
+
+## O(1) lookup cache mapping variable name -> BlackboardVariable instance.
+var _blackboard_map : Dictionary[StringName, BlackboardVariable] = {}
+## O(1) runtime cache mapping absolute NodePath -> WeakRef(Node) for _resolve_node().
+var _resolved_nodes_cache : Dictionary[NodePath, WeakRef] = {}
 
 ## Creates the graph's first [AccessPointNode] if [member nodes] is empty, guaranteeing every new [BehaviorGraph] has at least one valid entry point.
 func _init() -> void:
@@ -89,10 +95,27 @@ func get_nodes_names_by_category(category: String) -> Array[StringName]:
 #endregion
 
 #region Blackboard Methods
-## Returns the [BlackboardVariable] in [member blackboard] named [param key], or [code]null[/code] (logging an error) if none is found.
-func get_blackboard_property(key: StringName) -> BlackboardVariable:
+## Rebuilds [member _blackboard_map] from [member blackboard] and connects variable rename signals.
+func _rebuild_blackboard_map() -> void:
+	_blackboard_map.clear()
 	for variable in blackboard:
-		if variable==null or variable.name != key: continue
+		if variable == null: continue
+		if not variable.name_changed.is_connected(_on_variable_name_changed):
+			variable.name_changed.connect(_on_variable_name_changed)
+		if variable.name != &"":
+			_blackboard_map[variable.name] = variable
+
+func _on_variable_name_changed(_new_name: String) -> void:
+	_rebuild_blackboard_map()
+
+## Returns the [BlackboardVariable] in [member blackboard] named [param key], or [code]null[/code] if none is found.
+func get_blackboard_property(key: StringName) -> BlackboardVariable:
+	var cached : BlackboardVariable = _blackboard_map.get(key, null)
+	if cached != null and cached.name == key:
+		return cached
+	for variable in blackboard:
+		if variable == null or variable.name != key: continue
+		_blackboard_map[key] = variable
 		return variable
 	return null
 
@@ -119,6 +142,8 @@ func get_agent_node() -> BehaviorAgent:
 ## Prepares a freshly duplicated graph for execution: binds it to [param agent], rebuilds successor links from [member connections] and points every node back to this graph.
 func setup_runtime(agent: Node) -> void:
 	set_agent(agent)
+	_resolved_nodes_cache.clear()
+	_rebuild_blackboard_map()
 	for c in connections:
 		var from_node : BehaviorNode = get_node(c["from_node"])
 		var to_node : BehaviorNode = get_node(c["to_node"])
@@ -129,6 +154,8 @@ func setup_runtime(agent: Node) -> void:
 		from_node.add_next(to_node, c["from_port"])
 	for node in nodes.values():
 		node._graph_ref = weakref(self)
+		if not node._blackboard_bindings.is_empty() and node.has_method(&"on_blackboard_property_changed"):
+			node._connect_blackboard_signals()
 	for node in nodes.values():
 		if node is BehaviorFrame and node.is_sequence:
 			node.setup_sequence(self)

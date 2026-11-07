@@ -37,6 +37,14 @@ var _behavior_graph : BehaviorGraph #duplicate
 			enabled = false
 		_update_process_flags()
 
+## Executes the behavior graph only every [code]n[/code]-th tick attempt (e.g. [code]1[/code] ticks every time, [code]4[/code] ticks only every 4th time).
+@export_range(1, 60, 1, "or_greater") var tick_interval: int = 1:
+	set(value):
+		tick_interval = maxi(1, value)
+
+## Counter tracking how many tick attempts have occurred since the last actual execution.
+var _tick_counter: int = 0
+
 ## Index of the currently selected access point inside [code]behavior_graph.get_nodes_by_category("access_point_node")[/code], backing the dynamically-built [code]starting_point[/code] inspector enum.
 var _starting_point_idx: int = 0
 ## The [BehaviorNode] (the chosen access point's entry into the graph) that gets ticked by [method _process] / [method _physics_process] / [method tick].
@@ -97,6 +105,10 @@ func _ready() -> void:
 		return
 
 	_behavior_graph = behavior_graph.duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
+	for i in behavior_graph.blackboard.size():
+		var src_var : BlackboardVariable = behavior_graph.blackboard[i]
+		if src_var != null and not src_var.resource_path.is_empty() and not src_var.is_built_in():
+			_behavior_graph.blackboard[i] = src_var
 	_behavior_graph.setup_runtime(self)
 	_select_starting_node(_starting_point_idx)
 
@@ -131,11 +143,23 @@ func _resolve_delta(delta: float) -> float:
 	_manual_tick_time = now
 	return elapsed
 
+## Returns [code]true[/code] only on every [member tick_interval]-th invocation.
+func _should_tick() -> bool:
+	if tick_interval <= 1:
+		_tick_counter = 0
+		return true
+	_tick_counter += 1
+	if _tick_counter >= tick_interval:
+		_tick_counter = 0
+		return true
+	return false
+
 ## Ticks [member starting_node] every idle frame when [member graph_process_mode] is [constant ProcessThread.IDLE] (outside the editor).
 func _process(_delta: float) -> void:
 	if Engine.is_editor_hint(): return
 	if not enabled: return
 	if starting_node==null: return
+	if not _should_tick(): return
 	
 	starting_node.do_tick(_delta)
 
@@ -144,6 +168,7 @@ func _physics_process(_delta: float) -> void:
 	if Engine.is_editor_hint(): return
 	if not enabled: return
 	if starting_node==null: return
+	if not _should_tick(): return
 	
 	starting_node.do_tick(_delta)
 
@@ -152,6 +177,7 @@ func _physics_process(_delta: float) -> void:
 func tick(_delta:float=-1.0) -> void:
 	if not enabled: return
 	if starting_node==null: return
+	if not _should_tick(): return
 	
 	starting_node.do_tick(_resolve_delta(_delta))
 
