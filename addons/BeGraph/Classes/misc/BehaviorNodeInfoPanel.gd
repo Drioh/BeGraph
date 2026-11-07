@@ -37,6 +37,7 @@ var graph_edit : BehaviorGraphEdit = null
 @onready var title_bar_color: ColorRect = %TitleBarColor
 @onready var title_label: Label = %TitleLabel
 @onready var category_label: Label = %CategoryLabel
+@onready var inspect_code_button: Button = %InspectCodeButton
 
 @onready var input_label: Label = %InputLabel
 @onready var output_label: Label = %OutputLabel
@@ -48,7 +49,18 @@ var _blackboard: Array[BlackboardVariable] = []
 var _current_node: BehaviorNode = null
 
 func _ready() -> void:
+	if inspect_code_button and not inspect_code_button.pressed.is_connected(_on_inspect_code_pressed):
+		inspect_code_button.pressed.connect(_on_inspect_code_pressed)
 	clear()
+
+func _on_inspect_code_pressed() -> void:
+	if _current_node == null or not Engine.is_editor_hint():
+		return
+	var scr := _current_node.get_script() as Script
+	if scr == null:
+		return
+	EditorInterface.set_main_screen_editor("Script")
+	EditorInterface.edit_script(scr)
 
 ## Displays [param node]'s instruction, info text, flags, conditions and behavior properties, binding each property's inline editor to [param blackboard]. Pass [code]null[/code] to clear (see [method clear]).
 func show_node(node: BehaviorNode, blackboard: Array[BlackboardVariable]) -> void:

@@ -6,10 +6,6 @@
 font_size = 20
 outline_size = 4
 
-[sub_resource type="LabelSettings" id="LabelSettings_g8rt0"]
-font_size = 10
-font_color = Color(0.34901962, 0.34901962, 0.34901962, 1)
-
 [sub_resource type="LabelSettings" id="LabelSettings_k7ocg"]
 font_size = 18
 font_color = Color(0.34901962, 0.34901962, 0.34901962, 1)
@@ -35,7 +31,7 @@ content_margin_left = 16.0
 content_margin_top = 4.0
 content_margin_right = 16.0
 content_margin_bottom = 4.0
-bg_color = Color(0.545, 0, 0.11, 1)
+bg_color = Color(0, 0.302, 0.145, 1)
 corner_radius_top_left = 20
 corner_radius_top_right = 20
 corner_radius_bottom_right = 20
@@ -68,7 +64,6 @@ text = "No node selected."
 
 [node name="ScrollContainer" type="ScrollContainer" parent="." unique_id=471582789]
 unique_name_in_owner = true
-visible = false
 layout_mode = 2
 
 [node name="Content" type="VBoxContainer" parent="ScrollContainer" unique_id=1167291481]
@@ -88,6 +83,7 @@ layout_mode = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="ScrollContainer/Content/TitleBar" unique_id=104795908]
 layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 4
 theme_override_constants/separation = 0
 
@@ -99,7 +95,13 @@ label_settings = SubResource("LabelSettings_fitmt")
 [node name="CategoryLabel" type="Label" parent="ScrollContainer/Content/TitleBar/VBoxContainer" unique_id=731427512]
 unique_name_in_owner = true
 layout_mode = 2
-label_settings = SubResource("LabelSettings_g8rt0")
+theme_override_colors/font_color = Color(0.34901962, 0.34901962, 0.34901962, 1)
+
+[node name="InspectCodeButton" type="Button" parent="ScrollContainer/Content/TitleBar" unique_id=1894021536]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+text = "Inspect Node Code"
 
 [node name="InstructionCaptionContainer" type="HBoxContainer" parent="ScrollContainer/Content" unique_id=495958953]
 unique_name_in_owner = true
