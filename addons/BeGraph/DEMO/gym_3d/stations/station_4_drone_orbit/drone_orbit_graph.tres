@@ -9,13 +9,17 @@
 [ext_resource type="Script" uid="uid://yikob6c0d8wi" path="res://addons/BeGraph/Classes/Nodes/Actions/Movement/Rotate Node.gd" id="8_rot"]
 [ext_resource type="Script" uid="uid://bhduga4xd8gmu" path="res://addons/BeGraph/Classes/Nodes/Actions/Properties & Methods/Set Property.gd" id="9_prop"]
 [ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="10_graph"]
+[ext_resource type="Script" uid="uid://3i4fdxhablja" path="res://addons/BeGraph/Classes/Nodes/Flow/Branching/Condition.gd" id="11_cond"]
+[ext_resource type="Script" uid="uid://dkp44eg1v01jm" path="res://addons/BeGraph/Classes/Nodes/Actions/Properties & Methods/Call Method.gd" id="12_call"]
+[ext_resource type="Script" uid="uid://bt3sox16shfd2" path="res://addons/BeGraph/Classes/Nodes/Actions/Blackboard & Data/Set Blackboard Variable.gd" id="13_setbb"]
+[ext_resource type="Script" uid="uid://b46b2ur82txgg" path="res://addons/BeGraph/Classes/Nodes/Actions/Movement/Move.gd" id="14_move"]
 
 [sub_resource type="Resource" id="Resource_bb_self"]
 resource_name = "Self"
 script = ExtResource("1_bb")
 name = &"Self"
 export_variable = true
-value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Stations/Station4_DroneOrbit/DroneActor")
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Station4_DroneOrbit/DroneActor")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_bb_player"]
@@ -31,7 +35,7 @@ resource_name = "CenterPylon"
 script = ExtResource("1_bb")
 name = &"CenterPylon"
 export_variable = true
-value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Stations/Station4_DroneOrbit/CenterPylon")
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Station4_DroneOrbit/CenterPylon")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_bb_arena"]
@@ -39,7 +43,21 @@ resource_name = "ArenaZone"
 script = ExtResource("1_bb")
 name = &"ArenaZone"
 export_variable = true
-value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Stations/Station4_DroneOrbit/ArenaZone")
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Station4_DroneOrbit/ArenaZone")
+metadata/_custom_type_script = "uid://da0t4052e3fsp"
+
+[sub_resource type="Resource" id="Resource_bb_last_orbit_pos"]
+resource_name = "LastOrbitPos"
+script = ExtResource("1_bb")
+name = &"LastOrbitPos"
+value = Vector3(3.5, 1.5, 0)
+metadata/_custom_type_script = "uid://da0t4052e3fsp"
+
+[sub_resource type="Resource" id="Resource_bb_is_chasing"]
+resource_name = "IsChasing"
+script = ExtResource("1_bb")
+name = &"IsChasing"
+value = false
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="SubResource_ap"]
@@ -62,19 +80,63 @@ script = ExtResource("4_area")
 area = NodePath("../ArenaZone")
 instruction = "Check bodies overlapping {area}"
 conditions = Array[Dictionary]([{
-"next": "SetAlertDroneColor",
+"next": &"CheckIsChasing",
 "text": "Body detected"
 }, {
-"next": "SetCyanDroneColor",
+"next": &"SetCyanDroneColor",
 "text": "No body detected"
 }])
 node_category = "control_flow_node"
 input = true
-position_in_graph = Vector2(-640, -20)
+position_in_graph = Vector2(-680, -20)
 _graph_ref = Object(WeakRef,"script":null)
 
 _blackboard_bindings = Dictionary[StringName, StringName]({
 &"area": &"ArenaZone"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_check_chasing"]
+resource_name = "CheckIsChasing"
+script = ExtResource("11_cond")
+instruction = "If {condition}"
+conditions = Array[Dictionary]([{
+"next": &"SetAlertDroneColor",
+"text": "True"
+}, {
+"next": &"SaveOrbitPos",
+"text": "False"
+}])
+node_category = "control_flow_node"
+input = true
+position_in_graph = Vector2(-220, -260)
+_graph_ref = Object(WeakRef,"script":null)
+
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"condition": &"IsChasing"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_check_return"]
+resource_name = "CheckNeedsReturn"
+script = ExtResource("11_cond")
+instruction = "If {condition}"
+conditions = Array[Dictionary]([{
+"next": &"ReturnToOrbit",
+"text": "True"
+}, {
+"next": &"OrbitCenterPylon",
+"text": "False"
+}])
+node_category = "control_flow_node"
+input = true
+position_in_graph = Vector2(280, 220)
+_graph_ref = Object(WeakRef,"script":null)
+
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"condition": &"IsChasing"
 })
 breakpointable = true
 mutable = true
@@ -91,7 +153,7 @@ instruction = "Rotate {node} ({mode}, axis {axis_3d})"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(620, -260)
+position_in_graph = Vector2(1580, -260)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"MaintainDistance"])
@@ -114,7 +176,7 @@ instruction = "Keep {target_distance} distance between {node} and {target}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1180, -260)
+position_in_graph = Vector2(2140, -260)
 _graph_ref = Object(WeakRef,"script":null)
 
 _blackboard_bindings = Dictionary[StringName, StringName]({
@@ -135,11 +197,52 @@ instruction = "Orbit {node} around {center} (radius: {radius})"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(840, 180)
+position_in_graph = Vector2(1660, 220)
 _graph_ref = Object(WeakRef,"script":null)
 
 _blackboard_bindings = Dictionary[StringName, StringName]({
 &"center": &"CenterPylon",
+&"node": &"Self"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_return_to_orbit"]
+resource_name = "ReturnToOrbit"
+script = ExtResource("14_move")
+node = NodePath(".")
+destination = Vector3(3.5, 1.5, 0)
+speed = 4.5
+instruction = "Move {node} to {destination} ({mode})"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(700, 420)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"SetChasingFalse"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"destination": &"LastOrbitPos",
+&"node": &"Self"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_save_orbit_pos"]
+resource_name = "SaveOrbitPos"
+script = ExtResource("12_call")
+node = NodePath(".")
+method = &"get_global_position"
+return_blackboard_key = &"LastOrbitPos"
+instruction = "Call {method} on {node}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(180, -480)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"SetChasingTrue"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
 &"node": &"Self"
 })
 breakpointable = true
@@ -155,13 +258,45 @@ instruction = "Set {node}'s {property} value: {value}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(80, -260)
+position_in_graph = Vector2(1060, -260)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"FacePlayer3D"])
 _blackboard_bindings = Dictionary[StringName, StringName]({
 &"node": &"Self"
 })
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_set_chasing_false"]
+resource_name = "SetChasingFalse"
+script = ExtResource("13_setbb")
+variable_name = &"IsChasing"
+value = false
+instruction = "Set BB var {variable_name} = {value}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(1180, 420)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"OrbitCenterPylon"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_set_chasing_true"]
+resource_name = "SetChasingTrue"
+script = ExtResource("13_setbb")
+variable_name = &"IsChasing"
+value = true
+instruction = "Set BB var {variable_name} = {value}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(620, -480)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"SetAlertDroneColor"])
 breakpointable = true
 mutable = true
 
@@ -175,10 +310,10 @@ instruction = "Set {node}'s {property} value: {value}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(180, 180)
+position_in_graph = Vector2(-220, 220)
 _graph_ref = Object(WeakRef,"script":null)
 
-_next_ref = Array[StringName]([&"OrbitCenterPylon"])
+_next_ref = Array[StringName]([&"CheckNeedsReturn"])
 _blackboard_bindings = Dictionary[StringName, StringName]({
 &"node": &"Self"
 })
@@ -187,14 +322,20 @@ mutable = true
 
 [resource]
 script = ExtResource("10_graph")
-blackboard = Array[ExtResource("1_bb")]([SubResource("Resource_bb_self"), SubResource("Resource_bb_player"), SubResource("Resource_bb_pylon"), SubResource("Resource_bb_arena")])
+blackboard = Array[ExtResource("1_bb")]([SubResource("Resource_bb_self"), SubResource("Resource_bb_player"), SubResource("Resource_bb_pylon"), SubResource("Resource_bb_arena"), SubResource("Resource_bb_last_orbit_pos"), SubResource("Resource_bb_is_chasing")])
 nodes = Dictionary[StringName, ExtResource("2_node")]({
 &"AccessPoint": SubResource("SubResource_ap"),
 &"ArenaCheck": SubResource("SubResource_arena"),
+&"CheckIsChasing": SubResource("SubResource_check_chasing"),
+&"CheckNeedsReturn": SubResource("SubResource_check_return"),
 &"FacePlayer3D": SubResource("SubResource_rot_player"),
 &"MaintainDistance": SubResource("SubResource_keep_dist"),
 &"OrbitCenterPylon": SubResource("SubResource_orbit_action"),
+&"ReturnToOrbit": SubResource("SubResource_return_to_orbit"),
+&"SaveOrbitPos": SubResource("SubResource_save_orbit_pos"),
 &"SetAlertDroneColor": SubResource("SubResource_alert_col"),
+&"SetChasingFalse": SubResource("SubResource_set_chasing_false"),
+&"SetChasingTrue": SubResource("SubResource_set_chasing_true"),
 &"SetCyanDroneColor": SubResource("SubResource_cyan_col")
 })
 connections = Array[Dictionary]([{
@@ -205,6 +346,30 @@ connections = Array[Dictionary]([{
 "to_port": 0
 }, {
 "from_node": &"ArenaCheck",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"CheckIsChasing",
+"to_port": 0
+}, {
+"from_node": &"CheckIsChasing",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"SetAlertDroneColor",
+"to_port": 0
+}, {
+"from_node": &"CheckIsChasing",
+"from_port": 1,
+"keep_alive": false,
+"to_node": &"SaveOrbitPos",
+"to_port": 0
+}, {
+"from_node": &"SaveOrbitPos",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"SetChasingTrue",
+"to_port": 0
+}, {
+"from_node": &"SetChasingTrue",
 "from_port": 0,
 "keep_alive": false,
 "to_node": &"SetAlertDroneColor",
@@ -230,6 +395,30 @@ connections = Array[Dictionary]([{
 }, {
 "from_node": &"SetCyanDroneColor",
 "from_port": 0,
+"keep_alive": false,
+"to_node": &"CheckNeedsReturn",
+"to_port": 0
+}, {
+"from_node": &"CheckNeedsReturn",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"ReturnToOrbit",
+"to_port": 0
+}, {
+"from_node": &"ReturnToOrbit",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"SetChasingFalse",
+"to_port": 0
+}, {
+"from_node": &"SetChasingFalse",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"OrbitCenterPylon",
+"to_port": 0
+}, {
+"from_node": &"CheckNeedsReturn",
+"from_port": 1,
 "keep_alive": false,
 "to_node": &"OrbitCenterPylon",
 "to_port": 0

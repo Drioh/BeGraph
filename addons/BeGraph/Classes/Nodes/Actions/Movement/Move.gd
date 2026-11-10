@@ -63,10 +63,8 @@ func on_blackboard_property_changed(key: StringName) -> void:
 		_destination = _resolve_destination_pos(eval(&"destination"))
 
 func _resolve_destination_pos(raw_dest: Variant) -> Variant:
-	var resolved = _resolve_node(raw_dest)
-	if resolved is Node2D or resolved is Node3D:
-		return resolved.global_position
-	return raw_dest
+	var is_coord : bool = raw_dest is Vector2 or raw_dest is Vector3
+	return raw_dest if is_coord else _resolve_node(raw_dest).global_position
 
 func _move_towards_destination(delta: float) -> bool:
 	var dest_pos : Variant = _destination

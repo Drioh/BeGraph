@@ -697,7 +697,7 @@ func _resolve_node(value: Variant) -> Node:
 		elif graph != null:
 			graph._resolved_nodes_cache[value] = weakref(resolved)
 		return resolved
-		
+	
 	return value as Node
 
 
