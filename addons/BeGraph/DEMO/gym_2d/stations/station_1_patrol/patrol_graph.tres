@@ -107,6 +107,27 @@ _next_ref = Array[StringName]([&"PatrolPingPongLoop"])
 breakpointable = true
 mutable = true
 
+[sub_resource type="Resource" id="SubResource_patrol_1"]
+resource_name = "PatrolLoop"
+script = ExtResource("4_tan1m")
+node = NodePath(".")
+mode = 1
+speed = 120.0
+wait_time = 0.2
+instruction = "Patrol {node} ({mode}, speed {speed})"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(-460, -80)
+_graph_ref = Object(WeakRef,"script":null)
+
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"self",
+&"waypoints": &"waypoints"
+})
+breakpointable = true
+mutable = true
+
 [sub_resource type="Resource" id="SubResource_patrol_0"]
 resource_name = "PatrolOnce"
 script = ExtResource("4_tan1m")
@@ -132,27 +153,6 @@ decorator = {
 "condition_expected": 0,
 "type": "condition"
 }
-
-[sub_resource type="Resource" id="SubResource_patrol_1"]
-resource_name = "PatrolLoop"
-script = ExtResource("4_tan1m")
-node = NodePath(".")
-mode = 1
-speed = 120.0
-wait_time = 0.2
-instruction = "Patrol {node} ({mode}, speed {speed})"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(-460, -80)
-_graph_ref = Object(WeakRef,"script":null)
-
-_blackboard_bindings = Dictionary[StringName, StringName]({
-&"node": &"self",
-&"waypoints": &"waypoints"
-})
-breakpointable = true
-mutable = true
 
 [sub_resource type="Resource" id="SubResource_patrol_2"]
 resource_name = "PatrolPingPong"
