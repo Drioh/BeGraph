@@ -8,7 +8,7 @@ const DISPLAY_INFO : String = "Rotates a 2D or 3D node towards a target angle, t
 enum Mode { TO_ANGLE, TOWARDS_NODE, CONTINUOUS_SPIN }
 enum SpeedMode { SPEED, DURATION }
 enum Direction { CLOCKWISE, COUNTERCLOCKWISE }
-enum Axis3D { Y, X, Z }
+enum Axis3D { X, Y, Z }
 
 @export_custom(PROPERTY_HINT_NODE_TYPE, BG.PROPERTY+"Node2D,Node3D") var node : NodePath = NodePath("")
 @export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+"ToAngle,TowardsNode,ContinuousSpin") var mode : Mode = Mode.TO_ANGLE
@@ -18,7 +18,7 @@ enum Axis3D { Y, X, Z }
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var target_angle : float = 0.0
 @export_custom(PROPERTY_HINT_NODE_TYPE, BG.PROPERTY+"Node2D,Node3D") var target_node : NodePath = NodePath("")
 @export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+"Clockwise,Counterclockwise") var direction : Direction = Direction.CLOCKWISE
-@export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+"Y (yaw/horizontal),X (pitch),Z (roll)") var axis_3d : Axis3D = Axis3D.Y
+@export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+"X (pitch),Y (yaw/horizontal),Z (roll)") var axis_3d : Axis3D = Axis3D.Y
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var recalculate_target_each_frame : bool = true
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var loop : bool = false
 
@@ -53,11 +53,14 @@ func tick(delta: float) -> Status:
 
 func _tick_spin(delta: float) -> Status:
 	var turn : float = -1.0 if (eval(&"direction") as Direction) == Direction.COUNTERCLOCKWISE else 1.0
-	_set_rotation(_get_rotation() + deg_to_rad(eval(&"angular_speed") as float) * turn * delta)
+	var is_timed : bool = (eval(&"speed_mode") as SpeedMode) == SpeedMode.DURATION
+	var dur : float = eval(&"duration") as float
+	var step_delta : float = minf(delta, maxf(0.0, dur - _elapsed)) if (is_timed and not eval(&"loop")) else delta
+	_set_rotation(_get_rotation() + deg_to_rad(eval(&"angular_speed") as float) * turn * step_delta)
 	
-	if (eval(&"speed_mode") as SpeedMode) == SpeedMode.DURATION:
+	if is_timed:
 		_elapsed += delta
-		if _elapsed >= (eval(&"duration") as float) and not eval(&"loop"):
+		if _elapsed >= dur and not eval(&"loop"):
 			_elapsed = 0.0
 			return Status.SUCCESS
 			

@@ -34,13 +34,17 @@ func tick(delta: float) -> Status:
 	if _node == null or _agent == null or not is_instance_valid(_node) or not is_instance_valid(_agent):
 		return Status.FAILURE
 
-	if _agent.is_navigation_finished():
-		return Status.SUCCESS
-
 	if _is_dynamic_target():
 		var target_pos : Variant = _resolve_target_pos()
 		if target_pos != null:
 			_agent.target_position = target_pos
+
+	if _agent.is_navigation_finished():
+		if _node is CharacterBody2D:
+			_node.velocity = Vector2.ZERO
+		elif _node is CharacterBody3D:
+			_node.velocity = Vector3.ZERO
+		return Status.SUCCESS
 
 	var next_path_pos : Variant = _agent.get_next_path_position()
 	var current_pos : Variant = _node.global_position
@@ -76,6 +80,11 @@ func _resolve_target_pos() -> Variant:
 	return null
 
 func on_end(_status: Status) -> void:
+	if is_instance_valid(_node):
+		if _node is CharacterBody2D:
+			_node.velocity = Vector2.ZERO
+		elif _node is CharacterBody3D:
+			_node.velocity = Vector3.ZERO
 	_node = null
 	_agent = null
 	_target_node = null

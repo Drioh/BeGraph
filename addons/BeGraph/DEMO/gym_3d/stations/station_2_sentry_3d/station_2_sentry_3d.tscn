@@ -54,8 +54,10 @@ script = ExtResource("1_st2_gd")
 [node name="StationBillboard3D" parent="." instance=ExtResource("1_bb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, -7.5)
 title = "Station 2: 3D Sentry & Spatial Occlusion"
-summary = "Showcases 3D raycast line-of-sight verification behind volumetric obstacles, dynamic lighting modulation (Fade Light Energy on SpotLight3D), spatial sound cues, and 3D projectile spawning (Spawn Projectile)."
-nodes_used = PackedStringArray("Access Point", "Distance", "Line Of Sight", "Sequence", "Fade Light Energy", "Set Property", "Play Sound", "Spawn Projectile", "Wait")
+summary = "Showcases two Access Point modes sharing the same 3D Alert & Idle Sequence Frames:
+1. 'Smart Sentry (Line of Sight)' (default): Requires both Distance and RayCast3D Line Of Sight to alert, brighten SpotLight3D, and fire.
+2. 'Blind Turret (Proximity Only)': Bypasses Line Of Sight and fires whenever the player enters range."
+nodes_used = PackedStringArray("Access Point", "Distance", "Line Of Sight", "BehaviorFrame", "Fade Light Energy", "Set Property", "Play Sound", "Spawn Projectile", "Wait")
 station_color = Color(0.95, 0.35, 0.25, 1)
 
 [node name="Floor" type="StaticBody3D" parent="."]

@@ -9,19 +9,21 @@
 [ext_resource type="Script" uid="uid://dc3xdjgtnutmf" path="res://addons/BeGraph/Classes/Nodes/Actions/Properties & Methods/Set Text Property.gd" id="8_txt"]
 [ext_resource type="Script" uid="uid://b0sc0g6pmwp4q" path="res://addons/BeGraph/Classes/Nodes/Flow/Wait/Wait.gd" id="9_wait"]
 [ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="10_graph"]
+[ext_resource type="Script" uid="uid://bucm3hk7h14de" path="res://addons/BeGraph/Classes/Nodes/Flow/Composites/Sequence.gd" id="11_seq"]
+[ext_resource type="Script" uid="uid://dj83nc1blyj2i" path="res://addons/BeGraph/Classes/Nodes/Flow/Composites/Parallel.gd" id="12_par"]
 
 [sub_resource type="Resource" id="Resource_b2fp8"]
 resource_name = "Self"
 script = ExtResource("1_bb")
 name = &"Self"
-value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym2D/Stations/Station5_Ambient/AmbientActor")
+value = NodePath("..")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_esob3"]
 resource_name = "StatusLabel"
 script = ExtResource("1_bb")
 name = &"StatusLabel"
-value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym2D/Stations/Station5_Ambient/AmbientActor/StatusLabel")
+value = NodePath("../StatusLabel")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_lw1ib"]
@@ -34,14 +36,42 @@ metadata/_custom_type_script = "uid://da0t4052e3fsp"
 [sub_resource type="Resource" id="SubResource_ap"]
 resource_name = "AccessPoint"
 script = ExtResource("3_ap")
-label = "Start"
+label = "Random Ambient (Random Selector)"
 node_category = "access_point_node"
 output = true
-position_in_graph = Vector2(-880, -280)
+position_in_graph = Vector2(-880, -360)
 is_starting_node = true
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"RandomPicker"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_ap_ord"]
+resource_name = "AccessPoint_Ordered"
+script = ExtResource("3_ap")
+label = "Deterministic Cycle (Sequence)"
+node_category = "access_point_node"
+output = true
+position_in_graph = Vector2(-880, -40)
+is_starting_node = true
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"OrderedCycle"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_ap_par"]
+resource_name = "AccessPoint_Parallel"
+script = ExtResource("3_ap")
+label = "Simultaneous Show (Parallel)"
+node_category = "access_point_node"
+output = true
+position_in_graph = Vector2(-880, 280)
+is_starting_node = true
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"ParallelShow"])
 breakpointable = true
 mutable = true
 
@@ -58,6 +88,46 @@ position_in_graph = Vector2(-340, -360)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"TxtSquish", &"TxtColor", &"TxtRest"])
+breakpointable = true
+mutable = true
+decorator = {
+"blackboard_key": &"animating",
+"type": "condition"
+}
+
+[sub_resource type="Resource" id="SubResource_ord_seq"]
+resource_name = "OrderedCycle"
+script = ExtResource("11_seq")
+memory = true
+instruction = "Sequence (memory: {memory})"
+node_category = "control_flow_node"
+input = true
+output = true
+allows_multiple_outputs = true
+position_in_graph = Vector2(-340, -40)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"TxtSquish", &"TxtColor", &"TxtRest"])
+breakpointable = true
+mutable = true
+decorator = {
+"blackboard_key": &"animating",
+"type": "condition"
+}
+
+[sub_resource type="Resource" id="SubResource_par_show"]
+resource_name = "ParallelShow"
+script = ExtResource("12_par")
+mode = 1
+instruction = "Parallel: {mode} mode"
+node_category = "control_flow_node"
+input = true
+output = true
+allows_multiple_outputs = true
+position_in_graph = Vector2(-340, 280)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"TxtSquish", &"TxtColor"])
 breakpointable = true
 mutable = true
 decorator = {
@@ -287,7 +357,7 @@ mutable = true
 [sub_resource type="Resource" id="Resource_c8uh7"]
 resource_name = "_GraphFrame_67680"
 script = ExtResource("8_b2fp8")
-frame_title = "Frame"
+frame_title = "Rest / Idle Sequence"
 frame_size = Vector2(1211, 358)
 attached_nodes = Array[StringName]([&"TxtRest", &"WaitRest"])
 is_sequence = true
@@ -302,7 +372,7 @@ mutable = true
 [sub_resource type="Resource" id="Resource_5l6d1"]
 resource_name = "_GraphFrame_68027"
 script = ExtResource("8_b2fp8")
-frame_title = "Frame"
+frame_title = "Squish & Stretch Tween Sequence"
 frame_size = Vector2(3031.0002, 448.00012)
 attached_nodes = Array[StringName]([&"TweenSquish1", &"TweenSquish2", &"TweenSquish3", &"WaitSquish", &"TxtSquish"])
 is_sequence = true
@@ -317,7 +387,7 @@ mutable = true
 [sub_resource type="Resource" id="Resource_g8vli"]
 resource_name = "_GraphFrame_94544"
 script = ExtResource("8_b2fp8")
-frame_title = "Frame"
+frame_title = "Color Pulse Tween Sequence"
 frame_size = Vector2(2791.0002, 378.00003)
 attached_nodes = Array[StringName]([&"TweenCol1", &"TweenCol2", &"TweenCol3", &"TxtColor", &"WaitCol"])
 is_sequence = true
@@ -334,6 +404,10 @@ script = ExtResource("10_graph")
 blackboard = Array[ExtResource("1_bb")]([SubResource("Resource_b2fp8"), SubResource("Resource_esob3"), SubResource("Resource_lw1ib")])
 nodes = Dictionary[StringName, ExtResource("2_node")]({
 &"AccessPoint": SubResource("SubResource_ap"),
+&"AccessPoint_Ordered": SubResource("SubResource_ap_ord"),
+&"AccessPoint_Parallel": SubResource("SubResource_ap_par"),
+&"OrderedCycle": SubResource("SubResource_ord_seq"),
+&"ParallelShow": SubResource("SubResource_par_show"),
 &"RandomPicker": SubResource("SubResource_rsel"),
 &"TweenCol1": SubResource("SubResource_tw_col1"),
 &"TweenCol2": SubResource("SubResource_tw_col2"),
@@ -412,6 +486,18 @@ connections = Array[Dictionary]([{
 "to_node": &"RandomPicker",
 "to_port": 0
 }, {
+"from_node": &"AccessPoint_Ordered",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"OrderedCycle",
+"to_port": 0
+}, {
+"from_node": &"AccessPoint_Parallel",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"ParallelShow",
+"to_port": 0
+}, {
 "from_node": &"RandomPicker",
 "from_port": 0,
 "keep_alive": false,
@@ -429,6 +515,35 @@ connections = Array[Dictionary]([{
 "keep_alive": false,
 "to_node": &"TxtRest",
 "to_port": 0
+}, {
+"from_node": &"OrderedCycle",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"TxtSquish",
+"to_port": 0
+}, {
+"from_node": &"OrderedCycle",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"TxtColor",
+"to_port": 0
+}, {
+"from_node": &"OrderedCycle",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"TxtRest",
+"to_port": 0
+}, {
+"from_node": &"ParallelShow",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"TxtSquish",
+"to_port": 0
+}, {
+"from_node": &"ParallelShow",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"TxtColor",
+"to_port": 0
 }])
 _agent_ref = Object(WeakRef,"script":null)
-

@@ -31,7 +31,7 @@ func tick(delta: float) -> Status:
 	var dur : float = eval(&"duration") as float
 	var target_e : float = eval(&"target_energy") as float
 	
-	if dur <= 0.0 or _elapsed >= dur:
+	if dur <= 0.0 or _elapsed >= dur or is_equal_approx(_start_energy, target_e):
 		_light_node.set(_prop_name, target_e)
 		return Status.SUCCESS
 		

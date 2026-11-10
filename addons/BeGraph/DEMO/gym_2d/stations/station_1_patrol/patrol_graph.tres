@@ -9,6 +9,7 @@
 [ext_resource type="Script" uid="uid://bhduga4xd8gmu" path="res://addons/BeGraph/Classes/Nodes/Actions/Properties & Methods/Set Property.gd" id="7_odt74"]
 [ext_resource type="Script" uid="uid://bt3sox16shfd2" path="res://addons/BeGraph/Classes/Nodes/Actions/Blackboard & Data/Set Blackboard Variable.gd" id="8_fynk6"]
 [ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="9_1patj"]
+[ext_resource type="Script" uid="uid://cs6p0qd255j4q" path="res://addons/BeGraph/Classes/misc/BehaviorFrame.gd" id="10_frame"]
 
 [sub_resource type="Resource" id="Resource_a6v5c"]
 resource_name = "moving"
@@ -18,20 +19,12 @@ export_variable = true
 value = true
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
-[sub_resource type="Resource" id="Resource_rdfje"]
-resource_name = "mode"
-script = ExtResource("1_xqdap")
-name = &"mode"
-export_variable = true
-value = 3
-metadata/_custom_type_script = "uid://da0t4052e3fsp"
-
 [sub_resource type="Resource" id="Resource_pxsmv"]
 resource_name = "waypoints"
 script = ExtResource("1_xqdap")
 name = &"waypoints"
 export_variable = true
-value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym2D/Stations/Station1_Patrol/WaypointsD")
+value = NodePath("")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_vumwu"]
@@ -58,13 +51,13 @@ export_variable = true
 value = NodePath("../StatusLabel")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
-[sub_resource type="Resource" id="SubResource_ap"]
-resource_name = "AccessPoint"
+[sub_resource type="Resource" id="SubResource_ap_0"]
+resource_name = "AccessPoint_0_Once"
 script = ExtResource("3_cmouj")
-label = "Start"
+label = "Patrol: Once"
 node_category = "access_point_node"
 output = true
-position_in_graph = Vector2(-1060, 20)
+position_in_graph = Vector2(-1060, -320)
 is_starting_node = true
 _graph_ref = Object(WeakRef,"script":null)
 
@@ -72,22 +65,64 @@ _next_ref = Array[StringName]([&"PatrolOnce"])
 breakpointable = true
 mutable = true
 
-[sub_resource type="Resource" id="SubResource_patrol"]
+[sub_resource type="Resource" id="SubResource_ap_1"]
+resource_name = "AccessPoint_1_Loop"
+script = ExtResource("3_cmouj")
+label = "Patrol: Loop"
+node_category = "access_point_node"
+output = true
+position_in_graph = Vector2(-1060, -80)
+is_starting_node = true
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"PatrolLoop"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_ap_2"]
+resource_name = "AccessPoint_2_PingPong"
+script = ExtResource("3_cmouj")
+label = "Patrol: Ping-Pong"
+node_category = "access_point_node"
+output = true
+position_in_graph = Vector2(-1060, 160)
+is_starting_node = true
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"PatrolPingPong"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_ap_3"]
+resource_name = "AccessPoint_3_PingPongLoop"
+script = ExtResource("3_cmouj")
+label = "Patrol: Ping-Pong (Loop)"
+node_category = "access_point_node"
+output = true
+position_in_graph = Vector2(-1060, 420)
+is_starting_node = true
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"PatrolPingPongLoop"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_patrol_0"]
 resource_name = "PatrolOnce"
 script = ExtResource("4_tan1m")
 node = NodePath(".")
+mode = 0
 speed = 120.0
 wait_time = 0.2
 instruction = "Patrol {node} ({mode}, speed {speed})"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(-420, -40)
+position_in_graph = Vector2(-460, -340)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"SetGoalText"])
 _blackboard_bindings = Dictionary[StringName, StringName]({
-&"mode": &"mode",
 &"node": &"self",
 &"waypoints": &"waypoints"
 })
@@ -99,6 +134,89 @@ decorator = {
 "type": "condition"
 }
 
+[sub_resource type="Resource" id="SubResource_patrol_1"]
+resource_name = "PatrolLoop"
+script = ExtResource("4_tan1m")
+node = NodePath(".")
+mode = 1
+speed = 120.0
+wait_time = 0.2
+instruction = "Patrol {node} ({mode}, speed {speed})"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(-460, -80)
+_graph_ref = Object(WeakRef,"script":null)
+
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"self",
+&"waypoints": &"waypoints"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_patrol_2"]
+resource_name = "PatrolPingPong"
+script = ExtResource("4_tan1m")
+node = NodePath(".")
+mode = 2
+speed = 120.0
+wait_time = 0.2
+instruction = "Patrol {node} ({mode}, speed {speed})"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(-460, 140)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"SetGoalText"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"self",
+&"waypoints": &"waypoints"
+})
+breakpointable = true
+mutable = true
+decorator = {
+"blackboard_key": &"moving",
+"condition_expected": 0,
+"type": "condition"
+}
+
+[sub_resource type="Resource" id="SubResource_patrol_3"]
+resource_name = "PatrolPingPongLoop"
+script = ExtResource("4_tan1m")
+node = NodePath(".")
+mode = 3
+speed = 120.0
+wait_time = 0.2
+instruction = "Patrol {node} ({mode}, speed {speed})"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(-460, 420)
+_graph_ref = Object(WeakRef,"script":null)
+
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"self",
+&"waypoints": &"waypoints"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_frame_goal"]
+resource_name = "_GraphFrame_Goal"
+script = ExtResource("10_frame")
+frame_title = "Shared Finite Patrol Completion (Once & Ping-Pong)"
+tint_color = Color(0.18, 0.42, 0.25, 0.7)
+frame_size = Vector2(2040, 320)
+attached_nodes = Array[StringName]([&"SetGoalText", &"SetGreenColor", &"PlayBurstParticles", &"_GraphNode_68030"])
+node_category = "frame_node"
+position_in_graph = Vector2(140, -140)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
 [sub_resource type="Resource" id="SubResource_part"]
 resource_name = "PlayBurstParticles"
 script = ExtResource("5_ea13l")
@@ -107,7 +225,7 @@ instruction = "Restart particles {node}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1260, 20)
+position_in_graph = Vector2(1260, -40)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"_GraphNode_68030"])
@@ -165,7 +283,7 @@ instruction = "Set BB var {variable_name} = {value}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1800, 0)
+position_in_graph = Vector2(1800, -40)
 _graph_ref = Object(WeakRef,"script":null)
 
 breakpointable = true
@@ -173,20 +291,57 @@ mutable = true
 
 [resource]
 script = ExtResource("9_1patj")
-blackboard = Array[ExtResource("1_xqdap")]([SubResource("Resource_a6v5c"), SubResource("Resource_rdfje"), SubResource("Resource_pxsmv"), SubResource("Resource_vumwu"), SubResource("Resource_273ow"), SubResource("Resource_eok6o")])
+blackboard = Array[ExtResource("1_xqdap")]([SubResource("Resource_a6v5c"), SubResource("Resource_pxsmv"), SubResource("Resource_vumwu"), SubResource("Resource_273ow"), SubResource("Resource_eok6o")])
 nodes = Dictionary[StringName, ExtResource("2_fyj4x")]({
-&"AccessPoint": SubResource("SubResource_ap"),
-&"PatrolOnce": SubResource("SubResource_patrol"),
+&"AccessPoint_0_Once": SubResource("SubResource_ap_0"),
+&"AccessPoint_1_Loop": SubResource("SubResource_ap_1"),
+&"AccessPoint_2_PingPong": SubResource("SubResource_ap_2"),
+&"AccessPoint_3_PingPongLoop": SubResource("SubResource_ap_3"),
+&"PatrolOnce": SubResource("SubResource_patrol_0"),
+&"PatrolLoop": SubResource("SubResource_patrol_1"),
+&"PatrolPingPong": SubResource("SubResource_patrol_2"),
+&"PatrolPingPongLoop": SubResource("SubResource_patrol_3"),
 &"PlayBurstParticles": SubResource("SubResource_part"),
 &"SetGoalText": SubResource("SubResource_text"),
 &"SetGreenColor": SubResource("SubResource_prop"),
+&"_GraphFrame_Goal": SubResource("SubResource_frame_goal"),
 &"_GraphNode_68030": SubResource("Resource_pwoe6")
 })
 connections = Array[Dictionary]([{
-"from_node": &"AccessPoint",
+"from_node": &"AccessPoint_0_Once",
 "from_port": 0,
 "keep_alive": false,
 "to_node": &"PatrolOnce",
+"to_port": 0
+}, {
+"from_node": &"AccessPoint_1_Loop",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"PatrolLoop",
+"to_port": 0
+}, {
+"from_node": &"AccessPoint_2_PingPong",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"PatrolPingPong",
+"to_port": 0
+}, {
+"from_node": &"AccessPoint_3_PingPongLoop",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"PatrolPingPongLoop",
+"to_port": 0
+}, {
+"from_node": &"PatrolOnce",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"SetGoalText",
+"to_port": 0
+}, {
+"from_node": &"PatrolPingPong",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"SetGoalText",
 "to_port": 0
 }, {
 "from_node": &"SetGoalText",
@@ -206,12 +361,5 @@ connections = Array[Dictionary]([{
 "keep_alive": false,
 "to_node": &"_GraphNode_68030",
 "to_port": 0
-}, {
-"from_node": &"PatrolOnce",
-"from_port": 0,
-"keep_alive": false,
-"to_node": &"SetGoalText",
-"to_port": 0
 }])
 _agent_ref = Object(WeakRef,"script":null)
-

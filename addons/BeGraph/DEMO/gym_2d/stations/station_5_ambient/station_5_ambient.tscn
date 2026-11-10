@@ -15,8 +15,11 @@ script = ExtResource("1_t4qwq")
 [node name="StationBillboard" parent="." unique_id=1636907639 instance=ExtResource("1_billboard")]
 position = Vector2(0, -220)
 title = "Station 5: Ambient Decisions & Tweens"
-summary = "Showcases non-deterministic AI flow using Random Selector inside a Repeat loop. The actor cycles through random actions: a bouncy squish-stretch squash animation (Tween Property on scale), dynamic color transitions (Tween Property on modulate), and resting periods (Wait)."
-nodes_used = PackedStringArray("Access Point", "Repeat", "Random Selector", "Sequence", "Tween Property", "Set Text Property", "Wait")
+summary = "Showcases 3 Access Point modes reusing the same 3 Tween Sequence Frames (Squish & Hop, Color Pulse, and Rest):
+1. 'Random Ambient (Random Selector)' (default): Picks a random animation sequence each cycle.
+2. 'Deterministic Cycle (Sequence)': Steps through Squish -> Color -> Rest in strict order.
+3. 'Simultaneous Show (Parallel)': Runs Squish & Stretch and Color Pulse at the same time."
+nodes_used = PackedStringArray("Access Point", "Random Selector", "Sequence", "Parallel", "BehaviorFrame", "Tween Property", "Set Text Property", "Wait")
 station_color = Color(0.85, 0.4, 0.85, 1)
 
 [node name="FloorArea" type="ColorRect" parent="." unique_id=61924377]

@@ -10,7 +10,19 @@ enum Mode { THRESHOLD, ALL }
 @export_custom(PROPERTY_HINT_ENUM, BG.PROPERTY+"Threshold,All", PROPERTY_USAGE_DEFAULT) var mode : Mode = Mode.THRESHOLD
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var required_successes : int = 1
 
+var _finished_children : Dictionary = {}
+
+func on_start() -> void:
+	_finished_children.clear()
+
+func on_end(_status: Status) -> void:
+	_finished_children.clear()
+
+func _on_abort_running(_visited: Dictionary) -> void:
+	_finished_children.clear()
+
 func _abort_remaining_children() -> void:
+	_finished_children.clear()
 	var graph := get_graph()
 	if graph == null:
 		return
@@ -26,11 +38,13 @@ func tick(delta: float) -> Status:
 	var failures : int = 0
 	
 	for i in _next_ref.size():
-		var status : Status = tick_next(delta, i)
+		var status : Status = _finished_children[i] if _finished_children.has(i) else tick_next(delta, i)
 		match status:
 			Status.SUCCESS:
+				_finished_children[i] = Status.SUCCESS
 				successes += 1
 			Status.FAILURE:
+				_finished_children[i] = Status.FAILURE
 				failures += 1
 			Status.ERROR:
 				_abort_remaining_children()

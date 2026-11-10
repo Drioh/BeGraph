@@ -28,11 +28,11 @@ script = ExtResource("1_st1")
 
 [node name="StationBillboard" parent="." unique_id=1777311164 instance=ExtResource("2_billboard")]
 position = Vector2(0, -216)
-title = "Station 1: Waypoint Patrol Variants"
-summary = "Showcases the Patrol node operating across its four modes: Once, Loop, Ping-Pong and Ping-Pong (Loop). 
-Actor A executes a finite waypoint sequence; upon reaching its goal, it triggers a text update, modulates its color to green, and bursts particles via Restart Particles. 
-Actors B and C showcase continuous linear oscillation and closed-circuit looping."
-nodes_used = PackedStringArray("Access Point", "Sequence", "Patrol", "Set Text Property", "Set Property", "Restart Particles")
+title = "Station 1: Multi-Access-Point Patrol Variants"
+summary = "Showcases how 4 actors share a single BehaviorGraph via 4 distinct Access Points (Patrol: Once, Loop, Ping-Pong, and Ping-Pong Loop).
+Actors A (Once) and C (Ping-Pong) execute finite patrol routes that converge onto the same shared Goal Reached sequence (updating text, turning green, and bursting particles).
+Actors B (Loop) and D (Ping-Pong Loop) run continuous patrol circuits from their respective Access Points."
+nodes_used = PackedStringArray("Access Point", "BehaviorFrame", "Patrol", "Set Text Property", "Set Property", "Restart Particles", "Set Blackboard Variable")
 station_color = Color(0.2, 0.75, 0.35, 1)
 
 [node name="ActorA" parent="." unique_id=532875850 instance=ExtResource("3_u0ds0")]

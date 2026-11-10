@@ -149,6 +149,7 @@ func setup_runtime(agent: Node, source_graph: BehaviorGraph = null) -> void:
 	set_agent(agent)
 	_resolved_nodes_cache.clear()
 	_rebuild_blackboard_map()
+	
 	for c in connections:
 		var from_node : BehaviorNode = get_node(c["from_node"])
 		var to_node : BehaviorNode = get_node(c["to_node"])
@@ -157,10 +158,12 @@ func setup_runtime(agent: Node, source_graph: BehaviorGraph = null) -> void:
 			continue
 		
 		from_node.add_next(to_node, c["from_port"])
+	
 	for node in nodes.values():
 		node._graph_ref = weakref(self)
 		if not node._blackboard_bindings.is_empty() and node.has_method(&"on_blackboard_property_changed"):
 			node._connect_blackboard_signals()
+	
 	for node in nodes.values():
 		if node is BehaviorFrame and node.is_sequence:
 			node.setup_sequence(self)

@@ -22,8 +22,10 @@ script = ExtResource("1_58k8u")
 [node name="StationBillboard" parent="." unique_id=718683900 instance=ExtResource("1_billboard")]
 position = Vector2(0, -220)
 title = "Station 2: Sentry & Line of Sight Arena"
-summary = "Demonstrates proximity sensing (Distance node), raycast line-of-sight verification behind obstacles (Line Of Sight node), sound cues (Play Sound), color state modulation (Set Property), and projectile firing (Spawn Projectile). The sentry only alerts and fires when unobstructed."
-nodes_used = PackedStringArray("Access Point", "Distance", "Line Of Sight", "Sequence", "Set Property", "Play Sound", "Spawn Projectile", "Wait")
+summary = "Demonstrates two Access Point modes sharing the same firing sequence:
+1. 'Smart Sentry (Line of Sight)' (default): Checks Distance AND RayCast2D Line Of Sight before alerting and firing.
+2. 'Blind Turret (Proximity Only)': Bypasses Line Of Sight and fires whenever the player enters range, even behind cover."
+nodes_used = PackedStringArray("Access Point", "Distance", "Line Of Sight", "BehaviorFrame", "Set Property", "Play Sound", "Spawn Projectile", "Wait")
 station_color = Color(0.95, 0.35, 0.25, 1)
 
 [node name="ArenaFloor" type="ColorRect" parent="." unique_id=632019740]

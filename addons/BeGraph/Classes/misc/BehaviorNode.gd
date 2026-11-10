@@ -631,6 +631,14 @@ func tick_next(delta:float,index:int = 0) -> Status:
 
 ## Ticks the successor bound to the condition at [param index] inside [member conditions] and returns its [enum Status]. Routes through [method do_tick] (rather than calling [method tick] directly) so the successor's status/tick-time gets recorded.
 func tick_condition(delta:float,index:int = 0) -> Status:
+	if last_ticked_condition != -1 and last_ticked_condition != index and last_ticked_condition < conditions.size():
+		var prev_target : StringName = conditions[last_ticked_condition]["next"] if conditions[last_ticked_condition]["next"] else &""
+		if prev_target != &"":
+			var graph := get_graph()
+			if graph != null:
+				var prev_node : BehaviorNode = graph.nodes.get(prev_target, null)
+				if prev_node != null:
+					prev_node.abort_running()
 	last_ticked_condition = index
 	if index >= conditions.size():
 		push_error("BehaviorNode %s has less than %s conditions" % [self, index + 1])
@@ -641,12 +649,15 @@ func tick_condition(delta:float,index:int = 0) -> Status:
 func _tick_target(target: StringName, delta: float) -> Status:
 	if target == &"":
 		return Status.FAILURE
+	
 	var graph := get_graph()
 	if graph == null:
 		return abort("lost graph reference")
+	
 	var target_node := graph.get_node(target)
 	if target_node == null:
 		return Status.FAILURE
+	
 	return target_node.do_tick(delta)
 
 ## Resolves a property value. If [code]resolve node[/code] is set to [code]true[/code] and the given property value is a nodepath, returnes the resolved nodepath via [method _resolve_node]. Returns the blackboard value if bound, otherwise returns the fallback local variable.

@@ -13,6 +13,7 @@ func _ready() -> void:
 	if behavior_agent == null:
 		return
 
+	behavior_agent.set_blackboard_property(&"Self", actuator.get_path())
 	behavior_agent.set_blackboard_property(&"TriggerArea", trigger_area.get_path())
 	behavior_agent.set_blackboard_property(&"CrateA", crate_a.get_path())
 	behavior_agent.set_blackboard_property(&"CrateB", crate_b.get_path())

@@ -1,7 +1,7 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://delycjeoxa3ii"]
 
-[ext_resource type="Script" path="res://addons/BeGraph/DEMO/gym_3d/stations/station_5_acrobat_jump/station_5_acrobat_jump.gd" id="1_st5_gd"]
 [ext_resource type="PackedScene" path="res://addons/BeGraph/DEMO/gym_3d/common/station_billboard_3d.tscn" id="1_bb"]
+[ext_resource type="Script" uid="uid://ceh4t4tsnuue3" path="res://addons/BeGraph/DEMO/gym_3d/stations/station_5_acrobat_jump/station_5_acrobat_jump.gd" id="1_st5_gd"]
 [ext_resource type="Script" uid="uid://cw01p0ypvtv25" path="res://addons/BeGraph/DEMO/gym_3d/common/actor_3d.gd" id="2_act"]
 [ext_resource type="Script" uid="uid://cj0fv54i6ere" path="res://addons/BeGraph/Classes/misc/BehaviorAgent.gd" id="3_agent"]
 [ext_resource type="Resource" uid="uid://df7glh24lgjle" path="res://addons/BeGraph/DEMO/gym_3d/stations/station_5_acrobat_jump/acrobat_jump_graph.tres" id="4_graph"]
@@ -20,6 +20,12 @@ size = Vector3(14, 0.4, 14)
 radius = 0.4
 height = 1.2
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_26god"]
+roughness = 0.3
+emission_enabled = true
+emission = Color(0.6, 0.2, 0.7, 1)
+emission_energy_multiplier = 0.3
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bot"]
 albedo_color = Color(0.85, 0.35, 0.9, 1)
 roughness = 0.3
@@ -32,28 +38,28 @@ material = SubResource("StandardMaterial3D_bot")
 radius = 0.4
 height = 1.2
 
-[node name="Station5_AcrobatJump" type="Node3D"]
+[node name="Station5_AcrobatJump" type="Node3D" unique_id=670857911]
 script = ExtResource("1_st5_gd")
 
-[node name="StationBillboard3D" parent="." instance=ExtResource("1_bb")]
+[node name="StationBillboard3D" parent="." unique_id=1233343533 instance=ExtResource("1_bb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, -6.5)
 title = "Station 5: 3D Platforming Acrobat"
-summary = "Showcases vertical 3D kinematics via the Jump node (height-calculated velocity & floor landing detection), spatial orientation (Rotate Node), and landing squash-and-stretch animation (Tween Property) inside a Repeat loop."
-nodes_used = PackedStringArray("Access Point", "Repeat", "Sequence", "Jump", "Rotate Node", "Tween Property", "Wait")
+summary = "Showcases dual Access Points ('Sequential Approach' vs 'Parallel Approach') converging onto a shared landing Sequence Frame: mid-air 360° flip (Rotate Node), floor detection (Jump / Check Bool State), and landing squash-and-stretch (Tween Property)."
+nodes_used = PackedStringArray("Access Point", "Repeat", "Sequence", "Parallel", "Check Bool State", "Jump", "Rotate Node", "Tween Property", "Wait")
 station_color = Color(0.85, 0.35, 0.9, 1)
 
-[node name="Floor" type="StaticBody3D" parent="."]
+[node name="Floor" type="StaticBody3D" parent="." unique_id=613226763]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
 collision_layer = 2
 collision_mask = 7
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Floor"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Floor" unique_id=805277147]
 mesh = SubResource("BoxMesh_floor")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor" unique_id=1300215873]
 shape = SubResource("BoxShape3D_floor")
 
-[node name="AcrobatBot" type="CharacterBody3D" parent="." node_paths=PackedStringArray("behavior_agent")]
+[node name="AcrobatBot" type="CharacterBody3D" parent="." unique_id=711911017 node_paths=PackedStringArray("behavior_agent")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 collision_layer = 4
 collision_mask = 3
@@ -61,13 +67,20 @@ script = ExtResource("2_act")
 behavior_agent = NodePath("BehaviorAgent")
 use_gravity = true
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="AcrobatBot"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="AcrobatBot" unique_id=911029113]
 shape = SubResource("CapsuleShape3D_bot")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="AcrobatBot"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="AcrobatBot" unique_id=354208897]
+material_override = SubResource("StandardMaterial3D_26god")
 mesh = SubResource("CapsuleMesh_bot")
 
-[node name="BehaviorAgent" type="Node" parent="AcrobatBot"]
+[node name="BehaviorAgent" type="Node" parent="AcrobatBot" unique_id=1627170295]
 script = ExtResource("3_agent")
+bb_props = Dictionary[StringName, Variant]({
+&"overridable_blackboard_properties/MeshInstance": NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Stations/Station5_AcrobatJump/AcrobatBot/MeshInstance3D"),
+&"overridable_blackboard_properties/Self": NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Stations/Station5_AcrobatJump/AcrobatBot")
+})
 behavior_graph = ExtResource("4_graph")
-starting_point = 0
+starting_point = 1
+overridable_blackboard_properties/Self = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Stations/Station5_AcrobatJump/AcrobatBot")
+overridable_blackboard_properties/MeshInstance = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Stations/Station5_AcrobatJump/AcrobatBot/MeshInstance3D")

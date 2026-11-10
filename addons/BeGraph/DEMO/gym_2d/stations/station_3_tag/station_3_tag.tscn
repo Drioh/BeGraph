@@ -31,8 +31,11 @@ behavior_agent = NodePath("TagActor/BehaviorAgent")
 [node name="StationBillboard" parent="." unique_id=1507976678 instance=ExtResource("2_billboard")]
 position = Vector2(0, -220)
 title = "Station 3: Tag / Chase & Flee Arena"
-summary = "Demonstrates area detection triggers (Area Detect), 2D NavMesh pathfinding navigation (Navigate To), role-inversion tag mechanics via distance thresholds (Distance), and blackboard state persistence (Condition & Set Blackboard Variable)."
-nodes_used = PackedStringArray("Access Point", "Area Detect", "Selector", "Sequence", "Condition", "Distance", "Navigate To", "Set Property", "Set Blackboard Variable")
+summary = "Demonstrates 3 Access Point modes sharing the same navigation and idle nodes:
+1. 'Dynamic Tag (Swap Roles)' (default): Swaps between Chaser and Runner upon contact.
+2. 'Relentless Chaser (2s Cooldown)': Always pursues the player, pausing for a 2s cooldown after each tag.
+3. 'Timid Runner Only': Always flees to the furthest corner."
+nodes_used = PackedStringArray("Access Point", "Area Detect", "BehaviorFrame", "Condition", "Distance", "Navigate To", "Wait", "Set Property", "Set Blackboard Variable")
 station_color = Color(0.95, 0.45, 0.15, 1)
 
 [node name="ArenaFloor" type="ColorRect" parent="." unique_id=737775180]

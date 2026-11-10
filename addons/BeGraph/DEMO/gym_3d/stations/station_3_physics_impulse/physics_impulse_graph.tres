@@ -8,13 +8,27 @@
 [ext_resource type="Script" uid="uid://b5qh72hlrsv4u" path="res://addons/BeGraph/Classes/Nodes/Actions/Physics/Apply Impulse.gd" id="7_imp"]
 [ext_resource type="Script" uid="uid://b0sc0g6pmwp4q" path="res://addons/BeGraph/Classes/Nodes/Flow/Wait/Wait.gd" id="8_wait"]
 [ext_resource type="Script" uid="uid://d25yjg1utgxu" path="res://addons/BeGraph/Classes/GraphStuff/BehaviorGraph.gd" id="9_graph"]
+[ext_resource type="Script" uid="uid://bhduga4xd8gmu" path="res://addons/BeGraph/Classes/Nodes/Actions/Properties & Methods/Set Property.gd" id="10_prop"]
+[ext_resource type="Script" uid="uid://yikob6c0d8wi" path="res://addons/BeGraph/Classes/Nodes/Actions/Movement/Rotate Node.gd" id="11_rot"]
+[ext_resource type="Script" uid="uid://bucm3hk7h14de" path="res://addons/BeGraph/Classes/Nodes/Flow/Composites/Sequence.gd" id="12_seq"]
+[ext_resource type="Script" uid="uid://dj83nc1blyj2i" path="res://addons/BeGraph/Classes/Nodes/Flow/Composites/Parallel.gd" id="13_par"]
+[ext_resource type="Script" uid="uid://buoorgg5w3x50" path="res://addons/BeGraph/Classes/Nodes/Flow/Composites/Random Selector.gd" id="14_rsel"]
+[ext_resource type="Script" uid="uid://g3n6tgaxhmye" path="res://addons/BeGraph/Classes/Nodes/Flow/Branching/Chance.gd" id="15_chance"]
+
+[sub_resource type="Resource" id="Resource_bb_self"]
+resource_name = "Self"
+script = ExtResource("1_bb")
+name = &"Self"
+export_variable = true
+value = NodePath("..")
+metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_bb_trig"]
 resource_name = "TriggerArea"
 script = ExtResource("1_bb")
 name = &"TriggerArea"
 export_variable = true
-value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Stations/Station3_PhysicsImpulse/PitTriggerArea")
+value = NodePath("../../PitTriggerArea")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_bb_crate_a"]
@@ -22,7 +36,7 @@ resource_name = "CrateA"
 script = ExtResource("1_bb")
 name = &"CrateA"
 export_variable = true
-value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Stations/Station3_PhysicsImpulse/Crate1")
+value = NodePath("../../Crate1")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_bb_crate_b"]
@@ -30,20 +44,48 @@ resource_name = "CrateB"
 script = ExtResource("1_bb")
 name = &"CrateB"
 export_variable = true
-value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Stations/Station3_PhysicsImpulse/Crate2")
+value = NodePath("../../Crate2")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
-[sub_resource type="Resource" id="SubResource_ap"]
-resource_name = "AccessPoint"
+[sub_resource type="Resource" id="SubResource_ap_0"]
+resource_name = "AccessPoint_0_Juggler"
 script = ExtResource("3_ap")
-label = "Start"
+label = "Telekinetic Juggler (Sequence)"
 node_category = "access_point_node"
 output = true
-position_in_graph = Vector2(-380, -820)
+position_in_graph = Vector2(-520, -680)
 is_starting_node = true
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"AreaTrigger"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_ap_1"]
+resource_name = "AccessPoint_1_Vortex"
+script = ExtResource("3_ap")
+label = "Gravity Vortex (Parallel)"
+node_category = "access_point_node"
+output = true
+position_in_graph = Vector2(-520, 420)
+is_starting_node = true
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"AreaTrigger_Vortex"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_ap_2"]
+resource_name = "AccessPoint_2_Chaos"
+script = ExtResource("3_ap")
+label = "Chaotic Roulette (Random & Chance)"
+node_category = "access_point_node"
+output = true
+position_in_graph = Vector2(-520, 1140)
+is_starting_node = true
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"AreaTrigger_Chaos"])
 breakpointable = true
 mutable = true
 
@@ -53,19 +95,127 @@ script = ExtResource("4_area")
 area = NodePath("../PitTriggerArea")
 instruction = "Check bodies overlapping {area}"
 conditions = Array[Dictionary]([{
-"next": "LaunchCrateA",
+"next": &"SetActuatorRed",
 "text": "Body detected"
 }, {
-"next": null,
+"next": &"SetActuatorIdle",
 "text": "No body detected"
 }])
 node_category = "control_flow_node"
 input = true
-position_in_graph = Vector2(420, -720)
+position_in_graph = Vector2(80, -680)
 _graph_ref = Object(WeakRef,"script":null)
 
 _blackboard_bindings = Dictionary[StringName, StringName]({
 &"area": &"TriggerArea"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_area_vortex"]
+resource_name = "AreaTrigger_Vortex"
+script = ExtResource("4_area")
+area = NodePath("../PitTriggerArea")
+instruction = "Check bodies overlapping {area}"
+conditions = Array[Dictionary]([{
+"next": &"VortexSequence",
+"text": "Body detected"
+}, {
+"next": &"SetActuatorIdle",
+"text": "No body detected"
+}])
+node_category = "control_flow_node"
+input = true
+position_in_graph = Vector2(80, 420)
+_graph_ref = Object(WeakRef,"script":null)
+
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"area": &"TriggerArea"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_area_chaos"]
+resource_name = "AreaTrigger_Chaos"
+script = ExtResource("4_area")
+area = NodePath("../PitTriggerArea")
+instruction = "Check bodies overlapping {area}"
+conditions = Array[Dictionary]([{
+"next": &"ChaosSelector",
+"text": "Body detected"
+}, {
+"next": &"SetActuatorIdle",
+"text": "No body detected"
+}])
+node_category = "control_flow_node"
+input = true
+position_in_graph = Vector2(80, 1140)
+_graph_ref = Object(WeakRef,"script":null)
+
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"area": &"TriggerArea"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_act_idle"]
+resource_name = "SetActuatorIdle"
+script = ExtResource("10_prop")
+node = NodePath(".")
+property = "actor_color"
+value = Color(0.95, 0.65, 0.2, 1)
+instruction = "Set {node}'s {property} value: {value}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(680, -120)
+_graph_ref = Object(WeakRef,"script":null)
+
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"Self"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_act_red"]
+resource_name = "SetActuatorRed"
+script = ExtResource("10_prop")
+node = NodePath(".")
+property = "actor_color"
+value = Color(0.95, 0.3, 0.2, 1)
+instruction = "Set {node}'s {property} value: {value}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(1280, -1380)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"FaceCrateA"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"Self"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_face_a"]
+resource_name = "FaceCrateA"
+script = ExtResource("11_rot")
+node = NodePath(".")
+mode = 1
+speed_mode = 1
+duration = 0.25
+target_node = NodePath("../Crate1")
+instruction = "Rotate {node} ({mode}, axis {axis_3d})"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(1280, -1180)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"LaunchCrateA"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"Self",
+&"target_node": &"CrateA"
 })
 breakpointable = true
 mutable = true
@@ -79,12 +229,70 @@ instruction = "Apply impulse {impulse} to {node}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1300, -960)
+position_in_graph = Vector2(1280, -960)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"WaitA"])
 _blackboard_bindings = Dictionary[StringName, StringName]({
 &"node": &"CrateA"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_wait_a"]
+resource_name = "WaitA"
+script = ExtResource("8_wait")
+seconds = 0.65
+instruction = "Wait {seconds}s"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(1280, -760)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"SetActuatorBlue"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_act_blue"]
+resource_name = "SetActuatorBlue"
+script = ExtResource("10_prop")
+node = NodePath(".")
+property = "actor_color"
+value = Color(0.2, 0.7, 0.95, 1)
+instruction = "Set {node}'s {property} value: {value}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(1280, -580)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"FaceCrateB"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"Self"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_face_b"]
+resource_name = "FaceCrateB"
+script = ExtResource("11_rot")
+node = NodePath(".")
+mode = 1
+speed_mode = 1
+duration = 0.25
+target_node = NodePath("../Crate2")
+instruction = "Rotate {node} ({mode}, axis {axis_3d})"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(1280, -380)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"LaunchCrateB"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"Self",
+&"target_node": &"CrateB"
 })
 breakpointable = true
 mutable = true
@@ -98,12 +306,70 @@ instruction = "Apply impulse {impulse} to {node}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1280, -640)
+position_in_graph = Vector2(1280, -160)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"WaitB"])
 _blackboard_bindings = Dictionary[StringName, StringName]({
 &"node": &"CrateB"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_wait_b"]
+resource_name = "WaitB"
+script = ExtResource("8_wait")
+seconds = 0.65
+instruction = "Wait {seconds}s"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(1280, 40)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"SetReturnRed"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_ret_red"]
+resource_name = "SetReturnRed"
+script = ExtResource("10_prop")
+node = NodePath(".")
+property = "actor_color"
+value = Color(0.95, 0.3, 0.2, 1)
+instruction = "Set {node}'s {property} value: {value}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(1280, 220)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"FaceReturnA"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"Self"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_face_ra"]
+resource_name = "FaceReturnA"
+script = ExtResource("11_rot")
+node = NodePath(".")
+mode = 1
+speed_mode = 1
+duration = 0.25
+target_node = NodePath("../Crate1")
+instruction = "Rotate {node} ({mode}, axis {axis_3d})"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(1280, 420)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"ReturnCrateA"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"Self",
+&"target_node": &"CrateA"
 })
 breakpointable = true
 mutable = true
@@ -117,12 +383,70 @@ instruction = "Apply impulse {impulse} to {node}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1300, -340)
+position_in_graph = Vector2(1280, 620)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"WaitC"])
 _blackboard_bindings = Dictionary[StringName, StringName]({
 &"node": &"CrateA"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_wait_c"]
+resource_name = "WaitC"
+script = ExtResource("8_wait")
+seconds = 0.65
+instruction = "Wait {seconds}s"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(1280, 820)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"SetReturnBlue"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_ret_blue"]
+resource_name = "SetReturnBlue"
+script = ExtResource("10_prop")
+node = NodePath(".")
+property = "actor_color"
+value = Color(0.2, 0.7, 0.95, 1)
+instruction = "Set {node}'s {property} value: {value}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(1280, 1000)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"FaceReturnB"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"Self"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_face_rb"]
+resource_name = "FaceReturnB"
+script = ExtResource("11_rot")
+node = NodePath(".")
+mode = 1
+speed_mode = 1
+duration = 0.25
+target_node = NodePath("../Crate2")
+instruction = "Rotate {node} ({mode}, axis {axis_3d})"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(1280, 1200)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"ReturnCrateB"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"Self",
+&"target_node": &"CrateB"
 })
 breakpointable = true
 mutable = true
@@ -136,7 +460,7 @@ instruction = "Apply impulse {impulse} to {node}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1300, -20)
+position_in_graph = Vector2(1280, 1400)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"WaitD"])
@@ -146,60 +470,15 @@ _blackboard_bindings = Dictionary[StringName, StringName]({
 breakpointable = true
 mutable = true
 
-[sub_resource type="Resource" id="SubResource_wait_a"]
-resource_name = "WaitA"
-script = ExtResource("8_wait")
-seconds = 0.9
-instruction = "Wait {seconds}s"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(1280, -760)
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"LaunchCrateB"])
-breakpointable = true
-mutable = true
-
-[sub_resource type="Resource" id="SubResource_wait_b"]
-resource_name = "WaitB"
-script = ExtResource("8_wait")
-seconds = 0.9
-instruction = "Wait {seconds}s"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(1300, -440)
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"ReturnCrateA"])
-breakpointable = true
-mutable = true
-
-[sub_resource type="Resource" id="SubResource_wait_c"]
-resource_name = "WaitC"
-script = ExtResource("8_wait")
-seconds = 0.9
-instruction = "Wait {seconds}s"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(1300, -140)
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"ReturnCrateB"])
-breakpointable = true
-mutable = true
-
 [sub_resource type="Resource" id="SubResource_wait_d"]
 resource_name = "WaitD"
 script = ExtResource("8_wait")
-seconds = 0.9
+seconds = 0.65
 instruction = "Wait {seconds}s"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1300, 200)
+position_in_graph = Vector2(1280, 1600)
 _graph_ref = Object(WeakRef,"script":null)
 
 breakpointable = true
@@ -208,13 +487,254 @@ mutable = true
 [sub_resource type="Resource" id="Resource_72wl6"]
 resource_name = "_GraphFrame_83187"
 script = ExtResource("7_fk2jh")
-frame_title = "Frame"
-frame_size = Vector2(591.0005, 1368.0001)
-attached_nodes = Array[StringName]([&"LaunchCrateA", &"WaitA", &"LaunchCrateB", &"WaitB", &"ReturnCrateA", &"WaitC", &"ReturnCrateB", &"WaitD"])
+frame_title = "Telekinetic Juggler Sequence (Face Target -> Color Shift -> Apply Impulse)"
+tint_color = Color(0.85, 0.42, 0.2, 0.7)
+frame_size = Vector2(640, 3180)
+attached_nodes = Array[StringName]([&"SetActuatorRed", &"FaceCrateA", &"LaunchCrateA", &"WaitA", &"SetActuatorBlue", &"FaceCrateB", &"LaunchCrateB", &"WaitB", &"SetReturnRed", &"FaceReturnA", &"ReturnCrateA", &"WaitC", &"SetReturnBlue", &"FaceReturnB", &"ReturnCrateB", &"WaitD"])
 is_sequence = true
 memory = true
 node_category = "frame_node"
-position_in_graph = Vector2(1240, -1014)
+position_in_graph = Vector2(1220, -1440)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_vortex_seq"]
+resource_name = "VortexSequence"
+script = ExtResource("12_seq")
+memory = true
+instruction = "Sequence (memory: {memory})"
+node_category = "control_flow_node"
+input = true
+output = true
+allows_multiple_outputs = true
+position_in_graph = Vector2(680, 420)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"SetActuatorPurple", &"SpinVortex", &"ParallelLaunch", &"WaitVortexMid", &"ParallelReturn", &"WaitVortexEnd"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_act_purple"]
+resource_name = "SetActuatorPurple"
+script = ExtResource("10_prop")
+node = NodePath(".")
+property = "actor_color"
+value = Color(0.75, 0.25, 0.95, 1)
+instruction = "Set {node}'s {property} value: {value}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(2140, 120)
+_graph_ref = Object(WeakRef,"script":null)
+
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"Self"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_spin_vortex"]
+resource_name = "SpinVortex"
+script = ExtResource("11_rot")
+node = NodePath(".")
+mode = 2
+speed_mode = 1
+angular_speed = 900.0
+duration = 0.4
+instruction = "Rotate {node} ({mode}, axis {axis_3d})"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(2140, 320)
+_graph_ref = Object(WeakRef,"script":null)
+
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"Self"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_par_launch"]
+resource_name = "ParallelLaunch"
+script = ExtResource("13_par")
+mode = 1
+instruction = "Parallel: {mode} mode"
+node_category = "control_flow_node"
+input = true
+output = true
+allows_multiple_outputs = true
+position_in_graph = Vector2(2140, 540)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"VortexLaunchA", &"VortexLaunchB"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_v_la"]
+resource_name = "VortexLaunchA"
+script = ExtResource("7_imp")
+node = NodePath("../Crate1")
+impulse = Vector3(1.4, 10.5, 4.2)
+instruction = "Apply impulse {impulse} to {node}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(2760, 440)
+_graph_ref = Object(WeakRef,"script":null)
+
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"CrateA"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_v_lb"]
+resource_name = "VortexLaunchB"
+script = ExtResource("7_imp")
+node = NodePath("../Crate2")
+impulse = Vector3(-1.4, 9.5, -3.4)
+instruction = "Apply impulse {impulse} to {node}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(2760, 620)
+_graph_ref = Object(WeakRef,"script":null)
+
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"CrateB"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_wait_vm"]
+resource_name = "WaitVortexMid"
+script = ExtResource("8_wait")
+seconds = 0.9
+instruction = "Wait {seconds}s"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(2140, 740)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_par_ret"]
+resource_name = "ParallelReturn"
+script = ExtResource("13_par")
+mode = 1
+instruction = "Parallel: {mode} mode"
+node_category = "control_flow_node"
+input = true
+output = true
+allows_multiple_outputs = true
+position_in_graph = Vector2(2140, 940)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"VortexReturnA", &"VortexReturnB"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_v_ra"]
+resource_name = "VortexReturnA"
+script = ExtResource("7_imp")
+node = NodePath("../Crate1")
+impulse = Vector3(-1.4, 10.5, -4.2)
+instruction = "Apply impulse {impulse} to {node}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(2760, 860)
+_graph_ref = Object(WeakRef,"script":null)
+
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"CrateA"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_v_rb"]
+resource_name = "VortexReturnB"
+script = ExtResource("7_imp")
+node = NodePath("../Crate2")
+impulse = Vector3(1.4, 9.5, 3.4)
+instruction = "Apply impulse {impulse} to {node}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(2760, 1040)
+_graph_ref = Object(WeakRef,"script":null)
+
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"CrateB"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_wait_ve"]
+resource_name = "WaitVortexEnd"
+script = ExtResource("8_wait")
+seconds = 0.9
+instruction = "Wait {seconds}s"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(2140, 1160)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_frame_vortex"]
+resource_name = "_GraphFrame_Vortex"
+script = ExtResource("7_fk2jh")
+frame_title = "Gravity Vortex (Spin & Dual Parallel Impulse)"
+tint_color = Color(0.58, 0.25, 0.82, 0.7)
+frame_size = Vector2(1220, 1240)
+attached_nodes = Array[StringName]([&"SetActuatorPurple", &"SpinVortex", &"ParallelLaunch", &"VortexLaunchA", &"VortexLaunchB", &"WaitVortexMid", &"ParallelReturn", &"VortexReturnA", &"VortexReturnB", &"WaitVortexEnd"])
+is_sequence = false
+memory = false
+node_category = "frame_node"
+position_in_graph = Vector2(2080, 60)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_chaos_sel"]
+resource_name = "ChaosSelector"
+script = ExtResource("14_rsel")
+memory = true
+instruction = "Random Selector (memory: {memory})"
+node_category = "control_flow_node"
+input = true
+output = true
+allows_multiple_outputs = true
+position_in_graph = Vector2(680, 1140)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"SetActuatorRed", &"VortexSequence", &"ChaosChance"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_chaos_chance"]
+resource_name = "ChaosChance"
+script = ExtResource("15_chance")
+probability = 50.0
+instruction = "Chance {probability}%"
+conditions = Array[Dictionary]([{
+"next": &"VortexSequence",
+"text": "Success ({probability}%)"
+}, {
+"next": &"SetActuatorRed",
+"text": "Failure"
+}])
+node_category = "control_flow_node"
+input = true
+position_in_graph = Vector2(1280, 1180)
 _graph_ref = Object(WeakRef,"script":null)
 
 breakpointable = true
@@ -222,28 +742,109 @@ mutable = true
 
 [resource]
 script = ExtResource("9_graph")
-blackboard = Array[ExtResource("1_bb")]([SubResource("Resource_bb_trig"), SubResource("Resource_bb_crate_a"), SubResource("Resource_bb_crate_b")])
+blackboard = Array[ExtResource("1_bb")]([SubResource("Resource_bb_self"), SubResource("Resource_bb_trig"), SubResource("Resource_bb_crate_a"), SubResource("Resource_bb_crate_b")])
 nodes = Dictionary[StringName, ExtResource("2_node")]({
-&"AccessPoint": SubResource("SubResource_ap"),
+&"AccessPoint_0_Juggler": SubResource("SubResource_ap_0"),
+&"AccessPoint_1_Vortex": SubResource("SubResource_ap_1"),
+&"AccessPoint_2_Chaos": SubResource("SubResource_ap_2"),
 &"AreaTrigger": SubResource("SubResource_area"),
+&"AreaTrigger_Chaos": SubResource("SubResource_area_chaos"),
+&"AreaTrigger_Vortex": SubResource("SubResource_area_vortex"),
+&"ChaosChance": SubResource("SubResource_chaos_chance"),
+&"ChaosSelector": SubResource("SubResource_chaos_sel"),
+&"FaceCrateA": SubResource("SubResource_face_a"),
+&"FaceCrateB": SubResource("SubResource_face_b"),
+&"FaceReturnA": SubResource("SubResource_face_ra"),
+&"FaceReturnB": SubResource("SubResource_face_rb"),
 &"LaunchCrateA": SubResource("SubResource_imp_a1"),
 &"LaunchCrateB": SubResource("SubResource_imp_b1"),
+&"ParallelLaunch": SubResource("SubResource_par_launch"),
+&"ParallelReturn": SubResource("SubResource_par_ret"),
 &"ReturnCrateA": SubResource("SubResource_imp_a2"),
 &"ReturnCrateB": SubResource("SubResource_imp_b2"),
+&"SetActuatorBlue": SubResource("SubResource_act_blue"),
+&"SetActuatorIdle": SubResource("SubResource_act_idle"),
+&"SetActuatorPurple": SubResource("SubResource_act_purple"),
+&"SetActuatorRed": SubResource("SubResource_act_red"),
+&"SetReturnBlue": SubResource("SubResource_ret_blue"),
+&"SetReturnRed": SubResource("SubResource_ret_red"),
+&"SpinVortex": SubResource("SubResource_spin_vortex"),
+&"VortexLaunchA": SubResource("SubResource_v_la"),
+&"VortexLaunchB": SubResource("SubResource_v_lb"),
+&"VortexReturnA": SubResource("SubResource_v_ra"),
+&"VortexReturnB": SubResource("SubResource_v_rb"),
+&"VortexSequence": SubResource("SubResource_vortex_seq"),
 &"WaitA": SubResource("SubResource_wait_a"),
 &"WaitB": SubResource("SubResource_wait_b"),
 &"WaitC": SubResource("SubResource_wait_c"),
 &"WaitD": SubResource("SubResource_wait_d"),
-&"_GraphFrame_83187": SubResource("Resource_72wl6")
+&"WaitVortexEnd": SubResource("SubResource_wait_ve"),
+&"WaitVortexMid": SubResource("SubResource_wait_vm"),
+&"_GraphFrame_83187": SubResource("Resource_72wl6"),
+&"_GraphFrame_Vortex": SubResource("SubResource_frame_vortex")
 })
 connections = Array[Dictionary]([{
-"from_node": &"AccessPoint",
+"from_node": &"AccessPoint_0_Juggler",
 "from_port": 0,
 "keep_alive": false,
 "to_node": &"AreaTrigger",
 "to_port": 0
 }, {
+"from_node": &"AccessPoint_1_Vortex",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"AreaTrigger_Vortex",
+"to_port": 0
+}, {
+"from_node": &"AccessPoint_2_Chaos",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"AreaTrigger_Chaos",
+"to_port": 0
+}, {
 "from_node": &"AreaTrigger",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"SetActuatorRed",
+"to_port": 0
+}, {
+"from_node": &"AreaTrigger",
+"from_port": 1,
+"keep_alive": false,
+"to_node": &"SetActuatorIdle",
+"to_port": 0
+}, {
+"from_node": &"AreaTrigger_Vortex",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"VortexSequence",
+"to_port": 0
+}, {
+"from_node": &"AreaTrigger_Vortex",
+"from_port": 1,
+"keep_alive": false,
+"to_node": &"SetActuatorIdle",
+"to_port": 0
+}, {
+"from_node": &"AreaTrigger_Chaos",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"ChaosSelector",
+"to_port": 0
+}, {
+"from_node": &"AreaTrigger_Chaos",
+"from_port": 1,
+"keep_alive": false,
+"to_node": &"SetActuatorIdle",
+"to_port": 0
+}, {
+"from_node": &"SetActuatorRed",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"FaceCrateA",
+"to_port": 0
+}, {
+"from_node": &"FaceCrateA",
 "from_port": 0,
 "keep_alive": false,
 "to_node": &"LaunchCrateA",
@@ -258,6 +859,18 @@ connections = Array[Dictionary]([{
 "from_node": &"WaitA",
 "from_port": 0,
 "keep_alive": false,
+"to_node": &"SetActuatorBlue",
+"to_port": 0
+}, {
+"from_node": &"SetActuatorBlue",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"FaceCrateB",
+"to_port": 0
+}, {
+"from_node": &"FaceCrateB",
+"from_port": 0,
+"keep_alive": false,
 "to_node": &"LaunchCrateB",
 "to_port": 0
 }, {
@@ -268,6 +881,18 @@ connections = Array[Dictionary]([{
 "to_port": 0
 }, {
 "from_node": &"WaitB",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"SetReturnRed",
+"to_port": 0
+}, {
+"from_node": &"SetReturnRed",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"FaceReturnA",
+"to_port": 0
+}, {
+"from_node": &"FaceReturnA",
 "from_port": 0,
 "keep_alive": false,
 "to_node": &"ReturnCrateA",
@@ -282,6 +907,18 @@ connections = Array[Dictionary]([{
 "from_node": &"WaitC",
 "from_port": 0,
 "keep_alive": false,
+"to_node": &"SetReturnBlue",
+"to_port": 0
+}, {
+"from_node": &"SetReturnBlue",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"FaceReturnB",
+"to_port": 0
+}, {
+"from_node": &"FaceReturnB",
+"from_port": 0,
+"keep_alive": false,
 "to_node": &"ReturnCrateB",
 "to_port": 0
 }, {
@@ -290,6 +927,95 @@ connections = Array[Dictionary]([{
 "keep_alive": false,
 "to_node": &"WaitD",
 "to_port": 0
+}, {
+"from_node": &"VortexSequence",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"SetActuatorPurple",
+"to_port": 0
+}, {
+"from_node": &"VortexSequence",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"SpinVortex",
+"to_port": 0
+}, {
+"from_node": &"VortexSequence",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"ParallelLaunch",
+"to_port": 0
+}, {
+"from_node": &"VortexSequence",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"WaitVortexMid",
+"to_port": 0
+}, {
+"from_node": &"VortexSequence",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"ParallelReturn",
+"to_port": 0
+}, {
+"from_node": &"VortexSequence",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"WaitVortexEnd",
+"to_port": 0
+}, {
+"from_node": &"ParallelLaunch",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"VortexLaunchA",
+"to_port": 0
+}, {
+"from_node": &"ParallelLaunch",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"VortexLaunchB",
+"to_port": 0
+}, {
+"from_node": &"ParallelReturn",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"VortexReturnA",
+"to_port": 0
+}, {
+"from_node": &"ParallelReturn",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"VortexReturnB",
+"to_port": 0
+}, {
+"from_node": &"ChaosSelector",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"SetActuatorRed",
+"to_port": 0
+}, {
+"from_node": &"ChaosSelector",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"VortexSequence",
+"to_port": 0
+}, {
+"from_node": &"ChaosSelector",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"ChaosChance",
+"to_port": 0
+}, {
+"from_node": &"ChaosChance",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"VortexSequence",
+"to_port": 0
+}, {
+"from_node": &"ChaosChance",
+"from_port": 1,
+"keep_alive": false,
+"to_node": &"SetActuatorRed",
+"to_port": 0
 }])
 _agent_ref = Object(WeakRef,"script":null)
-

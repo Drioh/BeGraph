@@ -53,6 +53,9 @@ func tick(delta: float) -> Status:
 				_last_running_idx = -1
 				_position = 0
 				return status
+			Status.SUCCESS:
+				if _last_running_idx == i:
+					_last_running_idx = -1
 		i += 1
 		
 	_last_running_idx = -1

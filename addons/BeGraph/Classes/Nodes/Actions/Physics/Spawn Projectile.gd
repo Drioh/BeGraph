@@ -16,6 +16,7 @@ const DISPLAY_INFO : String = "Spawns a projectile scene towards a target (Node/
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var lifetime : float = 0.0
 @export_custom(BG.HINT_NONE, BG.PROPERTY) var variable_name : StringName = &""
 
+var _cached_target_node : Node = null
 var _cached_target_pos : Variant = null
 
 func on_start() -> void:
@@ -63,9 +64,10 @@ func tick(_delta: float) -> Status:
 
 	# Direction computation
 	var final_dir_3d : Vector3 = Vector3.ZERO
+	var target_pos : Variant = _get_target_position()
 
-	if _cached_target_pos != null:
-		final_dir_3d = (_cached_target_pos - spawn_pos_3d).normalized()
+	if target_pos != null:
+		final_dir_3d = ((target_pos as Vector3) - spawn_pos_3d).normalized()
 	else:
 		var dir_val : Vector3 = eval(&"direction") as Vector3
 		final_dir_3d = dir_val.normalized()
@@ -112,25 +114,29 @@ func tick(_delta: float) -> Status:
 	return Status.SUCCESS
 
 func on_end(_status: Status) -> void:
+	_cached_target_node = null
 	_cached_target_pos = null
 
 func _update_target_cache() -> void:
-	_cached_target_pos = _resolve_target_position(eval(&"target"))
-
-func _resolve_target_position(value: Variant) -> Variant:
+	_cached_target_node = null
+	_cached_target_pos = null
+	var value : Variant = eval(&"target")
 	if value == null:
-		return null
+		return
 	if value is Vector3:
-		return value
-	if value is Vector2:
-		return Vector3(value.x, value.y, 0.0)
+		_cached_target_pos = value
+	elif value is Vector2:
+		_cached_target_pos = Vector3(value.x, value.y, 0.0)
+	else:
+		_cached_target_node = _resolve_node(value)
 
-	var n : Node = _resolve_node(value)
-	if n != null:
-		if n is Node2D: return Vector3(n.global_position.x, n.global_position.y, 0.0)
-		if n is Node3D: return n.global_position
-
-	return null
+func _get_target_position() -> Variant:
+	if _cached_target_node != null and is_instance_valid(_cached_target_node):
+		if _cached_target_node is Node2D:
+			return Vector3(_cached_target_node.global_position.x, _cached_target_node.global_position.y, 0.0)
+		if _cached_target_node is Node3D:
+			return _cached_target_node.global_position
+	return _cached_target_pos
 
 func set_instruction() -> String: return "Spawn {scene_path} from {origin} (target: {target})"
 func set_node_category() -> String: return "action_node"

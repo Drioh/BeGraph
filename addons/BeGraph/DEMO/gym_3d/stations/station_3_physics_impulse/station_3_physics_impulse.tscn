@@ -60,9 +60,12 @@ script = ExtResource("1_st3_gd")
 
 [node name="StationBillboard3D" parent="." instance=ExtResource("1_bb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, -6.5)
-title = "Station 3: 3D Physics & Impulse Playground"
-summary = "Showcases BeGraph's direct interaction with Godot's 3D physics engine via the Apply Impulse node. The actuator applies cyclical directional force vectors to RigidBody3D entities, juggling physical blocks back and forth inside the arena."
-nodes_used = PackedStringArray("Access Point", "Area Detect", "Repeat", "Sequence", "Apply Impulse", "Wait")
+title = "Station 3: 3D Telekinetic Physics & Impulse Showcase"
+summary = "Showcases 3 Access Point modes orchestrating RigidBody3D physics impulses, 3D rotation, and color state modulation:
+1. 'Telekinetic Juggler (Sequence)' (default): ActuatorBot rotates to face each crate, shifts color, and juggles them in sequence.
+2. 'Gravity Vortex (Parallel)': ActuatorBot spins rapidly and launches/pulls both crates simultaneously via Parallel nodes.
+3. 'Chaotic Roulette (Random & Chance)': Combines Random Selector and Chance (50%) to alternate unpredictably between Juggler and Vortex routines."
+nodes_used = PackedStringArray("Access Point", "Area Detect", "BehaviorFrame", "Sequence", "Parallel", "Random Selector", "Chance", "Rotate Node", "Set Property", "Apply Impulse", "Wait")
 station_color = Color(0.95, 0.5, 0.15, 1)
 
 [node name="Floor" type="StaticBody3D" parent="."]

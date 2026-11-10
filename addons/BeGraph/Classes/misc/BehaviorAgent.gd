@@ -89,6 +89,8 @@ func _get(property: StringName) -> Variant:
 func _set(property: StringName, value: Variant) -> bool:
 	if property == "starting_point":
 		_starting_point_idx = value
+		if _behavior_graph != null:
+			_select_starting_node(_starting_point_idx)
 		return true
 	
 	if not property.begins_with(BG.OBP): return false

@@ -18,7 +18,7 @@ resource_name = "Self"
 script = ExtResource("1_bb")
 name = &"Self"
 export_variable = true
-value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Stations/Station2_Sentry3D/SentryActor3D")
+value = NodePath("..")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_bb_player"]
@@ -26,7 +26,7 @@ resource_name = "Player"
 script = ExtResource("1_bb")
 name = &"Player"
 export_variable = true
-value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Player3D")
+value = NodePath("../../../../Player3D")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_bb_raycast"]
@@ -34,7 +34,7 @@ resource_name = "RayCast"
 script = ExtResource("1_bb")
 name = &"RayCast"
 export_variable = true
-value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Stations/Station2_Sentry3D/SentryActor3D/RayCast3D")
+value = NodePath("../RayCast3D")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_bb_spotlight"]
@@ -42,7 +42,7 @@ resource_name = "SpotLight"
 script = ExtResource("1_bb")
 name = &"SpotLight"
 export_variable = true
-value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Stations/Station2_Sentry3D/SentryActor3D/SpotLight3D")
+value = NodePath("../SpotLight3D")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_bb_audio"]
@@ -50,7 +50,7 @@ resource_name = "AudioPlayer"
 script = ExtResource("1_bb")
 name = &"AudioPlayer"
 export_variable = true
-value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Stations/Station2_Sentry3D/SentryActor3D/AudioStreamPlayer")
+value = NodePath("../AudioStreamPlayer")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_bb_proj"]
@@ -58,13 +58,13 @@ resource_name = "ProjectilesParent"
 script = ExtResource("1_bb")
 name = &"ProjectilesParent"
 export_variable = true
-value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym3D/Stations/Station2_Sentry3D/Projectiles3D")
+value = NodePath("../../Projectiles3D")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="SubResource_ap"]
 resource_name = "AccessPoint"
 script = ExtResource("3_ap")
-label = "Start"
+label = "Smart Sentry (Line of Sight)"
 node_category = "access_point_node"
 output = true
 position_in_graph = Vector2(-1660, -260)
@@ -75,12 +75,26 @@ _next_ref = Array[StringName]([&"DistanceCheck"])
 breakpointable = true
 mutable = true
 
+[sub_resource type="Resource" id="SubResource_ap_blind"]
+resource_name = "AccessPoint_Blind"
+script = ExtResource("3_ap")
+label = "Blind Turret (Proximity Only)"
+node_category = "access_point_node"
+output = true
+position_in_graph = Vector2(-1660, 420)
+is_starting_node = true
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"ProximityCheck"])
+breakpointable = true
+mutable = true
+
 [sub_resource type="Resource" id="SubResource_bright_light"]
 resource_name = "BrightenSpotLight"
 script = ExtResource("7_light")
 node = NodePath("SpotLight3D")
 target_energy = 4.0
-duration = 0.1
+duration = 0.05
 instruction = "Sets {node} to energy {target_energy}, fading over {duration}s"
 node_category = "action_node"
 input = true
@@ -98,7 +112,7 @@ mutable = true
 [sub_resource type="Resource" id="SubResource_cd"]
 resource_name = "CooldownWait"
 script = ExtResource("11_wait")
-seconds = 0.8
+seconds = 0.3
 instruction = "Wait {seconds}s"
 node_category = "action_node"
 input = true
@@ -119,7 +133,7 @@ instruction = "Sets {node} to energy {target_energy}, fading over {duration}s"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(400, -120)
+position_in_graph = Vector2(1120, -40)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"ResetYellowColor"])
@@ -137,7 +151,7 @@ node_b = NodePath("../../../Player3D")
 threshold = 14.0
 instruction = "Distance {node_a} - {node_b} vs {threshold}"
 conditions = Array[Dictionary]([{
-"next": "DimSpotLight",
+"next": &"ResetYellowColor",
 "text": "distance > {threshold}"
 }, {
 "next": null,
@@ -149,6 +163,35 @@ conditions = Array[Dictionary]([{
 node_category = "control_flow_node"
 input = true
 position_in_graph = Vector2(-1200, -300)
+_graph_ref = Object(WeakRef,"script":null)
+
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node_a": &"Self",
+&"node_b": &"Player"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_prox"]
+resource_name = "ProximityCheck"
+script = ExtResource("4_dist")
+node_a = NodePath(".")
+node_b = NodePath("../../../Player3D")
+threshold = 14.0
+instruction = "Distance {node_a} - {node_b} vs {threshold}"
+conditions = Array[Dictionary]([{
+"next": &"ResetYellowColor",
+"text": "distance > {threshold}"
+}, {
+"next": null,
+"text": "distance = {threshold}"
+}, {
+"next": &"SetRedColor",
+"text": "distance < {threshold}"
+}])
+node_category = "control_flow_node"
+input = true
+position_in_graph = Vector2(-1200, 380)
 _graph_ref = Object(WeakRef,"script":null)
 
 _blackboard_bindings = Dictionary[StringName, StringName]({
@@ -189,15 +232,15 @@ raycast = NodePath("RayCast3D")
 target = NodePath("../../../Player3D")
 instruction = "Line of sight from {raycast} to {target}"
 conditions = Array[Dictionary]([{
-"next": "SetRedColor",
+"next": &"SetRedColor",
 "text": "Target visible"
 }, {
-"next": "DimSpotLight",
+"next": &"ResetYellowColor",
 "text": "Target obstructed / out of range"
 }])
 node_category = "control_flow_node"
 input = true
-position_in_graph = Vector2(-580, 300)
+position_in_graph = Vector2(-580, 120)
 _graph_ref = Object(WeakRef,"script":null)
 
 _blackboard_bindings = Dictionary[StringName, StringName]({
@@ -236,9 +279,10 @@ instruction = "Set {node}'s {property} value: {value}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1120, -40)
+position_in_graph = Vector2(400, -120)
 _graph_ref = Object(WeakRef,"script":null)
 
+_next_ref = Array[StringName]([&"DimSpotLight"])
 _blackboard_bindings = Dictionary[StringName, StringName]({
 &"node": &"Self"
 })
@@ -268,11 +312,12 @@ mutable = true
 [sub_resource type="Resource" id="Resource_gw7vy"]
 resource_name = "_GraphFrame_22309"
 script = ExtResource("11_7ihjp")
-frame_title = "Frame"
+frame_title = "Shared Alert & Fire Sequence"
 tint_color = Color(0.77254903, 0.4, 0.61960787, 0.7019608)
 frame_size = Vector2(2791, 308)
 attached_nodes = Array[StringName]([&"BrightenSpotLight", &"PlayAlarmSound", &"SetRedColor", &"FireSphere3D", &"CooldownWait"])
 is_sequence = true
+memory = true
 node_category = "frame_node"
 position_in_graph = Vector2(360, 326)
 _graph_ref = Object(WeakRef,"script":null)
@@ -283,10 +328,11 @@ mutable = true
 [sub_resource type="Resource" id="Resource_0xlxp"]
 resource_name = "_GraphFrame_58020"
 script = ExtResource("11_7ihjp")
-frame_title = "Frame"
-frame_size = Vector2(1291, 388)
-attached_nodes = Array[StringName]([&"DimSpotLight", &"ResetYellowColor"])
+frame_title = "Shared Idle Reset Sequence"
+frame_size = Vector2(1290.9999, 388)
+attached_nodes = Array[StringName]([&"ResetYellowColor", &"DimSpotLight"])
 is_sequence = true
+memory = true
 node_category = "frame_node"
 position_in_graph = Vector2(360, -174)
 _graph_ref = Object(WeakRef,"script":null)
@@ -299,6 +345,7 @@ script = ExtResource("12_graph")
 blackboard = Array[ExtResource("1_bb")]([SubResource("Resource_bb_self"), SubResource("Resource_bb_player"), SubResource("Resource_bb_raycast"), SubResource("Resource_bb_spotlight"), SubResource("Resource_bb_audio"), SubResource("Resource_bb_proj")])
 nodes = Dictionary[StringName, ExtResource("2_node")]({
 &"AccessPoint": SubResource("SubResource_ap"),
+&"AccessPoint_Blind": SubResource("SubResource_ap_blind"),
 &"BrightenSpotLight": SubResource("SubResource_bright_light"),
 &"CooldownWait": SubResource("SubResource_cd"),
 &"DimSpotLight": SubResource("SubResource_dim_light"),
@@ -306,6 +353,7 @@ nodes = Dictionary[StringName, ExtResource("2_node")]({
 &"FireSphere3D": SubResource("SubResource_spawn_sphere"),
 &"LOSCheck": SubResource("SubResource_los"),
 &"PlayAlarmSound": SubResource("SubResource_alarm_snd"),
+&"ProximityCheck": SubResource("SubResource_prox"),
 &"ResetYellowColor": SubResource("SubResource_reset_col"),
 &"SetRedColor": SubResource("SubResource_set_red"),
 &"_GraphFrame_22309": SubResource("Resource_gw7vy"),
@@ -318,28 +366,46 @@ connections = Array[Dictionary]([{
 "to_node": &"DistanceCheck",
 "to_port": 0
 }, {
+"from_node": &"AccessPoint_Blind",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"ProximityCheck",
+"to_port": 0
+}, {
 "from_node": &"DistanceCheck",
 "from_port": 2,
 "keep_alive": false,
 "to_node": &"LOSCheck",
 "to_port": 0
 }, {
-"from_node": &"DimSpotLight",
+"from_node": &"ProximityCheck",
 "from_port": 0,
 "keep_alive": false,
 "to_node": &"ResetYellowColor",
 "to_port": 0
 }, {
+"from_node": &"ProximityCheck",
+"from_port": 2,
+"keep_alive": false,
+"to_node": &"SetRedColor",
+"to_port": 0
+}, {
+"from_node": &"ResetYellowColor",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"DimSpotLight",
+"to_port": 0
+}, {
 "from_node": &"LOSCheck",
 "from_port": 1,
 "keep_alive": false,
-"to_node": &"DimSpotLight",
+"to_node": &"ResetYellowColor",
 "to_port": 0
 }, {
 "from_node": &"DistanceCheck",
 "from_port": 0,
 "keep_alive": false,
-"to_node": &"DimSpotLight",
+"to_node": &"ResetYellowColor",
 "to_port": 0
 }, {
 "from_node": &"FireSphere3D",
@@ -373,4 +439,3 @@ connections = Array[Dictionary]([{
 "to_port": 0
 }])
 _agent_ref = Object(WeakRef,"script":null)
-

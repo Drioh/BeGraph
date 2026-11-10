@@ -105,6 +105,5 @@ func reset_tag_game() -> void:
 		if actor.behavior_agent and actor.behavior_agent.behavior_graph:
 			_push_blackboard()
 			actor.behavior_agent.set_blackboard_property(&"is_fleeing", false)
-			actor.behavior_agent.starting_point = 0
-			actor.behavior_agent._starting_point_idx = 0
+			actor.behavior_agent._select_starting_node(actor.behavior_agent.starting_point)
 			actor.behavior_agent.notify_property_list_changed()

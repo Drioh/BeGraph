@@ -169,6 +169,9 @@ func tick_sequence(delta: float) -> Status:
 			Status.FAILURE, Status.ERROR:
 				_abort_previous_running(i)
 				return _finish_sequence_tick(status)
+			Status.SUCCESS:
+				if _last_running_idx == i:
+					_last_running_idx = -1
 		i += 1
 
 	return _finish_sequence_tick(Status.SUCCESS)

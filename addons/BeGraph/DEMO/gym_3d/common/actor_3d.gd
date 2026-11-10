@@ -16,7 +16,10 @@ func _ready() -> void:
 	_apply_color(actor_color)
 	if not Engine.is_editor_hint() and use_gravity:
 		# Settle on floor immediately so is_on_floor() is true before BehaviorAgent ticks
+		velocity.y = -0.1
 		move_and_slide()
+		if is_on_floor():
+			velocity.y = 0.0
 
 func _physics_process(delta: float) -> void:
 	if Engine.is_editor_hint() or not use_gravity:

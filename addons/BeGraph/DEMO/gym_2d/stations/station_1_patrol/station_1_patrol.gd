@@ -27,10 +27,10 @@ func _ready() -> void:
 	actor_c.behavior_agent.set_blackboard_property(&"waypoints",$WaypointsC.get_path())
 	actor_d.behavior_agent.set_blackboard_property(&"waypoints",$WaypointsD.get_path())
 	
-	actor_a.behavior_agent.set_blackboard_property(&"mode",0)
-	actor_b.behavior_agent.set_blackboard_property(&"mode",1)
-	actor_c.behavior_agent.set_blackboard_property(&"mode",2)
-	actor_d.behavior_agent.set_blackboard_property(&"mode",3)
+	actor_a.behavior_agent.starting_point = 0
+	actor_b.behavior_agent.starting_point = 1
+	actor_c.behavior_agent.starting_point = 2
+	actor_d.behavior_agent.starting_point = 3
 	
 func _draw() -> void:
 	# Draw circuit paths for each patrol variant
@@ -55,6 +55,7 @@ func reset_actors() -> void:
 	if actor_a and waypoint_a1:
 		actor_a.global_position = waypoint_a1.global_position
 		actor_a.modulate = Color.WHITE
+		actor_a.behavior_agent.starting_point = 0
 		actor_a.behavior_agent.set_blackboard_property(&"moving",true)
 		if label_a:
 			label_a.text = "Patrol: Once"
@@ -62,6 +63,7 @@ func reset_actors() -> void:
 	if actor_b and waypoint_b1:
 		actor_b.global_position = waypoint_b1.global_position
 		actor_b.modulate = Color.WHITE
+		actor_b.behavior_agent.starting_point = 1
 		actor_b.behavior_agent.set_blackboard_property(&"moving",true)
 		if label_b:
 			label_b.text = "Patrol: Loop"
@@ -69,6 +71,7 @@ func reset_actors() -> void:
 	if actor_c and waypoint_c1:
 		actor_c.global_position = waypoint_c1.global_position
 		actor_c.modulate = Color.WHITE
+		actor_c.behavior_agent.starting_point = 2
 		actor_c.behavior_agent.set_blackboard_property(&"moving",true)
 		if label_c:
 			label_c.text = "Patrol: Ping-Pong"
@@ -76,6 +79,7 @@ func reset_actors() -> void:
 	if actor_d and waypoint_d1:
 		actor_d.global_position = waypoint_d1.global_position
 		actor_d.modulate = Color.WHITE
+		actor_d.behavior_agent.starting_point = 3
 		actor_d.behavior_agent.set_blackboard_property(&"moving",true)
 		if label_d:
 			label_d.text = "Patrol: Ping-Pong (Loop)"
