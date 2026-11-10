@@ -214,34 +214,32 @@ _blackboard_bindings = Dictionary[StringName, StringName]({
 breakpointable = true
 mutable = true
 
-[sub_resource type="Resource" id="SubResource_grace_par"]
-resource_name = "GraceFleeParallel"
-script = ExtResource("16_par")
-mode = 0
-required_successes = 1
-instruction = "Parallel: {mode} mode"
+[sub_resource type="Resource" id="SubResource_chase_touch"]
+resource_name = "ChaseUntilTouch"
+script = ExtResource("8_dist")
+node_a = NodePath(".")
+node_b = NodePath("../../../Player")
+threshold = 42.0
+instruction = "Distance {node_a} - {node_b} vs {threshold}"
+conditions = Array[Dictionary]([{
+"next": &"RunChaseAction",
+"text": "distance > {threshold}"
+}, {
+"next": &"RunChaseAction",
+"text": "distance = {threshold}"
+}, {
+"next": &"SetCooldownColor",
+"text": "distance < {threshold}"
+}])
 node_category = "control_flow_node"
 input = true
-output = true
-allows_multiple_outputs = true
-position_in_graph = Vector2(960, -100)
+position_in_graph = Vector2(1500, 1220)
 _graph_ref = Object(WeakRef,"script":null)
 
-_next_ref = Array[StringName]([&"RunFleeAction", &"GraceFleeWait"])
-breakpointable = true
-mutable = true
-
-[sub_resource type="Resource" id="SubResource_grace_wait"]
-resource_name = "GraceFleeWait"
-script = ExtResource("14_wait")
-seconds = 1.0
-instruction = "Wait {seconds}s"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(1480, -320)
-_graph_ref = Object(WeakRef,"script":null)
-
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node_a": &"TagActor",
+&"node_b": &"player"
+})
 breakpointable = true
 mutable = true
 
@@ -274,55 +272,31 @@ _blackboard_bindings = Dictionary[StringName, StringName]({
 breakpointable = true
 mutable = true
 
-[sub_resource type="Resource" id="SubResource_swap_cd_col"]
-resource_name = "SetSwapCooldownColor"
-script = ExtResource("11_prop")
-node = NodePath(".")
-property = "modulate"
-value = Color(1, 0.65, 0.2, 1)
-instruction = "Set {node}'s {property} value: {value}"
-node_category = "action_node"
+[sub_resource type="Resource" id="SubResource_grace_par"]
+resource_name = "GraceFleeParallel"
+script = ExtResource("16_par")
+instruction = "Parallel: {mode} mode"
+node_category = "control_flow_node"
 input = true
 output = true
-position_in_graph = Vector2(2040, 200)
+allows_multiple_outputs = true
+position_in_graph = Vector2(960, -100)
 _graph_ref = Object(WeakRef,"script":null)
 
-_blackboard_bindings = Dictionary[StringName, StringName]({
-&"node": &"TagActor"
-})
+_next_ref = Array[StringName]([&"RunFleeAction", &"GraceFleeWait"])
 breakpointable = true
 mutable = true
 
-[sub_resource type="Resource" id="SubResource_swap_cd_txt"]
-resource_name = "SetSwapCooldownText"
-script = ExtResource("10_lw1ib")
-value = "TAGGED! (2s)"
-instruction = "Set {node}'s {property}: {value} ({mode})"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(2040, -60)
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"SwapCooldownWait"])
-_blackboard_bindings = Dictionary[StringName, StringName]({
-&"node": &"StatusLabel"
-})
-breakpointable = true
-mutable = true
-
-[sub_resource type="Resource" id="SubResource_swap_cd_wait"]
-resource_name = "SwapCooldownWait"
+[sub_resource type="Resource" id="SubResource_grace_wait"]
+resource_name = "GraceFleeWait"
 script = ExtResource("14_wait")
-seconds = 2.0
 instruction = "Wait {seconds}s"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(2540, -60)
+position_in_graph = Vector2(1480, -320)
 _graph_ref = Object(WeakRef,"script":null)
 
-_next_ref = Array[StringName]([&"SetChaserColor"])
 breakpointable = true
 mutable = true
 
@@ -415,6 +389,81 @@ _blackboard_bindings = Dictionary[StringName, StringName]({
 breakpointable = true
 mutable = true
 
+[sub_resource type="Resource" id="SubResource_rel_col"]
+resource_name = "SetChaserColor_Rel"
+script = ExtResource("11_prop")
+node = NodePath(".")
+property = "modulate"
+value = Color(1, 0.25, 0.25, 1)
+instruction = "Set {node}'s {property} value: {value}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(420, 1220)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"SetChaserText_Rel"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"TagActor"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_rel_txt"]
+resource_name = "SetChaserText_Rel"
+script = ExtResource("10_lw1ib")
+value = "RELENTLESS"
+instruction = "Set {node}'s {property}: {value} ({mode})"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(960, 1220)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"ChaseUntilTouch"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"StatusLabel"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_cd_col"]
+resource_name = "SetCooldownColor"
+script = ExtResource("11_prop")
+node = NodePath(".")
+property = "modulate"
+value = Color(1, 0.65, 0.2, 1)
+instruction = "Set {node}'s {property} value: {value}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(2160, 1560)
+_graph_ref = Object(WeakRef,"script":null)
+
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"TagActor"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_cd_txt"]
+resource_name = "SetCooldownText"
+script = ExtResource("10_lw1ib")
+value = "COOLDOWN (2s)"
+instruction = "Set {node}'s {property}: {value} ({mode})"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(2160, 1220)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"TagCooldownWait"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"StatusLabel"
+})
+breakpointable = true
+mutable = true
+
 [sub_resource type="Resource" id="SubResource_set_flee_bb"]
 resource_name = "SetFleeBB"
 script = ExtResource("12_setbb")
@@ -466,6 +515,142 @@ _graph_ref = Object(WeakRef,"script":null)
 _blackboard_bindings = Dictionary[StringName, StringName]({
 &"node": &"TagActor"
 })
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_run_col"]
+resource_name = "SetRunnerColor_Only"
+script = ExtResource("11_prop")
+node = NodePath(".")
+property = "modulate"
+value = Color(0.2, 0.8, 1, 1)
+instruction = "Set {node}'s {property} value: {value}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(420, -580)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"SetRunnerText_Only"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"TagActor"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_run_txt"]
+resource_name = "SetRunnerText_Only"
+script = ExtResource("10_lw1ib")
+value = "TIMID RUNNER"
+instruction = "Set {node}'s {property}: {value} ({mode})"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(980, -580)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"RunFleeAction"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"StatusLabel"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_swap_cd_col"]
+resource_name = "SetSwapCooldownColor"
+script = ExtResource("11_prop")
+node = NodePath(".")
+property = "modulate"
+value = Color(1, 0.65, 0.2, 1)
+instruction = "Set {node}'s {property} value: {value}"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(2040, 200)
+_graph_ref = Object(WeakRef,"script":null)
+
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"TagActor"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_swap_cd_txt"]
+resource_name = "SetSwapCooldownText"
+script = ExtResource("10_lw1ib")
+value = "TAGGED! (2s)"
+instruction = "Set {node}'s {property}: {value} ({mode})"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(2040, -60)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"SwapCooldownWait"])
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node": &"StatusLabel"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_swap_cd_wait"]
+resource_name = "SwapCooldownWait"
+script = ExtResource("14_wait")
+seconds = 2.0
+instruction = "Wait {seconds}s"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(2540, -60)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"SetChaserColor"])
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_cd_wait"]
+resource_name = "TagCooldownWait"
+script = ExtResource("14_wait")
+seconds = 2.0
+instruction = "Wait {seconds}s"
+node_category = "action_node"
+input = true
+output = true
+position_in_graph = Vector2(2720, 1220)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_frame_rel"]
+resource_name = "_GraphFrame_Relentless"
+script = ExtResource("15_frame")
+frame_title = "Relentless Chaser Cycle (Chase Until Touch -> 2s Cooldown)"
+tint_color = Color(0.85, 0.35, 0.2, 0.7)
+frame_size = Vector2(2840, 320)
+attached_nodes = Array[StringName]([&"SetChaserColor_Rel", &"SetChaserText_Rel", &"ChaseUntilTouch", &"SetCooldownText", &"TagCooldownWait"])
+is_sequence = true
+memory = true
+node_category = "frame_node"
+position_in_graph = Vector2(380, 1160)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_frame_runner_swap"]
+resource_name = "_GraphFrame_RunnerSwap"
+script = ExtResource("15_frame")
+frame_title = "Runner Phase (1s Grace Flee -> Flee Until Caught -> 2s Cooldown -> Become Chaser)"
+tint_color = Color(0.2, 0.55, 0.85, 0.7)
+frame_size = Vector2(3540, 280)
+attached_nodes = Array[StringName]([&"GraceFleeParallel", &"FleeDistCheck", &"SetSwapCooldownText", &"SwapCooldownWait", &"SetChaserColor", &"_GraphNode_60009", &"SetChaserBB"])
+is_sequence = true
+memory = true
+node_category = "frame_node"
+position_in_graph = Vector2(920, -140)
+_graph_ref = Object(WeakRef,"script":null)
+
 breakpointable = true
 mutable = true
 
@@ -521,194 +706,6 @@ position_in_graph = Vector2(3500, -60)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"SetChaserBB"])
-_blackboard_bindings = Dictionary[StringName, StringName]({
-&"node": &"StatusLabel"
-})
-breakpointable = true
-mutable = true
-
-[sub_resource type="Resource" id="SubResource_frame_runner_swap"]
-resource_name = "_GraphFrame_RunnerSwap"
-script = ExtResource("15_frame")
-frame_title = "Runner Phase (1s Grace Flee -> Flee Until Caught -> 2s Cooldown -> Become Chaser)"
-tint_color = Color(0.2, 0.55, 0.85, 0.7)
-frame_size = Vector2(3540, 280)
-attached_nodes = Array[StringName]([&"GraceFleeParallel", &"FleeDistCheck", &"SetSwapCooldownText", &"SwapCooldownWait", &"SetChaserColor", &"_GraphNode_60009", &"SetChaserBB"])
-is_sequence = true
-memory = true
-node_category = "frame_node"
-position_in_graph = Vector2(920, -140)
-_graph_ref = Object(WeakRef,"script":null)
-
-breakpointable = true
-mutable = true
-
-[sub_resource type="Resource" id="SubResource_rel_col"]
-resource_name = "SetChaserColor_Rel"
-script = ExtResource("11_prop")
-node = NodePath(".")
-property = "modulate"
-value = Color(1, 0.25, 0.25, 1)
-instruction = "Set {node}'s {property} value: {value}"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(420, 1220)
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"SetChaserText_Rel"])
-_blackboard_bindings = Dictionary[StringName, StringName]({
-&"node": &"TagActor"
-})
-breakpointable = true
-mutable = true
-
-[sub_resource type="Resource" id="SubResource_rel_txt"]
-resource_name = "SetChaserText_Rel"
-script = ExtResource("10_lw1ib")
-value = "RELENTLESS"
-instruction = "Set {node}'s {property}: {value} ({mode})"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(960, 1220)
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"ChaseUntilTouch"])
-_blackboard_bindings = Dictionary[StringName, StringName]({
-&"node": &"StatusLabel"
-})
-breakpointable = true
-mutable = true
-
-[sub_resource type="Resource" id="SubResource_chase_touch"]
-resource_name = "ChaseUntilTouch"
-script = ExtResource("8_dist")
-node_a = NodePath(".")
-node_b = NodePath("../../../Player")
-threshold = 42.0
-instruction = "Distance {node_a} - {node_b} vs {threshold}"
-conditions = Array[Dictionary]([{
-"next": &"RunChaseAction",
-"text": "distance > {threshold}"
-}, {
-"next": &"RunChaseAction",
-"text": "distance = {threshold}"
-}, {
-"next": &"SetCooldownColor",
-"text": "distance < {threshold}"
-}])
-node_category = "control_flow_node"
-input = true
-position_in_graph = Vector2(1500, 1220)
-_graph_ref = Object(WeakRef,"script":null)
-
-_blackboard_bindings = Dictionary[StringName, StringName]({
-&"node_a": &"TagActor",
-&"node_b": &"player"
-})
-breakpointable = true
-mutable = true
-
-[sub_resource type="Resource" id="SubResource_cd_col"]
-resource_name = "SetCooldownColor"
-script = ExtResource("11_prop")
-node = NodePath(".")
-property = "modulate"
-value = Color(1, 0.65, 0.2, 1)
-instruction = "Set {node}'s {property} value: {value}"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(2160, 1560)
-_graph_ref = Object(WeakRef,"script":null)
-
-_blackboard_bindings = Dictionary[StringName, StringName]({
-&"node": &"TagActor"
-})
-breakpointable = true
-mutable = true
-
-[sub_resource type="Resource" id="SubResource_cd_txt"]
-resource_name = "SetCooldownText"
-script = ExtResource("10_lw1ib")
-value = "COOLDOWN (2s)"
-instruction = "Set {node}'s {property}: {value} ({mode})"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(2160, 1220)
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"TagCooldownWait"])
-_blackboard_bindings = Dictionary[StringName, StringName]({
-&"node": &"StatusLabel"
-})
-breakpointable = true
-mutable = true
-
-[sub_resource type="Resource" id="SubResource_cd_wait"]
-resource_name = "TagCooldownWait"
-script = ExtResource("14_wait")
-seconds = 2.0
-instruction = "Wait {seconds}s"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(2720, 1220)
-_graph_ref = Object(WeakRef,"script":null)
-
-breakpointable = true
-mutable = true
-
-[sub_resource type="Resource" id="SubResource_frame_rel"]
-resource_name = "_GraphFrame_Relentless"
-script = ExtResource("15_frame")
-frame_title = "Relentless Chaser Cycle (Chase Until Touch -> 2s Cooldown)"
-tint_color = Color(0.85, 0.35, 0.2, 0.7)
-frame_size = Vector2(2840, 320)
-attached_nodes = Array[StringName]([&"SetChaserColor_Rel", &"SetChaserText_Rel", &"ChaseUntilTouch", &"SetCooldownText", &"TagCooldownWait"])
-is_sequence = true
-memory = true
-node_category = "frame_node"
-position_in_graph = Vector2(380, 1160)
-_graph_ref = Object(WeakRef,"script":null)
-
-breakpointable = true
-mutable = true
-
-[sub_resource type="Resource" id="SubResource_run_col"]
-resource_name = "SetRunnerColor_Only"
-script = ExtResource("11_prop")
-node = NodePath(".")
-property = "modulate"
-value = Color(0.2, 0.8, 1, 1)
-instruction = "Set {node}'s {property} value: {value}"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(420, -580)
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"SetRunnerText_Only"])
-_blackboard_bindings = Dictionary[StringName, StringName]({
-&"node": &"TagActor"
-})
-breakpointable = true
-mutable = true
-
-[sub_resource type="Resource" id="SubResource_run_txt"]
-resource_name = "SetRunnerText_Only"
-script = ExtResource("10_lw1ib")
-value = "TIMID RUNNER"
-instruction = "Set {node}'s {property}: {value} ({mode})"
-node_category = "action_node"
-input = true
-output = true
-position_in_graph = Vector2(980, -580)
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"RunFleeAction"])
 _blackboard_bindings = Dictionary[StringName, StringName]({
 &"node": &"StatusLabel"
 })
@@ -953,3 +950,4 @@ connections = Array[Dictionary]([{
 "to_port": 0
 }])
 _agent_ref = Object(WeakRef,"script":null)
+

@@ -161,8 +161,9 @@ func setup_runtime(agent: Node, source_graph: BehaviorGraph = null) -> void:
 	
 	for node in nodes.values():
 		node._graph_ref = weakref(self)
-		if not node._blackboard_bindings.is_empty() and node.has_method(&"on_blackboard_property_changed"):
-			node._connect_blackboard_signals()
+		if node._blackboard_bindings.is_empty() or not node.has_method(&"on_blackboard_property_changed"): continue
+		
+		node._connect_blackboard_signals()
 	
 	for node in nodes.values():
 		if node is BehaviorFrame and node.is_sequence:

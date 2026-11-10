@@ -301,8 +301,7 @@ func _decorator_time_limit(delta: float) -> Status:
 func _decorator_cooldown(delta: float) -> Status:
 	if _dec_cooldown_remaining != -1.0:
 		_dec_cooldown_remaining -= delta
-		if _dec_cooldown_remaining > 0.0:
-			return Status.FAILURE
+		if _dec_cooldown_remaining > 0.0: return Status.FAILURE
 		_dec_cooldown_remaining = -1.0
 
 	var status : Status = tick(delta)
@@ -647,16 +646,13 @@ func tick_condition(delta:float,index:int = 0) -> Status:
 	return _tick_target(target, delta)
 
 func _tick_target(target: StringName, delta: float) -> Status:
-	if target == &"":
-		return Status.FAILURE
+	if target == &"": return Status.FAILURE
 	
 	var graph := get_graph()
-	if graph == null:
-		return abort("lost graph reference")
+	if graph == null: return abort("lost graph reference")
 	
 	var target_node := graph.get_node(target)
-	if target_node == null:
-		return Status.FAILURE
+	if target_node == null: return Status.FAILURE
 	
 	return target_node.do_tick(delta)
 
@@ -671,8 +667,8 @@ func eval(property_name: StringName, resolve_node: bool = false, fallback_value:
 		var graph: BehaviorGraph = get_graph()
 		if graph != null:
 			val = graph.get_blackboard_value(key, fallback_value)
-	if resolve_node:
-		return _resolve_node(val)
+	if resolve_node: return _resolve_node(val)
+	
 	return val
 
 ## Accepts either an absolute [NodePath] or a direct reference to a [Node] (useful if [param value] is connected to a blackboard variable containing the node). Uses the owning [BehaviorGraph]'s [member BehaviorGraph._resolved_nodes_cache] for O(1) lookup after first resolution.

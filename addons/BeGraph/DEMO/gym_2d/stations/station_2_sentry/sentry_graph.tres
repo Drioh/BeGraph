@@ -108,35 +108,6 @@ _blackboard_bindings = Dictionary[StringName, StringName]({
 breakpointable = true
 mutable = true
 
-[sub_resource type="Resource" id="SubResource_prox"]
-resource_name = "ProximityCheck"
-script = ExtResource("4_dist")
-node_a = NodePath(".")
-node_b = NodePath("../../../Player")
-threshold = 320.0
-instruction = "Distance {node_a} - {node_b} vs {threshold}"
-conditions = Array[Dictionary]([{
-"next": &"ResetIdleColor",
-"text": "distance > {threshold}"
-}, {
-"next": null,
-"text": "distance = {threshold}"
-}, {
-"next": &"SetRedAlertColor",
-"text": "distance < {threshold}"
-}])
-node_category = "control_flow_node"
-input = true
-position_in_graph = Vector2(-420, 280)
-_graph_ref = Object(WeakRef,"script":null)
-
-_blackboard_bindings = Dictionary[StringName, StringName]({
-&"node_a": &"Self",
-&"node_b": &"Player"
-})
-breakpointable = true
-mutable = true
-
 [sub_resource type="Resource" id="SubResource_wait"]
 resource_name = "FireCooldown"
 script = ExtResource("10_wait")
@@ -215,6 +186,35 @@ _graph_ref = Object(WeakRef,"script":null)
 _next_ref = Array[StringName]([&"FireProjectile"])
 _blackboard_bindings = Dictionary[StringName, StringName]({
 &"player": &"AudioPlayer"
+})
+breakpointable = true
+mutable = true
+
+[sub_resource type="Resource" id="SubResource_prox"]
+resource_name = "ProximityCheck"
+script = ExtResource("4_dist")
+node_a = NodePath(".")
+node_b = NodePath("../../../Player")
+threshold = 320.0
+instruction = "Distance {node_a} - {node_b} vs {threshold}"
+conditions = Array[Dictionary]([{
+"next": &"ResetIdleColor",
+"text": "distance > {threshold}"
+}, {
+"next": null,
+"text": "distance = {threshold}"
+}, {
+"next": &"SetRedAlertColor",
+"text": "distance < {threshold}"
+}])
+node_category = "control_flow_node"
+input = true
+position_in_graph = Vector2(-420, 280)
+_graph_ref = Object(WeakRef,"script":null)
+
+_blackboard_bindings = Dictionary[StringName, StringName]({
+&"node_a": &"Self",
+&"node_b": &"Player"
 })
 breakpointable = true
 mutable = true
@@ -358,3 +358,4 @@ connections = Array[Dictionary]([{
 "to_port": 0
 }])
 _agent_ref = Object(WeakRef,"script":null)
+

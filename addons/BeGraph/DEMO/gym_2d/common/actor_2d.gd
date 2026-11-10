@@ -25,8 +25,8 @@ func _ready() -> void:
 
 
 func _physics_process(_delta: float) -> void:
-	if Engine.is_editor_hint():
-		return
+	if Engine.is_editor_hint(): return
+	
 	if _prev_safe_pos == Vector2.ZERO:
 		_prev_safe_pos = global_position
 		return

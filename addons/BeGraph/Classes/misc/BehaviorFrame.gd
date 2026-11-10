@@ -56,9 +56,10 @@ func compute_sequence_order(graph: BehaviorGraph) -> Array[StringName]:
 		var to_n := StringName(c["to_node"])
 		if in_frame.has(from_n) and in_frame.has(to_n):
 			var next_arr : Array[StringName] = internal_next[from_n]
-			if not next_arr.has(to_n):
-				next_arr.append(to_n)
-				in_degree[to_n] = int(in_degree[to_n]) + 1
+			if next_arr.has(to_n): continue
+			
+			next_arr.append(to_n)
+			in_degree[to_n] = int(in_degree[to_n]) + 1
 		elif not in_frame.has(from_n) and in_frame.has(to_n):
 			has_external_in[to_n] = true
 
@@ -79,8 +80,8 @@ func compute_sequence_order(graph: BehaviorGraph) -> Array[StringName]:
 	roots.sort_custom(func(a_name: StringName, b_name: StringName) -> bool:
 		var ext_a : bool = bool(has_external_in[a_name])
 		var ext_b : bool = bool(has_external_in[b_name])
-		if ext_a != ext_b:
-			return ext_a
+		if ext_a != ext_b: return ext_a
+		
 		return sort_spatial.call(a_name, b_name)
 	)
 
@@ -90,8 +91,9 @@ func compute_sequence_order(graph: BehaviorGraph) -> Array[StringName]:
 
 	var remaining : Array[StringName] = []
 	for n_name in in_frame:
-		if not visited.has(n_name):
-			remaining.append(n_name)
+		if visited.has(n_name): continue
+		remaining.append(n_name)
+	
 	remaining.sort_custom(sort_spatial)
 	for rem in remaining:
 		_visit_sequence_chain(rem, internal_next, visited, order)
@@ -103,12 +105,10 @@ func setup_sequence(graph: BehaviorGraph) -> void:
 	_position = 0
 	_last_running_idx = -1
 	_is_ticking_sequence = false
-	if not is_sequence or graph == null or attached_nodes.is_empty():
-		return
+	if not is_sequence or graph == null or attached_nodes.is_empty(): return
 
 	var order : Array[StringName] = compute_sequence_order(graph)
-	if order.is_empty():
-		return
+	if order.is_empty(): return
 
 	var in_frame : Dictionary = {}
 	for n_name in order:
@@ -116,22 +116,24 @@ func setup_sequence(graph: BehaviorGraph) -> void:
 
 	for n_name in order:
 		var bn : BehaviorNode = graph.nodes.get(n_name, null)
-		if bn == null:
-			continue
+		if bn == null: continue
+		
 		_sequence_nodes.append(bn)
 		# Strip internal frame targets from _next_ref on linear nodes so BehaviorNode.do_tick()
 		# doesn't auto-fire the next node in the frame prematurely; the frame drives them in order.
-		if bn.output and not bn.allows_multiple_outputs and bn.conditions.is_empty():
-			for i in range(bn._next_ref.size() - 1, -1, -1):
-				if in_frame.has(bn._next_ref[i]):
-					bn._next_ref.remove_at(i)
+		if not bn.output or bn.allows_multiple_outputs or not bn.conditions.is_empty(): continue
+		
+		for i in range(bn._next_ref.size() - 1, -1, -1):
+			if not in_frame.has(bn._next_ref[i]): continue
+			
+			bn._next_ref.remove_at(i)
 
 	if not _sequence_nodes.is_empty():
 		_sequence_nodes[0]._sequence_frame_entry = weakref(self)
 
 func _visit_sequence_chain(curr: StringName, internal_next: Dictionary, visited: Dictionary, order: Array[StringName]) -> void:
-	if visited.has(curr):
-		return
+	if visited.has(curr): return
+	
 	visited[curr] = true
 	order.append(curr)
 	for nxt in internal_next[curr]:

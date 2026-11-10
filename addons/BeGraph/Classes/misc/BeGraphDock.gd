@@ -68,8 +68,8 @@ func load_graph(object: BehaviorGraph):
 	intro_container.visible = false
 
 func refresh_label() -> void:
-	if loaded_graph == null:
-		return
+	if loaded_graph == null: return
+	
 	var graph_info: String = loaded_graph.resource_name if loaded_graph.resource_name != "" else loaded_graph.resource_path
 	graph_label.text = "Loaded Behavior Graph: %s" % graph_info
 

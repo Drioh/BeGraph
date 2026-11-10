@@ -41,8 +41,8 @@ func on_start() -> void:
 		_tween.tween_property(camera, "fov", final_fov, dur)
 
 func tick(_delta: float) -> Status:
-	if _tween != null and _tween.is_running():
-		return Status.RUNNING
+	if _tween != null and _tween.is_running(): return Status.RUNNING
+	
 	return Status.SUCCESS
 
 func on_end(_status: Status) -> void:

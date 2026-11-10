@@ -111,7 +111,6 @@ mutable = true
 resource_name = "PatrolOnce"
 script = ExtResource("4_tan1m")
 node = NodePath(".")
-mode = 0
 speed = 120.0
 wait_time = 0.2
 instruction = "Patrol {node} ({mode}, speed {speed})"
@@ -203,20 +202,6 @@ _blackboard_bindings = Dictionary[StringName, StringName]({
 breakpointable = true
 mutable = true
 
-[sub_resource type="Resource" id="SubResource_frame_goal"]
-resource_name = "_GraphFrame_Goal"
-script = ExtResource("10_frame")
-frame_title = "Shared Finite Patrol Completion (Once & Ping-Pong)"
-tint_color = Color(0.18, 0.42, 0.25, 0.7)
-frame_size = Vector2(2040, 320)
-attached_nodes = Array[StringName]([&"SetGoalText", &"SetGreenColor", &"PlayBurstParticles", &"_GraphNode_68030"])
-node_category = "frame_node"
-position_in_graph = Vector2(140, -140)
-_graph_ref = Object(WeakRef,"script":null)
-
-breakpointable = true
-mutable = true
-
 [sub_resource type="Resource" id="SubResource_part"]
 resource_name = "PlayBurstParticles"
 script = ExtResource("5_ea13l")
@@ -274,6 +259,20 @@ _blackboard_bindings = Dictionary[StringName, StringName]({
 breakpointable = true
 mutable = true
 
+[sub_resource type="Resource" id="SubResource_frame_goal"]
+resource_name = "_GraphFrame_Goal"
+script = ExtResource("10_frame")
+frame_title = "Shared Finite Patrol Completion (Once & Ping-Pong)"
+tint_color = Color(0.18, 0.42, 0.25, 0.7)
+frame_size = Vector2(2040, 320)
+attached_nodes = Array[StringName]([&"SetGoalText", &"SetGreenColor", &"PlayBurstParticles", &"_GraphNode_68030"])
+node_category = "frame_node"
+position_in_graph = Vector2(140, -140)
+_graph_ref = Object(WeakRef,"script":null)
+
+breakpointable = true
+mutable = true
+
 [sub_resource type="Resource" id="Resource_pwoe6"]
 resource_name = "_GraphNode_68030"
 script = ExtResource("8_fynk6")
@@ -297,8 +296,8 @@ nodes = Dictionary[StringName, ExtResource("2_fyj4x")]({
 &"AccessPoint_1_Loop": SubResource("SubResource_ap_1"),
 &"AccessPoint_2_PingPong": SubResource("SubResource_ap_2"),
 &"AccessPoint_3_PingPongLoop": SubResource("SubResource_ap_3"),
-&"PatrolOnce": SubResource("SubResource_patrol_0"),
 &"PatrolLoop": SubResource("SubResource_patrol_1"),
+&"PatrolOnce": SubResource("SubResource_patrol_0"),
 &"PatrolPingPong": SubResource("SubResource_patrol_2"),
 &"PatrolPingPongLoop": SubResource("SubResource_patrol_3"),
 &"PlayBurstParticles": SubResource("SubResource_part"),
@@ -363,3 +362,4 @@ connections = Array[Dictionary]([{
 "to_port": 0
 }])
 _agent_ref = Object(WeakRef,"script":null)
+

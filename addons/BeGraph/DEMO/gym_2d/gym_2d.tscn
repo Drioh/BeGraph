@@ -31,6 +31,7 @@ offset_bottom = 1600.0
 color = Color(0.078431375, 0.078431375, 0.078431375, 1)
 
 [node name="Player" parent="." unique_id=626932416 instance=ExtResource("2_player")]
+collision_mask = 3
 
 [node name="Stations" type="Node2D" parent="." unique_id=536469635]
 

@@ -49,8 +49,7 @@ func tick(delta: float) -> Status:
 	
 	_elapsed += delta
 	var reached : bool = _move_towards_destination(delta)
-	if not reached:
-		return Status.RUNNING
+	if not reached: return Status.RUNNING
 
 	return Status.SUCCESS
 

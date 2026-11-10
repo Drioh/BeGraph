@@ -16,14 +16,14 @@
 resource_name = "Self"
 script = ExtResource("1_bb")
 name = &"Self"
-value = NodePath("..")
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym2D/Stations/Station5_Ambient/AmbientActor")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_esob3"]
 resource_name = "StatusLabel"
 script = ExtResource("1_bb")
 name = &"StatusLabel"
-value = NodePath("../StatusLabel")
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym2D/Stations/Station5_Ambient/AmbientActor/StatusLabel")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_lw1ib"]
@@ -75,26 +75,6 @@ _next_ref = Array[StringName]([&"ParallelShow"])
 breakpointable = true
 mutable = true
 
-[sub_resource type="Resource" id="SubResource_rsel"]
-resource_name = "RandomPicker"
-script = ExtResource("5_rsel")
-memory = true
-instruction = "Random Selector (memory: {memory})"
-node_category = "control_flow_node"
-input = true
-output = true
-allows_multiple_outputs = true
-position_in_graph = Vector2(-340, -360)
-_graph_ref = Object(WeakRef,"script":null)
-
-_next_ref = Array[StringName]([&"TxtSquish", &"TxtColor", &"TxtRest"])
-breakpointable = true
-mutable = true
-decorator = {
-"blackboard_key": &"animating",
-"type": "condition"
-}
-
 [sub_resource type="Resource" id="SubResource_ord_seq"]
 resource_name = "OrderedCycle"
 script = ExtResource("11_seq")
@@ -128,6 +108,26 @@ position_in_graph = Vector2(-340, 280)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"TxtSquish", &"TxtColor"])
+breakpointable = true
+mutable = true
+decorator = {
+"blackboard_key": &"animating",
+"type": "condition"
+}
+
+[sub_resource type="Resource" id="SubResource_rsel"]
+resource_name = "RandomPicker"
+script = ExtResource("5_rsel")
+memory = true
+instruction = "Random Selector (memory: {memory})"
+node_category = "control_flow_node"
+input = true
+output = true
+allows_multiple_outputs = true
+position_in_graph = Vector2(-340, -360)
+_graph_ref = Object(WeakRef,"script":null)
+
+_next_ref = Array[StringName]([&"TxtSquish", &"TxtColor", &"TxtRest"])
 breakpointable = true
 mutable = true
 decorator = {
@@ -547,3 +547,4 @@ connections = Array[Dictionary]([{
 "to_port": 0
 }])
 _agent_ref = Object(WeakRef,"script":null)
+

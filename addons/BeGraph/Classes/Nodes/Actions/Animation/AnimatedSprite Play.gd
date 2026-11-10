@@ -27,14 +27,11 @@ func on_start() -> void:
 	_sprite_ref.play(anim, eval(&"speed") as float, eval(&"backwards") as bool)
 
 func tick(_delta: float) -> Status:
-	if _sprite_ref == null or not is_instance_valid(_sprite_ref):
-		return Status.FAILURE
+	if _sprite_ref == null or not is_instance_valid(_sprite_ref): return Status.FAILURE
 		
-	if not eval(&"wait_until_finished"):
-		return Status.SUCCESS
+	if not eval(&"wait_until_finished"): return Status.SUCCESS
 		
-	if _sprite_ref.is_playing():
-		return Status.RUNNING
+	if _sprite_ref.is_playing(): return Status.RUNNING
 		
 	return Status.SUCCESS
 

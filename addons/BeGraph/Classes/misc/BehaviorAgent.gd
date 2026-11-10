@@ -94,6 +94,7 @@ func _set(property: StringName, value: Variant) -> bool:
 		return true
 	
 	if not property.begins_with(BG.OBP): return false
+	
 	bb_props[property] = value
 	return true
 
@@ -154,33 +155,28 @@ func _should_tick() -> bool:
 
 ## Ticks [member starting_node] every idle frame when [member graph_process_mode] is [constant ProcessThread.IDLE] (outside the editor).
 func _process(_delta: float) -> void:
-	if not Engine.is_editor_hint():
-		_execute_tick(_delta)
+	if not Engine.is_editor_hint(): _execute_tick(_delta)
 
 ## Ticks [member starting_node] every physics frame when [member graph_process_mode] is [constant ProcessThread.PHYSICS] (outside the editor), forwarding the engine's own physics delta directly (bypassing [method _resolve_delta], which only applies to manual ticking).
 func _physics_process(_delta: float) -> void:
-	if not Engine.is_editor_hint():
-		_execute_tick(_delta)
+	if not Engine.is_editor_hint(): _execute_tick(_delta)
 
 ## Manually ticks [member starting_node], provided [member enabled] is [code]true[/code]. Intended to be called by user code when [member graph_process_mode] is [constant ProcessThread.MANUAL].[br]
 ## [param delta] defaults to [code]-1[/code]: in that case [method _resolve_delta] falls back to the pre-existing [method Time.get_ticks_msec]-based system so time-based nodes keep working unattended. Pass an explicit delta (in seconds) to drive ticking with a known, fixed step instead.
-func tick(_delta:float=-1.0) -> void:
-	_execute_tick(_resolve_delta(_delta))
+func tick(_delta:float=-1.0) -> void: _execute_tick(_resolve_delta(_delta))
 
 func _execute_tick(delta: float) -> void:
-	if not enabled or starting_node == null or not _should_tick():
-		return
+	if not enabled or starting_node == null or not _should_tick(): return
+	
 	starting_node.do_tick(delta)
 
 ## Resolves [member starting_node] from the access point at [param index] inside [member behavior_graph]'s [code]"access_point_node"[/code] category, or sets it to [code]null[/code] if [member behavior_graph] is unset, has no access points, or [param index] is out of range.
 func _select_starting_node(index: int) -> void:
 	starting_node = null
-	if _behavior_graph == null:
-		return
+	if _behavior_graph == null: return
 
 	var names := _behavior_graph.get_nodes_names_by_category("access_point_node")
-	if index < 0 or index >= names.size():
-		return
+	if index < 0 or index >= names.size(): return
 
 	starting_node = _behavior_graph.get_node(names[index])
 
@@ -192,18 +188,19 @@ func get_overridable_property_list()->Array[Dictionary]:
 	var base_usage := PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_SCRIPT_VARIABLE | PROPERTY_USAGE_NIL_IS_VARIANT
 	var ret : Array[Dictionary]
 	for bb_var in behavior_graph.blackboard:
-		if bb_var.export_variable:
-			var name :String = BG.OBP+"/"+bb_var.name
-			if name not in bb_props.keys() or typeof(bb_props[name]) != typeof(bb_var._value):
-				bb_props[name] = bb_var._value
-				
-			ret.append({
-				"name": name,
-				"type": typeof(bb_var._value),
-				"hint": PROPERTY_HINT_NONE,
-				"hint_string": "",
-				"usage": base_usage
-			})
+		if not bb_var.export_variable: continue
+		
+		var name :String = BG.OBP+"/"+bb_var.name
+		if name not in bb_props.keys() or typeof(bb_props[name]) != typeof(bb_var._value):
+			bb_props[name] = bb_var._value
+			
+		ret.append({
+			"name": name,
+			"type": typeof(bb_var._value),
+			"hint": PROPERTY_HINT_NONE,
+			"hint_string": "",
+			"usage": base_usage
+		})
 	for bb_prop in bb_props.duplicate():
 		if behavior_graph.get_blackboard_property(bb_prop.get_slice("/", 1))== null:
 			bb_props.erase(bb_prop)
