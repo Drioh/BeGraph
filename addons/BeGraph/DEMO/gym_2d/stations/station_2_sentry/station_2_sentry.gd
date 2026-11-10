@@ -29,8 +29,8 @@ func _find_player() -> void:
 func _push_blackboard() -> void:
 	if behavior_agent == null:
 		return
-	behavior_agent.set_blackboard_property(&"Self", sentry_actor.get_path())
+	#behavior_agent.set_blackboard_property(&"Self", sentry_actor.get_path())
 	behavior_agent.set_blackboard_property(&"Player", player.get_path())
-	behavior_agent.set_blackboard_property(&"RayCast", raycast.get_path())
-	behavior_agent.set_blackboard_property(&"AudioPlayer", audio_player.get_path())
-	behavior_agent.set_blackboard_property(&"ProjectilesParent", projectiles_container.get_path())
+	#behavior_agent.set_blackboard_property(&"RayCast", raycast.get_path())
+	#behavior_agent.set_blackboard_property(&"AudioPlayer", audio_player.get_path())
+	#behavior_agent.set_blackboard_property(&"ProjectilesParent", projectiles_container.get_path())

@@ -56,6 +56,10 @@ volume_db = -8.0
 script = ExtResource("3_agent")
 behavior_graph = ExtResource("4_sentry_graph")
 starting_point = 0
+overridable_blackboard_properties/Self = NodePath("..")
+overridable_blackboard_properties/RayCast = NodePath("../RayCast2D")
+overridable_blackboard_properties/AudioPlayer = NodePath("../AudioStreamPlayer")
+overridable_blackboard_properties/ProjectilesParent = NodePath("../../ProjectilesContainer")
 
 [node name="StatusLabel" type="Label" parent="SentryActor" unique_id=2111781538]
 offset_left = -50.0
