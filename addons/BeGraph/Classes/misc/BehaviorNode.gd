@@ -78,10 +78,7 @@ func set_breakpointable()->bool:return true
 
 ## Returns [code]true[/code] if this node belongs to the [code]"access_point_node"[/code] category, meaning it can be used as an entry point by a [BehaviorAgent].
 @export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE) var is_starting_node : bool :
-	get():
-		if node_category == "access_point_node": 
-			return true
-		return false
+	get(): return node_category == "access_point_node"
 
 ## Weak reference to the [BehaviorGraph] this node belongs to. Used to resolve blackboard bindings and to notify the graph of connection changes.
 @export_custom(PROPERTY_HINT_NONE, "", INTERNAL_USAGE) var _graph_ref : WeakRef
@@ -457,7 +454,7 @@ func _get(property: StringName) -> Variant:
 	var graph : BehaviorGraph = get_graph()
 	if graph == null:
 		return null
-	return graph.get_blackboard_property(key).value
+	return graph.get_blackboard_value(key)
 
 func _set(property: StringName, value: Variant) -> bool:
 	
@@ -490,18 +487,10 @@ func get_graph() -> BehaviorGraph:
 ## Returns the value stored under the given key (e.g. [code]"type"[/code], [code]"hint"[/code], [code]"blackboard_key"[/code]) if [param info] is provided. [br]
 ## Returns the full property [Dictionary] otherwise (or if [param info] is not a valid key (check [param behavior_properties] or [method_add_behavior_property])
 func get_node_property_info(property: StringName, info: String = "") -> Variant:
-	for prop in get_behavior_property_list():
-		if prop["name"] != property:
-			continue
-		if info == "":
-			return prop
-		return prop.get(info, null)
 	for prop in get_property_list():
 		if prop["name"] != property: 
 			continue
-		if info == "":
-			return prop
-		return prop.get(info, null)
+		return prop if info == "" else prop.get(info, null)
 	push_error("Property '%s' not found" % property)
 	return null
 
@@ -631,33 +620,14 @@ func add_next(n : BehaviorNode, from_port : int) -> void:
 func remove_next(n : BehaviorNode, from_port : int) -> void:
 	if output:
 		_next_ref.erase(n.resource_name)
-	else:
-		var current : StringName = conditions[from_port]["next"]
-		
-		var cond_1 : bool = current != null
-		var cond_2 : bool = current == n.resource_name or current== null
-		if  cond_1 and cond_2: 
-			conditions[from_port]["next"] = null
+	elif conditions[from_port]["next"] == n.resource_name:
+		conditions[from_port]["next"] = null
 
 ## Ticks the successor stored at [param index] inside [member _next_ref] and returns its [enum Status]. Routes through [method do_tick] (rather than calling [method tick] directly) so the successor's status/tick-time gets recorded.
 func tick_next(delta:float,index:int = 0) -> Status:
 	if index >= _next_ref.size():
 		return Status.SUCCESS # Node has no successors, if it wants to tick a successor, but it has none, then it means it accomplished its purpose
-
-	var target: StringName = _next_ref[index]
-	if target == &"":
-		return Status.FAILURE
-		
-	var graph := get_graph()
-	if graph == null:
-		return abort("lost graph reference")
-
-	var target_node := graph.get_node(target)
-	if target_node == null:
-		return Status.FAILURE
-
-	return target_node.do_tick(delta)
-	
+	return _tick_target(_next_ref[index], delta)
 
 ## Ticks the successor bound to the condition at [param index] inside [member conditions] and returns its [enum Status]. Routes through [method do_tick] (rather than calling [method tick] directly) so the successor's status/tick-time gets recorded.
 func tick_condition(delta:float,index:int = 0) -> Status:
@@ -665,19 +635,18 @@ func tick_condition(delta:float,index:int = 0) -> Status:
 	if index >= conditions.size():
 		push_error("BehaviorNode %s has less than %s conditions" % [self, index + 1])
 		return Status.FAILURE
-
 	var target : StringName = conditions[index]["next"] if conditions[index]["next"] else &""
+	return _tick_target(target, delta)
+
+func _tick_target(target: StringName, delta: float) -> Status:
 	if target == &"":
 		return Status.FAILURE
-
 	var graph := get_graph()
 	if graph == null:
 		return abort("lost graph reference")
-
 	var target_node := graph.get_node(target)
 	if target_node == null:
 		return Status.FAILURE
-
 	return target_node.do_tick(delta)
 
 ## Resolves a property value. If [code]resolve node[/code] is set to [code]true[/code] and the given property value is a nodepath, returnes the resolved nodepath via [method _resolve_node]. Returns the blackboard value if bound, otherwise returns the fallback local variable.

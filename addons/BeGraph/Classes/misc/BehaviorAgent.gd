@@ -105,11 +105,7 @@ func _ready() -> void:
 		return
 
 	_behavior_graph = behavior_graph.duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
-	for i in behavior_graph.blackboard.size():
-		var src_var : BlackboardVariable = behavior_graph.blackboard[i]
-		if src_var != null and not src_var.resource_path.is_empty() and not src_var.is_built_in():
-			_behavior_graph.blackboard[i] = src_var
-	_behavior_graph.setup_runtime(self)
+	_behavior_graph.setup_runtime(self, behavior_graph)
 	_select_starting_node(_starting_point_idx)
 
 	if starting_node == null:
@@ -156,46 +152,35 @@ func _should_tick() -> bool:
 
 ## Ticks [member starting_node] every idle frame when [member graph_process_mode] is [constant ProcessThread.IDLE] (outside the editor).
 func _process(_delta: float) -> void:
-	if Engine.is_editor_hint(): return
-	if not enabled: return
-	if starting_node==null: return
-	if not _should_tick(): return
-	
-	starting_node.do_tick(_delta)
+	if not Engine.is_editor_hint():
+		_execute_tick(_delta)
 
 ## Ticks [member starting_node] every physics frame when [member graph_process_mode] is [constant ProcessThread.PHYSICS] (outside the editor), forwarding the engine's own physics delta directly (bypassing [method _resolve_delta], which only applies to manual ticking).
 func _physics_process(_delta: float) -> void:
-	if Engine.is_editor_hint(): return
-	if not enabled: return
-	if starting_node==null: return
-	if not _should_tick(): return
-	
-	starting_node.do_tick(_delta)
+	if not Engine.is_editor_hint():
+		_execute_tick(_delta)
 
 ## Manually ticks [member starting_node], provided [member enabled] is [code]true[/code]. Intended to be called by user code when [member graph_process_mode] is [constant ProcessThread.MANUAL].[br]
 ## [param delta] defaults to [code]-1[/code]: in that case [method _resolve_delta] falls back to the pre-existing [method Time.get_ticks_msec]-based system so time-based nodes keep working unattended. Pass an explicit delta (in seconds) to drive ticking with a known, fixed step instead.
 func tick(_delta:float=-1.0) -> void:
-	if not enabled: return
-	if starting_node==null: return
-	if not _should_tick(): return
-	
-	starting_node.do_tick(_resolve_delta(_delta))
+	_execute_tick(_resolve_delta(_delta))
+
+func _execute_tick(delta: float) -> void:
+	if not enabled or starting_node == null or not _should_tick():
+		return
+	starting_node.do_tick(delta)
 
 ## Resolves [member starting_node] from the access point at [param index] inside [member behavior_graph]'s [code]"access_point_node"[/code] category, or sets it to [code]null[/code] if [member behavior_graph] is unset, has no access points, or [param index] is out of range.
 func _select_starting_node(index: int) -> void:
+	starting_node = null
 	if _behavior_graph == null:
-		starting_node = null
 		return
 
 	var names := _behavior_graph.get_nodes_names_by_category("access_point_node")
-	if names.is_empty():
-		starting_node = null
+	if index < 0 or index >= names.size():
 		return
 
-	if index >= 0 and index < names.size():
-		starting_node = _behavior_graph.get_node(names[index])
-	else:
-		starting_node = null
+	starting_node = _behavior_graph.get_node(names[index])
 
 ##Returns [code]true[/code] if given [code]property[/code] is contained withing the [code]Blackboard[/code] associated with this [code]BehaviorAgent[/code]
 func is_bb_property(property:StringName)->bool:

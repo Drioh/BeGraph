@@ -811,31 +811,9 @@ func _paste_snapshot(snapshot : Dictionary, offset : Vector2) -> void:
 		if v != null:
 			valid_bb_keys.append(StringName(v.name))
 
-	var name_map : Dictionary = {} # old name -> new name
-	var copies : Array[BehaviorNode] = []
-	for source : BehaviorNode in nodes:
-		var copy : BehaviorNode = _clone_behavior_node(source)
-		var new_name : StringName = _generate_unique_node_name()
-		while name_map.values().has(new_name):
-			new_name = _generate_unique_node_name()
-		name_map[StringName(source.resource_name)] = new_name
-		copy.resource_name = new_name
-		copy.position_in_graph = source.position_in_graph + offset
-		_unbind_blackboard_properties(copy, valid_bb_keys)
-		copies.append(copy)
-
-	var new_connections : Array[Dictionary] = []
-	for c in snapshot["connections"]:
-		var from_orig := StringName(c["from_node"])
-		var to_orig := StringName(c["to_node"])
-		if not name_map.has(from_orig) or not name_map.has(to_orig):
-			continue
-		new_connections.append({
-			"from_node": name_map[from_orig],
-			"from_port": c["from_port"],
-			"to_node": name_map[to_orig],
-			"to_port": c["to_port"],
-		})
+	var cloned : Dictionary = _clone_nodes_and_connections(nodes, snapshot["connections"], offset, valid_bb_keys)
+	var copies : Array[BehaviorNode] = cloned["copies"]
+	var new_connections : Array[Dictionary] = cloned["connections"]
 
 	var pasted_names : Array[StringName] = []
 	for copy in copies:
@@ -896,6 +874,34 @@ func _clone_behavior_node(source : BehaviorNode) -> BehaviorNode:
 		condition["next"] = null
 	return copy
 
+func _clone_nodes_and_connections(sources: Array, source_connections: Array, offset: Vector2, valid_bb_keys: Array[StringName] = []) -> Dictionary:
+	var name_map : Dictionary = {} # old name -> new name
+	var copies : Array[BehaviorNode] = []
+	for src : BehaviorNode in sources:
+		var copy : BehaviorNode = _clone_behavior_node(src)
+		var new_name : StringName = _generate_unique_node_name()
+		while name_map.values().has(new_name):
+			new_name = _generate_unique_node_name()
+		name_map[StringName(src.resource_name)] = new_name
+		copy.resource_name = new_name
+		copy.position_in_graph = src.position_in_graph + offset
+		_unbind_blackboard_properties(copy, valid_bb_keys)
+		copies.append(copy)
+
+	var new_connections : Array[Dictionary] = []
+	for c in source_connections:
+		var from_orig := StringName(c["from_node"])
+		var to_orig := StringName(c["to_node"])
+		if not name_map.has(from_orig) or not name_map.has(to_orig):
+			continue
+		new_connections.append({
+			"from_node": name_map[from_orig],
+			"from_port": c["from_port"],
+			"to_node": name_map[to_orig],
+			"to_port": c["to_port"],
+		})
+	return {"copies": copies, "connections": new_connections}
+
 ## Top-left corner (graph coordinates) of the bounding box of the snapshot's nodes.
 func _snapshot_origin(snapshot : Dictionary) -> Vector2:
 	var origin := Vector2(INF, INF)
@@ -952,27 +958,9 @@ func embed_graph(source: BehaviorGraph, include_access_points: bool = false) -> 
 		bounds = bounds.expand(src.position_in_graph)
 	var offset : Vector2 = (scroll_offset + size * 0.5) / zoom - bounds.get_center()
 
-	var name_map : Dictionary = {} # old name -> new name
-	var copies : Array[BehaviorNode] = []
-	for src in sources:
-		var copy : BehaviorNode = _clone_behavior_node(src)
-		var new_name : StringName = _generate_unique_node_name()
-		name_map[StringName(src.resource_name)] = new_name
-		copy.resource_name = new_name
-		copy.position_in_graph = src.position_in_graph + offset
-		_unbind_blackboard_properties(copy)
-		copies.append(copy)
-
-	var new_connections : Array[Dictionary] = []
-	for c in source.connections:
-		var from_name := StringName(c["from_node"])
-		var to_name := StringName(c["to_node"])
-		if !name_map.has(from_name) or !name_map.has(to_name): continue
-		
-		new_connections.append({
-			"from_node": name_map[from_name], "from_port": c["from_port"],
-			"to_node": name_map[to_name], "to_port": c["to_port"],
-		})
+	var cloned : Dictionary = _clone_nodes_and_connections(sources, source.connections, offset)
+	var copies : Array[BehaviorNode] = cloned["copies"]
+	var new_connections : Array[Dictionary] = cloned["connections"]
 
 	var frame_node := BehaviorFrame.new()
 	var frame_name : StringName = _generate_unique_node_name("_GraphFrame_")

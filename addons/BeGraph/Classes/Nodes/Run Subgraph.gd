@@ -66,11 +66,7 @@ func _build_runtime_graph() -> bool:
 			n.last_status = -1
 	else:
 		runtime = source.duplicate_deep(Resource.DEEP_DUPLICATE_ALL) as BehaviorGraph
-		for i in source.blackboard.size():
-			var src_var : BlackboardVariable = source.blackboard[i]
-			if src_var != null and not src_var.resource_path.is_empty() and not src_var.is_built_in():
-				runtime.blackboard[i] = src_var
-		runtime.setup_runtime(agent)
+		runtime.setup_runtime(agent, source)
 		_cached_runtime = runtime
 		_cache_key = key
 

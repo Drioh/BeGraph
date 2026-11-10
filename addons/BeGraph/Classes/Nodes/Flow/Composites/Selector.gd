@@ -48,16 +48,11 @@ func tick(delta: float) -> Status:
 				_last_running_idx = i
 				_position = i if use_memory else 0
 				return Status.RUNNING
-			Status.SUCCESS:
+			Status.SUCCESS, Status.ERROR:
 				_abort_previous_running(i)
 				_last_running_idx = -1
 				_position = 0
-				return Status.SUCCESS
-			Status.ERROR:
-				_abort_previous_running(i)
-				_last_running_idx = -1
-				_position = 0
-				return Status.ERROR
+				return status
 		i += 1
 		
 	_abort_previous_running(-1)

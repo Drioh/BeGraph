@@ -186,7 +186,7 @@ func change_property(property: StringName, new_value: Variant, field: StringName
 		node.conditions.clear()
 		for i in values.size():
 			var cond : bool = i < old_conditions.size()
-			var kept_next : WeakRef = old_conditions[i]["next"] if cond else null
+			var kept_next = old_conditions[i]["next"] if cond else null
 			node.conditions.append({"text": values[i], "next": kept_next})
 			
 		node.output = false
@@ -261,7 +261,7 @@ func _populate_popup() -> void:
 	var theme := EditorInterface.get_editor_theme()
 	for blackboard_property in node._graph_ref.get_ref().blackboard:
 		var t: int = typeof(blackboard_property.value)
-		if t not in BG.CONVERSION_DICT[type]:
+		if not BG.is_type_compatible(t, type):
 			continue
 		popup.add_item(blackboard_property.name)
 		popup.set_item_icon(-1, theme.get_icon(type_string(t), "EditorIcons"))
@@ -300,9 +300,7 @@ func _can_drop_data(at_position, data):
 		return false
 
 	var global_pos = get_global_transform() * at_position
-	var cond_1:bool=_get_slot_at(self,global_pos)!=null and typeof(data["resource"].value) in BG.CONVERSION_DICT[type]
-	var cond_2 : bool = typeof(data["resource"].value) == TYPE_NIL
-	return cond_1 or cond_2 or type==TYPE_NIL
+	return _get_slot_at(self, global_pos) != null and BG.is_type_compatible(typeof(data["resource"].value), type)
 
 ## Handles a successful drop of a blackboard variable resource: binds [member node]'s property to the dropped variable's name via [method BehaviorNode.set_node_property_blackboard_key] and updates [member linked_property]/[member bb_reference] accordingly.
 func _drop_data(at_position, data):
@@ -344,7 +342,7 @@ func update_bb_name(n:StringName)->void:
 
 ## Callback for [signal BlackboardVariable.value_changed] on [member linked_property]: if the new value's type is no longer compatible with [member type], unbinds the property and switches back to the plain value editor.
 func update_bb_value(v:Variant)->void:
-	if not typeof(v) in BG.CONVERSION_DICT[type]:
+	if not BG.is_type_compatible(typeof(v), type):
 		node.set_node_property_blackboard_key(key)
 		linked=false
 
@@ -376,10 +374,8 @@ func _notification(what: int) -> void:
 		if not drag_data.has("resource"):
 			return
 		
-		var cond_1 : bool = typeof(drag_data["resource"].value) in BG.CONVERSION_DICT[type]
-		var cond_2 : bool = typeof(drag_data["resource"].value) == TYPE_NIL
-
-		var prefix : String = "" if (cond_1 or cond_2 or type==TYPE_NIL) else "not_"
+		var compatible : bool = BG.is_type_compatible(typeof(drag_data["resource"].value), type)
+		var prefix : String = "" if compatible else "not_"
 		var bg_color : Color = ProjectSettings.get_setting("BeGraph/colors/graph_editor/%sallowed_variable/background"%prefix)
 		var border_color : Color = ProjectSettings.get_setting("BeGraph/colors/graph_editor/%sallowed_variable/border"%prefix)
 		fallback_layer.set_indexed("theme_override_styles/panel:bg_color",bg_color)

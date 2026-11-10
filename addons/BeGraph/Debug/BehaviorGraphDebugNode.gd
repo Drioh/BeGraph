@@ -79,51 +79,11 @@ func setup(info: Dictionary) -> void:
 
 ## Shows a short human-readable summary of [param decorator] in [member decorator_label], or hides it when no decorator is active.
 func _set_decorator_info(decorator: Dictionary) -> void:
-	var text : String = _decorator_summary(decorator)
+	var text : String = BG.format_decorator_summary(decorator)
 	decorator_label.visible = text != ""
 	decorator_label.text = text
 	decorator_label.tooltip_text = text
 	reset_size.call_deferred()
-
-## Builds the summary text for [param decorator]. Field meanings mirror [member BehaviorNode.decorator]'s own doc.
-func _decorator_summary(decorator: Dictionary) -> String:
-	match String(decorator.get("type", "none")):
-		"none", "":
-			return ""
-		"inverter":
-			return "Decorator: Inverter"
-		"force":
-			var variant : int = int(decorator.get("variant", 0))
-			return "Decorator: Force %s" % ("Success" if variant == 0 else "Failure")
-		"repeater":
-			var variant : int = int(decorator.get("variant", 0))
-			var between : float = decorator.get("between_delay", 0.0)
-			var detail : String
-			match variant:
-				0:
-					var count : int = int(decorator.get("count", 3))
-					detail = "Times (%s)" % (str(count) if count > 0 else "infinite")
-				1:
-					var timeout : float = decorator.get("timeout", 0.0)
-					detail = "Until Success (timeout %ss)" % (str(timeout) if timeout > 0.0 else "none")
-				_:
-					var timeout2 : float = decorator.get("timeout", 0.0)
-					detail = "Until Failure (timeout %ss)" % (str(timeout2) if timeout2 > 0.0 else "none")
-			return "Decorator: Repeater - %s, delay %ss" % [detail, str(between)]
-		"time_limit":
-			var on_timeout : int = int(decorator.get("on_timeout", 0))
-			return "Decorator: Time Limit %ss (on timeout: %s)" % [str(decorator.get("seconds", 5.0)), "Abort" if on_timeout == 0 else "Let Run"]
-		"cooldown":
-			var mode : int = int(decorator.get("cooldown_mode", 0))
-			return "Decorator: Cooldown %ss (%s)" % [str(decorator.get("seconds", 2.0)), "Always" if mode == 0 else "On Success"]
-		"delay":
-			var delay_mode : int = int(decorator.get("delay_mode", 0))
-			return "Decorator: Delay %ss (%s)" % [str(decorator.get("seconds", 1.0)), "Before" if delay_mode == 0 else "After"]
-		"condition":
-			var key : String = String(decorator.get("blackboard_key", &""))
-			return "Decorator: Condition - %s" % (key if key != "" else "(unbound)")
-		_:
-			return ""
 
 ## Rebuilds [member properties_container] from scratch using [param properties] (an Array of [code]{"name","value","blackboard_key"}[/code] dictionaries).
 func _build_properties(properties: Array) -> void:

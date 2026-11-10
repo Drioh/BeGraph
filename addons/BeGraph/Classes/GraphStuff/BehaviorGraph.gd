@@ -140,7 +140,12 @@ func get_agent_node() -> BehaviorAgent:
 	return _agent_ref.get_ref() as BehaviorAgent
 
 ## Prepares a freshly duplicated graph for execution: binds it to [param agent], rebuilds successor links from [member connections] and points every node back to this graph.
-func setup_runtime(agent: Node) -> void:
+func setup_runtime(agent: Node, source_graph: BehaviorGraph = null) -> void:
+	if source_graph != null:
+		for i in source_graph.blackboard.size():
+			var src_var : BlackboardVariable = source_graph.blackboard[i]
+			if src_var != null and not src_var.resource_path.is_empty() and not src_var.is_built_in():
+				blackboard[i] = src_var
 	set_agent(agent)
 	_resolved_nodes_cache.clear()
 	_rebuild_blackboard_map()

@@ -137,6 +137,19 @@ func _visit_sequence_chain(curr: StringName, internal_next: Dictionary, visited:
 	for nxt in internal_next[curr]:
 		_visit_sequence_chain(nxt, internal_next, visited, order)
 
+func _abort_previous_running(except_idx: int) -> void:
+	if _last_running_idx != -1 and _last_running_idx != except_idx and _last_running_idx < _sequence_nodes.size():
+		_sequence_nodes[_last_running_idx].abort_running()
+	_last_running_idx = -1
+
+func _finish_sequence_tick(status: Status, running_idx: int = -1, next_pos: int = 0) -> Status:
+	_last_running_idx = running_idx
+	_position = next_pos
+	_is_ticking_sequence = false
+	last_status = status
+	last_tick_time = Time.get_ticks_msec()
+	return status
+
 func tick_sequence(delta: float) -> Status:
 	var count : int = _sequence_nodes.size()
 	if count == 0:
@@ -148,35 +161,17 @@ func tick_sequence(delta: float) -> Status:
 	_is_ticking_sequence = true
 	var i : int = _position
 	while i < count:
-		var child : BehaviorNode = _sequence_nodes[i]
-		var status : Status = child.do_tick(delta)
+		var status : Status = _sequence_nodes[i].do_tick(delta)
 		match status:
 			Status.RUNNING:
-				if _last_running_idx != -1 and _last_running_idx != i and _last_running_idx < count:
-					_sequence_nodes[_last_running_idx].abort_running()
-				_last_running_idx = i
-				_position = i if memory else 0
-				_is_ticking_sequence = false
-				last_status = Status.RUNNING
-				last_tick_time = Time.get_ticks_msec()
-				return Status.RUNNING
+				_abort_previous_running(i)
+				return _finish_sequence_tick(Status.RUNNING, i, i if memory else 0)
 			Status.FAILURE, Status.ERROR:
-				if _last_running_idx != -1 and _last_running_idx != i and _last_running_idx < count:
-					_sequence_nodes[_last_running_idx].abort_running()
-				_last_running_idx = -1
-				_position = 0
-				_is_ticking_sequence = false
-				last_status = status
-				last_tick_time = Time.get_ticks_msec()
-				return status
+				_abort_previous_running(i)
+				return _finish_sequence_tick(status)
 		i += 1
 
-	_last_running_idx = -1
-	_position = 0
-	_is_ticking_sequence = false
-	last_status = Status.SUCCESS
-	last_tick_time = Time.get_ticks_msec()
-	return Status.SUCCESS
+	return _finish_sequence_tick(Status.SUCCESS)
 
 func _on_abort_running(visited: Dictionary) -> void:
 	_position = 0
@@ -196,4 +191,3 @@ func set_node_category() -> String: return "frame_node"
 func set_input() -> bool: return false
 func set_output() -> bool: return false
 func set_allows_multiple_outputs() -> bool: return false
-func set_properties() -> void: return
