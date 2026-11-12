@@ -32,7 +32,19 @@ const LINKED_ICON: Texture2D = preload("res://addons/BeGraph/Icons/link_icon.svg
 @onready var properties_toggle: Button
 @onready var properties_tree: Tree = %PropertiesTree
 
+## Titlebar badge showing the 1-based execution order when this node is inside a Sequence Frame.
+var sequence_badge_label: Label = null
+
 func _ready() -> void:
+	sequence_badge_label = Label.new()
+	sequence_badge_label.visible = false
+	sequence_badge_label.add_theme_font_size_override("font_size", 13)
+	if Engine.is_editor_hint() and EditorInterface.get_editor_settings():
+		sequence_badge_label.modulate = EditorInterface.get_editor_settings().get_setting("interface/theme/accent_color")
+	else:
+		sequence_badge_label.modulate = Color(0.3, 0.65, 1.0)
+	get_titlebar_hbox().add_child(sequence_badge_label)
+
 	properties_toggle = Button.new()
 	properties_toggle.toggle_mode=true
 	properties_toggle.flat=true
@@ -42,6 +54,17 @@ func _ready() -> void:
 		properties_tree.visible = pressed
 		reset_size.call_deferred()
 		)
+	
+## Shows or hides the 1-based execution order badge (#1, #2, ...) when inside a Sequence Frame.
+func set_sequence_index(index: int) -> void:
+	if sequence_badge_label == null:
+		return
+	if index > 0:
+		sequence_badge_label.text = " #%d " % index
+		sequence_badge_label.tooltip_text = "Sequence Frame execution step #%d" % index
+		sequence_badge_label.visible = true
+	else:
+		sequence_badge_label.visible = false
 	
 
 ## Configures every part of this node from [param info] (the same dictionary shape built by [method BehaviorGraphDebugView._info_from_node] / sent by [method BehaviorGraphDebugBridge._send_graph_structure]): title, subtitle, instruction, breakpoint/mute flags, decorator summary, input/output/condition slots, and the (initially hidden) properties list.

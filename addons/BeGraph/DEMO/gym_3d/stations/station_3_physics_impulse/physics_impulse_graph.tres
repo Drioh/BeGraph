@@ -149,7 +149,7 @@ conditions = Array[Dictionary]([{
 }])
 node_category = "control_flow_node"
 input = true
-position_in_graph = Vector2(80, 420)
+position_in_graph = Vector2(-80, 400)
 _graph_ref = Object(WeakRef,"script":null)
 
 _blackboard_bindings = Dictionary[StringName, StringName]({
@@ -171,7 +171,7 @@ conditions = Array[Dictionary]([{
 }])
 node_category = "control_flow_node"
 input = true
-position_in_graph = Vector2(1280, 1180)
+position_in_graph = Vector2(1220, 1200)
 _graph_ref = Object(WeakRef,"script":null)
 
 breakpointable = true
@@ -205,7 +205,7 @@ instruction = "Rotate {node} ({mode}, axis {axis_3d})"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1280, -1180)
+position_in_graph = Vector2(3380, -900)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"LaunchCrateA"])
@@ -228,7 +228,7 @@ instruction = "Rotate {node} ({mode}, axis {axis_3d})"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1280, -380)
+position_in_graph = Vector2(3380, -100)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"LaunchCrateB"])
@@ -251,7 +251,7 @@ instruction = "Rotate {node} ({mode}, axis {axis_3d})"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1280, 420)
+position_in_graph = Vector2(3380, 700)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"ReturnCrateA"])
@@ -274,7 +274,7 @@ instruction = "Rotate {node} ({mode}, axis {axis_3d})"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1280, 1200)
+position_in_graph = Vector2(3380, 1480)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"ReturnCrateB"])
@@ -294,7 +294,7 @@ instruction = "Apply impulse {impulse} to {node}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1280, -960)
+position_in_graph = Vector2(3380, -680)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"WaitA"])
@@ -313,7 +313,7 @@ instruction = "Apply impulse {impulse} to {node}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1280, -160)
+position_in_graph = Vector2(3380, 120)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"WaitB"])
@@ -332,7 +332,7 @@ node_category = "control_flow_node"
 input = true
 output = true
 allows_multiple_outputs = true
-position_in_graph = Vector2(2140, 540)
+position_in_graph = Vector2(2100, 500)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"VortexLaunchA", &"VortexLaunchB"])
@@ -348,7 +348,7 @@ node_category = "control_flow_node"
 input = true
 output = true
 allows_multiple_outputs = true
-position_in_graph = Vector2(2140, 940)
+position_in_graph = Vector2(2100, 900)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"VortexReturnA", &"VortexReturnB"])
@@ -364,7 +364,7 @@ instruction = "Apply impulse {impulse} to {node}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1280, 620)
+position_in_graph = Vector2(3380, 900)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"WaitC"])
@@ -383,7 +383,7 @@ instruction = "Apply impulse {impulse} to {node}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1280, 1400)
+position_in_graph = Vector2(3380, 1680)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"WaitD"])
@@ -403,7 +403,7 @@ instruction = "Set {node}'s {property} value: {value}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1280, -580)
+position_in_graph = Vector2(3380, -300)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"FaceCrateB"])
@@ -442,7 +442,7 @@ instruction = "Set {node}'s {property} value: {value}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(2140, 120)
+position_in_graph = Vector2(2100, 80)
 _graph_ref = Object(WeakRef,"script":null)
 
 _blackboard_bindings = Dictionary[StringName, StringName]({
@@ -461,7 +461,7 @@ instruction = "Set {node}'s {property} value: {value}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1280, -1380)
+position_in_graph = Vector2(3380, -1100)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"FaceCrateA"])
@@ -481,7 +481,7 @@ instruction = "Set {node}'s {property} value: {value}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1280, 1000)
+position_in_graph = Vector2(3380, 1280)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"FaceReturnB"])
@@ -501,7 +501,7 @@ instruction = "Set {node}'s {property} value: {value}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1280, 220)
+position_in_graph = Vector2(3380, 500)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"FaceReturnA"])
@@ -523,7 +523,7 @@ instruction = "Rotate {node} ({mode}, axis {axis_3d})"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(2140, 320)
+position_in_graph = Vector2(2100, 280)
 _graph_ref = Object(WeakRef,"script":null)
 
 _blackboard_bindings = Dictionary[StringName, StringName]({
@@ -541,7 +541,7 @@ instruction = "Apply impulse {impulse} to {node}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(2760, 440)
+position_in_graph = Vector2(2720, 400)
 _graph_ref = Object(WeakRef,"script":null)
 
 _blackboard_bindings = Dictionary[StringName, StringName]({
@@ -559,7 +559,7 @@ instruction = "Apply impulse {impulse} to {node}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(2760, 620)
+position_in_graph = Vector2(2720, 580)
 _graph_ref = Object(WeakRef,"script":null)
 
 _blackboard_bindings = Dictionary[StringName, StringName]({
@@ -577,7 +577,7 @@ instruction = "Apply impulse {impulse} to {node}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(2760, 860)
+position_in_graph = Vector2(2720, 820)
 _graph_ref = Object(WeakRef,"script":null)
 
 _blackboard_bindings = Dictionary[StringName, StringName]({
@@ -595,7 +595,7 @@ instruction = "Apply impulse {impulse} to {node}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(2760, 1040)
+position_in_graph = Vector2(2720, 1000)
 _graph_ref = Object(WeakRef,"script":null)
 
 _blackboard_bindings = Dictionary[StringName, StringName]({
@@ -613,7 +613,7 @@ node_category = "control_flow_node"
 input = true
 output = true
 allows_multiple_outputs = true
-position_in_graph = Vector2(680, 420)
+position_in_graph = Vector2(1440, 500)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"SetActuatorPurple", &"SpinVortex", &"ParallelLaunch", &"WaitVortexMid", &"ParallelReturn", &"WaitVortexEnd"])
@@ -628,7 +628,7 @@ instruction = "Wait {seconds}s"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1280, -760)
+position_in_graph = Vector2(3380, -480)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"SetActuatorBlue"])
@@ -643,7 +643,7 @@ instruction = "Wait {seconds}s"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1280, 40)
+position_in_graph = Vector2(3380, 320)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"SetReturnRed"])
@@ -658,7 +658,7 @@ instruction = "Wait {seconds}s"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1280, 820)
+position_in_graph = Vector2(3380, 1100)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"SetReturnBlue"])
@@ -673,7 +673,7 @@ instruction = "Wait {seconds}s"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1280, 1600)
+position_in_graph = Vector2(3380, 1880)
 _graph_ref = Object(WeakRef,"script":null)
 
 breakpointable = true
@@ -687,7 +687,7 @@ instruction = "Wait {seconds}s"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(2140, 1160)
+position_in_graph = Vector2(2100, 1120)
 _graph_ref = Object(WeakRef,"script":null)
 
 breakpointable = true
@@ -701,7 +701,7 @@ instruction = "Wait {seconds}s"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(2140, 740)
+position_in_graph = Vector2(2100, 700)
 _graph_ref = Object(WeakRef,"script":null)
 
 breakpointable = true
@@ -712,12 +712,12 @@ resource_name = "_GraphFrame_83187"
 script = ExtResource("7_fk2jh")
 frame_title = "Telekinetic Juggler Sequence (Face Target -> Color Shift -> Apply Impulse)"
 tint_color = Color(0.85, 0.42, 0.2, 0.7)
-frame_size = Vector2(640, 3180)
+frame_size = Vector2(571, 3188)
 attached_nodes = Array[StringName]([&"SetActuatorRed", &"FaceCrateA", &"LaunchCrateA", &"WaitA", &"SetActuatorBlue", &"FaceCrateB", &"LaunchCrateB", &"WaitB", &"SetReturnRed", &"FaceReturnA", &"ReturnCrateA", &"WaitC", &"SetReturnBlue", &"FaceReturnB", &"ReturnCrateB", &"WaitD"])
 is_sequence = true
 memory = true
 node_category = "frame_node"
-position_in_graph = Vector2(1220, -1440)
+position_in_graph = Vector2(3340, -1154)
 _graph_ref = Object(WeakRef,"script":null)
 
 breakpointable = true
@@ -728,10 +728,10 @@ resource_name = "_GraphFrame_Vortex"
 script = ExtResource("7_fk2jh")
 frame_title = "Gravity Vortex (Spin & Dual Parallel Impulse)"
 tint_color = Color(0.58, 0.25, 0.82, 0.7)
-frame_size = Vector2(1220, 1240)
+frame_size = Vector2(1191, 1248)
 attached_nodes = Array[StringName]([&"SetActuatorPurple", &"SpinVortex", &"ParallelLaunch", &"VortexLaunchA", &"VortexLaunchB", &"WaitVortexMid", &"ParallelReturn", &"VortexReturnA", &"VortexReturnB", &"WaitVortexEnd"])
 node_category = "frame_node"
-position_in_graph = Vector2(2080, 60)
+position_in_graph = Vector2(2060, 26)
 _graph_ref = Object(WeakRef,"script":null)
 
 breakpointable = true

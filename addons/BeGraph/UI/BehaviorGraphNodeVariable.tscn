@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://cge6m18n225eb" path="res://addons/BeGraph/Classes/misc/BehaviorGraphNodeVariableEditor.gd" id="1_w1qui"]
 [ext_resource type="Texture2D" uid="uid://gabkvvih5tb" path="res://addons/BeGraph/Icons/link_icon.svg" id="1_yo868"]
 [ext_resource type="Texture2D" uid="uid://bm47qms27capg" path="res://addons/BeGraph/Icons/unlink_icon.svg" id="2_w1qui"]
+[ext_resource type="Script" path="res://addons/BeGraph/Classes/misc/BehaviorGraphNodeVariableDropLayer.gd" id="3_droplayer"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hdwr6"]
 content_margin_left = 2.0
@@ -41,12 +42,6 @@ offset_transform_scale = Vector2(1, 0.9)
 offset_transform_visual_only = false
 theme_override_styles/panel = SubResource("StyleBoxFlat_hdwr6")
 script = ExtResource("1_w1qui")
-
-[node name="FallbackLayer" type="PanelContainer" parent="." unique_id=222060223]
-unique_name_in_owner = true
-layout_mode = 2
-mouse_behavior_recursive = 1
-theme_override_styles/panel = SubResource("StyleBoxFlat_cy14o")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1565367426]
 unique_name_in_owner = true
@@ -90,3 +85,10 @@ mouse_filter = 1
 icon = ExtResource("2_w1qui")
 flat = true
 icon_alignment = 1
+
+[node name="FallbackLayer" type="PanelContainer" parent="." unique_id=222060223]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_cy14o")
+script = ExtResource("3_droplayer")

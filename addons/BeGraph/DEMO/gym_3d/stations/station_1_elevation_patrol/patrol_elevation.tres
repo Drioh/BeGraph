@@ -46,7 +46,7 @@ script = ExtResource("3_ap")
 label = "Start"
 node_category = "access_point_node"
 output = true
-position_in_graph = Vector2(-1420, -60)
+position_in_graph = Vector2(-720, -360)
 is_starting_node = true
 _graph_ref = Object(WeakRef,"script":null)
 

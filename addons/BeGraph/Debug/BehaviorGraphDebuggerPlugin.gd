@@ -58,15 +58,15 @@ func _on_session_stopped(session_id: int) -> void:
 	s["blackboard"].clear()
 	s["current_agent"] = ""
 	s["tab"].agent_option.clear()
-	s["tab"].debug_view.build_from_data([], [])
+	s["tab"].debug_view.build_from_data([], [], [])
 	s["tab"].set_blackboard({})
 	s["tab"].running_label.text = "Running: Waiting for a Behavior Agent to report in..."
 	s["tab"].graph_label.text = "Graph: Waiting for a Behavior Agent to report in..."
 
 #region Message handling
 
-func _on_graph_message(s: Dictionary, agent_path: String, nodes_data: Array, connections_data: Array, blackboard: Dictionary, graph_name : String) -> void:
-	s["graphs"][agent_path] = [nodes_data, connections_data]
+func _on_graph_message(s: Dictionary, agent_path: String, nodes_data: Array, connections_data: Array, blackboard: Dictionary, graph_name : String, frames_data: Array = []) -> void:
+	s["graphs"][agent_path] = [nodes_data, connections_data, frames_data]
 	s["blackboard"][agent_path] = blackboard
 	s["tab"].graph_label.text = graph_name
 
@@ -76,7 +76,7 @@ func _on_graph_message(s: Dictionary, agent_path: String, nodes_data: Array, con
 		if s["agents"].size() == 1:
 			_select_agent(s, agent_path)
 	elif s["current_agent"] == agent_path:
-		s["tab"].debug_view.build_from_data(nodes_data, connections_data)
+		s["tab"].debug_view.build_from_data(nodes_data, connections_data, frames_data)
 		s["tab"].set_blackboard(blackboard)
 
 func _on_status_message(s: Dictionary, agent_path: String, deltas: Array) -> void:
@@ -117,7 +117,7 @@ func _on_removed_message(s: Dictionary, agent_path: String) -> void:
 	s["blackboard"].erase(agent_path)
 	if s["current_agent"] == agent_path:
 		s["current_agent"] = ""
-		s["tab"].debug_view.build_from_data([], [])
+		s["tab"].debug_view.build_from_data([], [], [])
 		s["tab"].set_blackboard({})
 		s["tab"].running_label.text = ""
 
@@ -138,7 +138,8 @@ func _select_agent(s: Dictionary, agent_path: String) -> void:
 	s["current_agent"] = agent_path
 	if s["graphs"].has(agent_path):
 		var g : Array = s["graphs"][agent_path]
-		s["tab"].debug_view.build_from_data(g[0], g[1])
+		var frames : Array = g[2] if g.size() > 2 else []
+		s["tab"].debug_view.build_from_data(g[0], g[1], frames)
 	s["tab"].set_blackboard(s["blackboard"].get(agent_path, {}))
 
 #endregion

@@ -196,3 +196,27 @@ func set_node_category() -> String: return "frame_node"
 func set_input() -> bool: return false
 func set_output() -> bool: return false
 func set_allows_multiple_outputs() -> bool: return false
+
+## Serializable form of frame, for debug purposes.
+func to_debug_info(graph: BehaviorGraph = null) -> Dictionary:
+	var g : BehaviorGraph = graph if graph != null else get_graph()
+	var seq_order : Array = []
+	if is_sequence and g != null:
+		seq_order = compute_sequence_order(g).map(func(n): return String(n))
+	var attached : Array = []
+	for a in attached_nodes:
+		attached.append(String(a))
+	return {
+		"name": String(resource_name),
+		"category": "frame_node",
+		"display_name": DISPLAY_NAME,
+		"title": frame_title,
+		"tint_color": tint_color,
+		"autoshrink": autoshrink,
+		"position": position_in_graph,
+		"size": frame_size,
+		"attached_nodes": attached,
+		"is_sequence": is_sequence,
+		"memory": memory,
+		"sequence_order": seq_order,
+	}

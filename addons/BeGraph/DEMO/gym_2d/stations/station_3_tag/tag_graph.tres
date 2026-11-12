@@ -294,7 +294,7 @@ instruction = "Wait {seconds}s"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1480, -320)
+position_in_graph = Vector2(1480, -300)
 _graph_ref = Object(WeakRef,"script":null)
 
 breakpointable = true
@@ -336,7 +336,7 @@ instruction = "Navigate {node} to {target}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(1880, -480)
+position_in_graph = Vector2(2080, -520)
 _graph_ref = Object(WeakRef,"script":null)
 
 _blackboard_bindings = Dictionary[StringName, StringName]({
@@ -363,7 +363,7 @@ instruction = "Set BB var {variable_name} = {value}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(3980, -60)
+position_in_graph = Vector2(4340, -60)
 _graph_ref = Object(WeakRef,"script":null)
 
 breakpointable = true
@@ -379,7 +379,7 @@ instruction = "Set {node}'s {property} value: {value}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(3020, -60)
+position_in_graph = Vector2(3080, -60)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"_GraphNode_60009"])
@@ -437,9 +437,10 @@ instruction = "Set {node}'s {property} value: {value}"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(2160, 1560)
+position_in_graph = Vector2(2040, 1240)
 _graph_ref = Object(WeakRef,"script":null)
 
+_next_ref = Array[StringName]([&"SetCooldownText"])
 _blackboard_bindings = Dictionary[StringName, StringName]({
 &"node": &"TagActor"
 })
@@ -454,7 +455,7 @@ instruction = "Set {node}'s {property}: {value} ({mode})"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(2160, 1220)
+position_in_graph = Vector2(2580, 1220)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"TagCooldownWait"])
@@ -601,7 +602,7 @@ instruction = "Wait {seconds}s"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(2540, -60)
+position_in_graph = Vector2(2560, -60)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"SetChaserColor"])
@@ -616,7 +617,7 @@ instruction = "Wait {seconds}s"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(2720, 1220)
+position_in_graph = Vector2(3140, 1220)
 _graph_ref = Object(WeakRef,"script":null)
 
 breakpointable = true
@@ -627,12 +628,12 @@ resource_name = "_GraphFrame_Relentless"
 script = ExtResource("15_frame")
 frame_title = "Relentless Chaser Cycle (Chase Until Touch -> 2s Cooldown)"
 tint_color = Color(0.85, 0.35, 0.2, 0.7)
-frame_size = Vector2(2840, 320)
-attached_nodes = Array[StringName]([&"SetChaserColor_Rel", &"SetChaserText_Rel", &"ChaseUntilTouch", &"SetCooldownText", &"TagCooldownWait"])
+frame_size = Vector2(3291, 488.0005)
+attached_nodes = Array[StringName]([&"SetChaserColor_Rel", &"SetChaserText_Rel", &"ChaseUntilTouch", &"SetCooldownText", &"TagCooldownWait", &"SetCooldownColor"])
 is_sequence = true
 memory = true
 node_category = "frame_node"
-position_in_graph = Vector2(380, 1160)
+position_in_graph = Vector2(380, 1166)
 _graph_ref = Object(WeakRef,"script":null)
 
 breakpointable = true
@@ -643,12 +644,12 @@ resource_name = "_GraphFrame_RunnerSwap"
 script = ExtResource("15_frame")
 frame_title = "Runner Phase (1s Grace Flee -> Flee Until Caught -> 2s Cooldown -> Become Chaser)"
 tint_color = Color(0.2, 0.55, 0.85, 0.7)
-frame_size = Vector2(3540, 280)
-attached_nodes = Array[StringName]([&"GraceFleeParallel", &"FleeDistCheck", &"SetSwapCooldownText", &"SwapCooldownWait", &"SetChaserColor", &"_GraphNode_60009", &"SetChaserBB"])
+frame_size = Vector2(3951.0005, 607.99994)
+attached_nodes = Array[StringName]([&"GraceFleeParallel", &"FleeDistCheck", &"SetSwapCooldownText", &"SwapCooldownWait", &"SetChaserColor", &"_GraphNode_60009", &"SetChaserBB", &"SetSwapCooldownColor"])
 is_sequence = true
 memory = true
 node_category = "frame_node"
-position_in_graph = Vector2(920, -140)
+position_in_graph = Vector2(920, -154)
 _graph_ref = Object(WeakRef,"script":null)
 
 breakpointable = true
@@ -702,7 +703,7 @@ instruction = "Set {node}'s {property}: {value} ({mode})"
 node_category = "action_node"
 input = true
 output = true
-position_in_graph = Vector2(3500, -60)
+position_in_graph = Vector2(3640, -60)
 _graph_ref = Object(WeakRef,"script":null)
 
 _next_ref = Array[StringName]([&"SetChaserBB"])
@@ -947,6 +948,12 @@ connections = Array[Dictionary]([{
 "from_port": 0,
 "keep_alive": false,
 "to_node": &"SetChaserBB",
+"to_port": 0
+}, {
+"from_node": &"SetCooldownColor",
+"from_port": 0,
+"keep_alive": false,
+"to_node": &"SetCooldownText",
 "to_port": 0
 }])
 _agent_ref = Object(WeakRef,"script":null)

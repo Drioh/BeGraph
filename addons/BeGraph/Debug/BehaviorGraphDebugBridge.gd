@@ -71,13 +71,14 @@ func _broadcast() -> void:
 ## Sends [param graph]'s full structure (once per agent): every node's name/category/display name/input-output flags/graph position/condition texts/instruction/behavior properties, the connection list, and the full blackboard snapshot. Matches the dictionary shape [method BehaviorGraphDebugView._add_debug_node_from_info] expects.
 func _send_graph_structure(path: String, graph: BehaviorGraph, graph_name : String) -> void:
 	var nodes_data : Array = graph.nodes.values().filter(func(n): return n is not BehaviorFrame).map(func(n: BehaviorNode): return n.to_debug_info())
+	var frames_data : Array = graph.nodes.values().filter(func(n): return n is BehaviorFrame).map(func(f: BehaviorFrame): return f.to_debug_info(graph))
 	var connections_data : Array = graph.connections.map(func(c: Dictionary): return {
 		"from_node": String(c["from_node"]), "from_port": c["from_port"],
 		"to_node": String(c["to_node"]), "to_port": c["to_port"],
 	})
 
 	EngineDebugger.send_message(BG.Protocol.GRAPH,
-		[path, nodes_data, connections_data, _blackboard_snapshot(graph),graph_name])
+		[path, nodes_data, connections_data, _blackboard_snapshot(graph), graph_name, frames_data])
 
 ## Sends only the nodes whose [member BehaviorNode.last_tick_time] changed since the previous broadcast for this agent, as [code][node_name:String, status:int][/code] pairs. Sends nothing at all if no node ticked since last time.
 func _send_status_delta(path: String, graph: BehaviorGraph) -> void:

@@ -26,6 +26,8 @@ var _node_condition_count : Dictionary = {}
 
 ## node name (StringName) -> the [BehaviorGraphDebugNode] visualizing it.
 var _debug_nodes : Dictionary = {}
+## frame name (StringName) -> the [BehaviorGraphDebugFrame] visualizing it.
+var _debug_frames : Dictionary = {}
 ## node name (StringName) -> its category (String), cached at build time (needed for the idle color, since data-driven mode has no live resource to ask).
 var _node_category : Dictionary = {}
 ## node category (String) -> {"bg": Color, "border": Color}, cached from [ProjectSettings].
@@ -52,6 +54,12 @@ func set_graph(graph: BehaviorGraph) -> void:
 		
 		_add_debug_node_from_info(behavior_node.to_debug_info())
 		_live_nodes[StringName(behavior_node.resource_name)] = behavior_node
+
+	for behavior_node in graph.nodes.values():
+		if behavior_node is not BehaviorFrame: continue
+		
+		_add_debug_frame_from_info(behavior_node.to_debug_info(graph))
+		_live_nodes[StringName(behavior_node.resource_name)] = behavior_node
 	
 	for c in graph.connections:
 		if !_debug_nodes.has(c["from_node"]) or !_debug_nodes.has(c["to_node"]): continue
@@ -59,10 +67,12 @@ func set_graph(graph: BehaviorGraph) -> void:
 		connect_node(c["from_node"], c["from_port"], c["to_node"], c["to_port"])
 
 ## Data-driven mode: rebuilds the view from [param nodes_data] (an Array of the dictionaries described in [method _add_debug_node_from_info]) and [param connections_data] (an Array of [code]{"from_node","from_port","to_node","to_port"}[/code] dictionaries with String node names) - the shapes [BehaviorGraphDebugBridge] sends over [EngineDebugger]. Call with two empty arrays to clear.
-func build_from_data(nodes_data: Array, connections_data: Array) -> void:
+func build_from_data(nodes_data: Array, connections_data: Array, frames_data: Array = []) -> void:
 	_clear()
 	for info in nodes_data:
 		_add_debug_node_from_info(info)
+	for frame_info in frames_data:
+		_add_debug_frame_from_info(frame_info)
 	for c in connections_data:
 		var from_node : StringName = StringName(c["from_node"])
 		var to_node : StringName = StringName(c["to_node"])
@@ -99,6 +109,8 @@ func _process(_delta: float) -> void:
 	
 	for key : StringName in _debug_nodes.keys():
 		_update_status_visual(key)
+	for key : StringName in _debug_frames.keys():
+		_update_frame_status_visual(key)
 
 #region Building
 
@@ -106,11 +118,12 @@ func _clear() -> void:
 	if connections.size() > 0:
 		clear_connections()
 	for child in get_children().duplicate():
-		if child is not GraphNode: continue
+		if child is not GraphElement: continue
 		
 		remove_child(child)
 		child.queue_free()
 	_debug_nodes.clear()
+	_debug_frames.clear()
 	_node_category.clear()
 	_node_condition_count.clear()
 	_node_state.clear()
@@ -130,6 +143,34 @@ func _add_debug_node_from_info(info: Dictionary) -> void:
 	_node_category[key] = info.get("category", "")
 	_apply_category_color(gn, _node_category[key])
 	_debug_nodes[key] = gn
+
+## Instantiates [BehaviorGraphDebugFrame] for [param info], attaches enclosed nodes, and sets sequence badges.
+func _add_debug_frame_from_info(info: Dictionary) -> void:
+	var key : StringName = StringName(info["name"])
+	var frame := BehaviorGraphDebugFrame.new()
+	add_child(frame)
+	move_child(frame, 0)
+	frame.setup(info)
+	_debug_frames[key] = frame
+
+	var attached : Array = info.get("attached_nodes", [])
+	for element_name in attached:
+		var s_name := StringName(element_name)
+		var node_element : BehaviorGraphDebugNode = _debug_nodes.get(s_name, null)
+		if node_element == null:
+			continue
+		attach_graph_element_to_frame(node_element.name, frame.name)
+		frame.track(node_element)
+
+	if frame.autoshrink and not attached.is_empty():
+		frame.autoshrink_enabled = true
+
+	if info.get("is_sequence", false):
+		var seq_order : Array = info.get("sequence_order", [])
+		for i in seq_order.size():
+			var step_node : BehaviorGraphDebugNode = _debug_nodes.get(StringName(seq_order[i]), null)
+			if step_node != null:
+				step_node.set_sequence_index(i + 1)
 
 ## Reads (and caches) the background/border colors this addon already stores in [ProjectSettings] for [param category] - the same ones the editor's own [BehaviorGraphNodeBase] uses - and applies them to [param gn]'s panel/slots.
 func _apply_category_color(gn: GraphNode, category: String) -> void:
@@ -202,4 +243,19 @@ func _status_text(status: int) -> String:
 func _set_slot_color(gn: GraphNode, slot: int, color: Color) -> void:
 	gn.set("slot/%s/left_color" % slot, color)
 	gn.set("slot/%s/right_color" % slot, color)
+
+## Recolors [param frame_name]'s [BehaviorGraphDebugFrame] from [member _node_state], fading from the status color back to its idle tint.
+func _update_frame_status_visual(frame_name: StringName) -> void:
+	var frame : BehaviorGraphDebugFrame = _debug_frames.get(frame_name)
+	if frame == null:
+		return
+	var state = _node_state.get(frame_name)
+	if state == null:
+		frame.update_status(frame.idle_tint, 0.0)
+		return
+
+	var age : float = (Time.get_ticks_msec() - state["since"]) / 1000.0
+	var freshness : float = clamp(1.0 - age / FADE_DURATION, 0.0, 1.0)
+	var status_color : Color = STATUS_COLORS.get(state["status"], frame.idle_tint)
+	frame.update_status(status_color, freshness)
 #endregion

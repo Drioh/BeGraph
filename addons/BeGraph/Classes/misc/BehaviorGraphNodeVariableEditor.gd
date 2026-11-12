@@ -82,6 +82,10 @@ var linked_property : BlackboardVariable = null:
 func setup_variable_editor(n : BehaviorNode,property:Dictionary,bb:Array[BlackboardVariable]) -> bool:
 	node = n
 	
+	if fallback_layer:
+		if not (fallback_layer is BehaviorGraphNodeVariableDropLayer):
+			fallback_layer.set_script(preload("res://addons/BeGraph/Classes/misc/BehaviorGraphNodeVariableDropLayer.gd"))
+		fallback_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	refresh_editor(property)
 
 	size_flags_horizontal=Control.SIZE_SHRINK_BEGIN
@@ -292,23 +296,34 @@ func _on_unlink_pressed() -> void:
 	node.set_node_property_blackboard_key(key)
 	_commit_blackboard_binding(before_key, &"")
 
-## Returns [code]true[/code] if [param data] represents a blackboard variable resource with a value type compatible with [member type].
-func _can_drop_data(at_position, data):
-	if data is not Dictionary:
+func _is_blackboard_variable(res: Variant) -> bool:
+	if not (res is Resource):
 		return false
-	if not data.has("resource"):
-		return false
+	if res is BlackboardVariable:
+		return true
+	return "value" in res and "name" in res
 
-	var global_pos = get_global_transform() * at_position
-	return _get_slot_at(self, global_pos) != null and BG.is_type_compatible(typeof(data["resource"].value), type)
+## Returns [code]true[/code] if [param data] represents a blackboard variable resource with a value type compatible with [member type].
+func _can_drop_data(_at_position, data):
+	if data is not Dictionary or not data.has("resource"):
+		return false
+	var res = data["resource"]
+	if not _is_blackboard_variable(res):
+		return false
+	return BG.is_type_compatible(typeof(res.value), type)
 
 ## Handles a successful drop of a blackboard variable resource: binds [member node]'s property to the dropped variable's name via [method BehaviorNode.set_node_property_blackboard_key] and updates [member linked_property]/[member bb_reference] accordingly.
-func _drop_data(at_position, data):
-	var k : StringName = data["resource"].name
+func _drop_data(_at_position, data):
+	if data is not Dictionary or not data.has("resource"):
+		return
+	var res = data["resource"]
+	if not _is_blackboard_variable(res):
+		return
+	var k : StringName = res.name
 	var before_key : StringName = node.get_blackboard_key(key)
 
 	bb_reference.text = String(k)
-	linked_property=data["resource"]
+	linked_property = res
 	node.set_node_property_blackboard_key(key, k)
 
 	_commit_blackboard_binding(before_key, k)
@@ -346,19 +361,6 @@ func update_bb_value(v:Variant)->void:
 		node.set_node_property_blackboard_key(key)
 		linked=false
 
-## Recursively searches [param node]'s [Control] descendants for the one whose global rect contains [param global_pos], returning the first (deepest) match found, or [code]null[/code] if none does.
-func _get_slot_at(node, global_pos):
-	for child in node.get_children():
-		if child is Control:
-			if child.get_global_rect().has_point(global_pos):
-				# if leaf, return
-				return child
-			# continue recursion
-			var found = _get_slot_at(child, global_pos)
-			if found:
-				return found
-	return null
-
 ## Callback for the owning [BehaviorGraph]'s [signal Resource.changed]: unbinds [member linked_property] (reverting to the plain value editor) if it is no longer present in [param blackboard].
 func check_property(blackboard:Array[BlackboardVariable])->void:
 	if linked_property == null: return
@@ -370,17 +372,27 @@ func check_property(blackboard:Array[BlackboardVariable])->void:
 ## Provides drag-and-drop visual feedback: while a compatible/incompatible blackboard variable resource is being dragged over this control, tints [member fallback_layer] accordingly; clears the tint once the drag ends.
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_DRAG_BEGIN:
-		var drag_data = get_viewport().gui_get_drag_data()
-		if not drag_data.has("resource"):
+		var vp = get_viewport()
+		if vp == null:
+			return
+		var drag_data = vp.gui_get_drag_data()
+		if not (drag_data is Dictionary) or not drag_data.has("resource"):
+			return
+		var res = drag_data["resource"]
+		if not _is_blackboard_variable(res):
 			return
 		
-		var compatible : bool = BG.is_type_compatible(typeof(drag_data["resource"].value), type)
+		fallback_layer.mouse_filter = Control.MOUSE_FILTER_STOP
+		var compatible : bool = BG.is_type_compatible(typeof(res.value), type)
 		var prefix : String = "" if compatible else "not_"
 		var bg_color : Color = ProjectSettings.get_setting("BeGraph/colors/graph_editor/%sallowed_variable/background"%prefix)
 		var border_color : Color = ProjectSettings.get_setting("BeGraph/colors/graph_editor/%sallowed_variable/border"%prefix)
-		fallback_layer.set_indexed("theme_override_styles/panel:bg_color",bg_color)
-		fallback_layer.set_indexed("theme_override_styles/panel:border_color",border_color)
+		var tint_bg : Color = bg_color if bg_color.a < 1.0 else Color(border_color.r, border_color.g, border_color.b, 0.22)
+		fallback_layer.set_indexed("theme_override_styles/panel:bg_color", tint_bg)
+		fallback_layer.set_indexed("theme_override_styles/panel:border_color", border_color)
 
 	if what == NOTIFICATION_DRAG_END:
-		fallback_layer.set_indexed("theme_override_styles/panel:bg_color",Color(0.0, 0.0, 0.0, 0.0))
-		fallback_layer.set_indexed("theme_override_styles/panel:border_color",Color(0.0, 0.0, 0.0, 0.0))
+		if is_instance_valid(fallback_layer):
+			fallback_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			fallback_layer.set_indexed("theme_override_styles/panel:bg_color", Color(0.0, 0.0, 0.0, 0.0))
+			fallback_layer.set_indexed("theme_override_styles/panel:border_color", Color(0.0, 0.0, 0.0, 0.0))
