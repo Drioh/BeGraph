@@ -29,6 +29,7 @@ nodes_used = PackedStringArray("Access Point", "Distance", "Line Of Sight", "Beh
 station_color = Color(0.95, 0.35, 0.25, 1)
 
 [node name="ArenaFloor" type="ColorRect" parent="." unique_id=632019740]
+z_index = -1
 offset_left = -280.0
 offset_top = -140.0
 offset_right = 280.0
@@ -56,6 +57,12 @@ volume_db = -8.0
 
 [node name="BehaviorAgent" type="Node" parent="SentryActor" unique_id=1037011001]
 script = ExtResource("3_agent")
+bb_props = Dictionary[StringName, Variant]({
+&"overridable_blackboard_properties/AudioPlayer": NodePath("../AudioStreamPlayer"),
+&"overridable_blackboard_properties/ProjectilesParent": NodePath("../../ProjectilesContainer"),
+&"overridable_blackboard_properties/RayCast": NodePath("../RayCast2D"),
+&"overridable_blackboard_properties/Self": NodePath("..")
+})
 behavior_graph = ExtResource("4_sentry_graph")
 starting_point = 0
 overridable_blackboard_properties/Self = NodePath("..")

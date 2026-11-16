@@ -10,9 +10,11 @@
 size = Vector2(560, 320)
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_yllxo"]
-vertices = PackedVector2Array(162, 124, 260, 165, -260, 165, 78, 124, -78, 124, -162, 124, 162, 14, 162, -94, 260, -135, -260, -135, 78, -94, 50, 49, 50, -19, 78, 16, -78, 14, -78, -94, -50, -19, -50, 49, -162, 16, -78, 16, -162, 14, -162, -94, 162, 16, 78, 14)
-polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3), PackedInt32Array(4, 3, 2), PackedInt32Array(5, 4, 2), PackedInt32Array(6, 7, 8, 1), PackedInt32Array(9, 8, 7, 10), PackedInt32Array(11, 12, 13, 3), PackedInt32Array(14, 15, 16, 17), PackedInt32Array(5, 2, 9, 18), PackedInt32Array(11, 3, 4, 17), PackedInt32Array(17, 4, 19), PackedInt32Array(14, 17, 19), PackedInt32Array(20, 14, 19, 18), PackedInt32Array(20, 18, 9), PackedInt32Array(21, 20, 9), PackedInt32Array(12, 16, 15, 10), PackedInt32Array(1, 0, 22), PackedInt32Array(6, 1, 22), PackedInt32Array(23, 6, 22, 13), PackedInt32Array(23, 13, 12), PackedInt32Array(10, 23, 12), PackedInt32Array(9, 10, 15), PackedInt32Array(21, 9, 15)])
-outlines = Array[PackedVector2Array]([PackedVector2Array(-260, -135, 260, -135, 260, 165, -260, 165), PackedVector2Array(-162, -94, -78, -94, -78, 14, -162, 14), PackedVector2Array(78, -94, 162, -94, 162, 14, 78, 14), PackedVector2Array(-162, 16, -78, 16, -78, 124, -162, 124), PackedVector2Array(78, 16, 162, 16, 162, 124, 78, 124), PackedVector2Array(-50, -19, 50, -19, 50, 49, -50, 49)])
+vertices = PackedVector2Array(162, 124, 247, 152, -247, 152, 78, 124, -78, 124, -162, 124, 162, 14, 162, -94, 247, -122, -247, -122, 78, -94, 50, 49, 50, -19, 78, 16, -78, 14, -78, -94, -50, -19, -50, 49, -78, 16, -162, 16, -162, 14, -162, -94, 162, 16, 78, 14)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3), PackedInt32Array(4, 3, 2), PackedInt32Array(5, 4, 2), PackedInt32Array(6, 7, 8, 1), PackedInt32Array(9, 8, 7, 10), PackedInt32Array(11, 12, 13, 3), PackedInt32Array(14, 15, 16, 17), PackedInt32Array(11, 3, 4, 17), PackedInt32Array(17, 4, 18), PackedInt32Array(14, 17, 18), PackedInt32Array(5, 2, 9, 19), PackedInt32Array(20, 14, 18, 19), PackedInt32Array(20, 19, 9), PackedInt32Array(21, 20, 9), PackedInt32Array(1, 0, 22), PackedInt32Array(6, 1, 22), PackedInt32Array(6, 22, 13, 23), PackedInt32Array(23, 13, 12), PackedInt32Array(10, 23, 12), PackedInt32Array(10, 12, 16, 15), PackedInt32Array(9, 10, 15), PackedInt32Array(9, 15, 21)])
+outlines = Array[PackedVector2Array]([PackedVector2Array(-265, -140, 265, -140, 265, 170, -265, 170)])
+parsed_geometry_type = 1
+parsed_collision_mask = 2
 agent_radius = 18.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_pillar"]
@@ -39,6 +41,7 @@ nodes_used = PackedStringArray("Access Point", "Area Detect", "BehaviorFrame", "
 station_color = Color(0.95, 0.45, 0.15, 1)
 
 [node name="ArenaFloor" type="ColorRect" parent="." unique_id=737775180]
+z_index = -1
 offset_left = -265.0
 offset_top = -140.0
 offset_right = 265.0

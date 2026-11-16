@@ -21,7 +21,6 @@ func _ready() -> void:
 
 func _find_player() -> void:
 	if not player or not is_instance_valid(player):
-		print(get_tree().get_first_node_in_group("player"))
 		player = get_tree().get_first_node_in_group("player") if get_tree() else null
 	if not player:
 		player = get_node_or_null("../Player")

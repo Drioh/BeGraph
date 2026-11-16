@@ -44,7 +44,7 @@ Ensure the addon is located at `res://addons/BeGraph/` and enable **BeGraph** in
 3. In the Inspector, assign your `my_first_graph.tres` to the **`Behavior Graph`** property.
 4. Select your **`Starting Point`** from the dropdown.
 5. Set **`Graph Process Mode`** to `PHYSICS` (for kinematic bodies) or `IDLE`.
-6. Press **Play Scene** (`F6`) to watch your AI execute!
+6. Press **Play Scene** to watch your AI execute!
 
 ---
 
@@ -73,14 +73,14 @@ Comprehensive tutorials, architecture deep dives, and API references are availab
 
 BeGraph comes pre-packaged with two interactive showcase arenas demonstrating real-world game AI setups:
 
-### Gym 2D (`res://addons/BeGraph/DEMO/gym_2d/gym_2d.tscn`)
+### Gym 2D
 - **Station 1 (Patrol)**: 4 agents demonstrating Once, Loop, Ping-Pong, and Ping-Pong Loop path iteration.
 - **Station 2 (Sentry)**: Proximity detection, RayCast2D line-of-sight checks, warning sound effects, and projectile firing.
 - **Station 3 (Tag Arena)**: Dynamic Chaser vs. Runner state machine powered by Godot 2D Navigation polygons.
 - **Station 4 (Field of View)**: Stealth vision cone with sweeping rotation and suspicious/detected alert states.
 - **Station 5 (Ambient)**: Procedural idle behaviors combining random selectors, tweening squashes, and pauses.
 
-### Gym 3D (`res://addons/BeGraph/DEMO/gym_3d/gym_3d.tscn`)
+### Gym 3D
 - **Station 1 (Elevation Patrol)**: 3D ramp climbing with summit particle system triggers.
 - **Station 2 (3D Sentry)**: 3D spherical perception, dynamic spotlight modulation, spatial audio, and 3D projectile spawning.
 - **Station 3 (Physics Impulse)**: Applying directional impulse forces to Jolt `RigidBody3D` crates inside a trigger pit.

@@ -23,6 +23,7 @@ nodes_used = PackedStringArray("Access Point", "Random Selector", "Sequence", "P
 station_color = Color(0.85, 0.4, 0.85, 1)
 
 [node name="FloorArea" type="ColorRect" parent="." unique_id=61924377]
+z_index = -1
 offset_left = -220.0
 offset_top = -140.0
 offset_right = 220.0

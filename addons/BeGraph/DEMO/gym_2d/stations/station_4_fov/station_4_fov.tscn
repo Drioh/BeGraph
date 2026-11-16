@@ -20,6 +20,7 @@ nodes_used = PackedStringArray("Access Point", "Field Of View", "Sequence", "Rot
 station_color = Color(0.9, 0.7, 0.15, 1)
 
 [node name="FloorArea" type="ColorRect" parent="." unique_id=1944436491]
+z_index = -1
 offset_left = -260.0
 offset_top = -140.0
 offset_right = 260.0
