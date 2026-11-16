@@ -91,7 +91,7 @@ _next_ref = Array[StringName]([&"TxtSquish", &"TxtColor", &"TxtRest"])
 breakpointable = true
 mutable = true
 decorator = {
-"blackboard_key": &"animating",
+"blackboard_key": &"",
 "type": "condition"
 }
 
@@ -111,7 +111,7 @@ _next_ref = Array[StringName]([&"TxtSquish", &"TxtColor"])
 breakpointable = true
 mutable = true
 decorator = {
-"blackboard_key": &"animating",
+"blackboard_key": &"",
 "type": "condition"
 }
 
@@ -131,7 +131,7 @@ _next_ref = Array[StringName]([&"TxtSquish", &"TxtColor", &"TxtRest"])
 breakpointable = true
 mutable = true
 decorator = {
-"blackboard_key": &"animating",
+"blackboard_key": &"",
 "type": "condition"
 }
 

@@ -12,6 +12,8 @@ config_version=5
 
 general_settings/custom_nodes_paths=PackedStringArray("res://Additional Nodes/")
 general_settings/runtime_debug_overlay_enabled=true
+general_settings/custom_categories=PackedStringArray("combat", "navigation")
+colors/node_colors/comment_node/border=Color(0.7882353, 0.5647059, 0.27058825, 1)
 
 [application]
 
@@ -26,8 +28,8 @@ BeGraphDebugBridge="*uid://dfticjtnj7mb6"
 
 [display]
 
-window/size/viewport_width=1920
-window/size/viewport_height=1080
+window/size/viewport_width=1270
+window/size/viewport_height=720
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 

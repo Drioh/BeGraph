@@ -149,7 +149,7 @@ _blackboard_bindings = Dictionary[StringName, StringName]({
 breakpointable = true
 mutable = true
 decorator = {
-"blackboard_key": &"moving",
+"blackboard_key": &"",
 "condition_expected": 0,
 "type": "condition"
 }
@@ -176,7 +176,7 @@ _blackboard_bindings = Dictionary[StringName, StringName]({
 breakpointable = true
 mutable = true
 decorator = {
-"blackboard_key": &"moving",
+"blackboard_key": &"",
 "condition_expected": 0,
 "type": "condition"
 }
