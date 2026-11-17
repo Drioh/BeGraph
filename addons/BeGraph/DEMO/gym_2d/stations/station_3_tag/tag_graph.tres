@@ -35,7 +35,7 @@ resource_name = "CollisionShape"
 script = ExtResource("1_bb")
 name = &"CollisionShape"
 export_variable = true
-value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym2D/Stations/Station3_Tag/ArenaZone/CollisionShape2D")
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Station3_Tag/ArenaZone/CollisionShape2D")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_iuwqy"]
@@ -43,35 +43,35 @@ resource_name = "EscapeTarget"
 script = ExtResource("1_bb")
 name = &"EscapeTarget"
 export_variable = true
-value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym2D/Stations/Station3_Tag/EscapeTarget")
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Station3_Tag/EscapeTarget")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_57hyn"]
 resource_name = "ArenaZone"
 script = ExtResource("1_bb")
 name = &"ArenaZone"
-value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym2D/Stations/Station3_Tag/ArenaZone")
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Station3_Tag/ArenaZone")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_lw1ib"]
 resource_name = "TagActor"
 script = ExtResource("1_bb")
 name = &"TagActor"
-value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym2D/Stations/Station3_Tag/TagActor")
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Station3_Tag/TagActor")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_747d8"]
 resource_name = "NavigationAgent"
 script = ExtResource("1_bb")
 name = &"NavigationAgent"
-value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym2D/Stations/Station3_Tag/TagActor/NavigationAgent2D")
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Station3_Tag/TagActor/NavigationAgent2D")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="Resource_2wtov"]
 resource_name = "StatusLabel"
 script = ExtResource("1_bb")
 name = &"StatusLabel"
-value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Gym2D/Stations/Station3_Tag/TagActor/StatusLabel")
+value = NodePath("/root/@EditorNode@19513/@Panel@14/@VBoxContainer@15/DockVSplitMain/DockHSplitMain/@VBoxContainer@37/DockVSplitCenter/@VSplitContainer@101/@VBoxContainer@102/@EditorMainScreen@160/MainScreen/@CanvasItemEditor@10138/@VSplitContainer@9897/@HSplitContainer@9899/@HSplitContainer@9901/@Control@9902/@SubViewportContainer@9903/@SubViewport@9904/Station3_Tag/TagActor/StatusLabel")
 metadata/_custom_type_script = "uid://da0t4052e3fsp"
 
 [sub_resource type="Resource" id="SubResource_ap_0"]

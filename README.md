@@ -3,7 +3,7 @@
 ![BeGraph Hero Banner](docs/media/begraph_hero_banner.png)
 [![Godot Engine](https://img.shields.io/badge/Godot-4.x-blue.svg)](https://godotengine.org) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Status: Active](https://img.shields.io/badge/Status-Active-brightgreen.svg)]()
 
-**BeGraph** is a high-performance visual Behavior Graph and Behavior Tree engine crafted for **Godot 4**. It merges the intuitive readability of visual graph canvases with the modularity, deterministic execution, and reactive state management of production-grade game AI.
+**BeGraph** is a high-performance visual Behavior Graph engine crafted for **Godot 4**. It merges the intuitive readability of visual graph canvases with the modularity, deterministic execution, and reactive state management of production-grade game AI.
 
 Whether you are crafting intricate stealth patrol logic in 2D, orchestrating boss fight phase machines, or simulating aerial 3D drone navigation with Jolt Physics, BeGraph gives you the tools to design, test, and debug your AI without leaving Godot.
 
