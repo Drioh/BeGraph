@@ -59,13 +59,32 @@ func remove_node(node: BehaviorNode) -> void:
 	
 	nodes.erase(node.resource_name)
 
+## Returns [code]true[/code] if a connection with the same endpoints and ports exists in [member connections].
+func has_connection(connection: Dictionary) -> bool:
+	var f_node := StringName(connection.get("from_node", &""))
+	var f_port := int(connection.get("from_port", 0))
+	var t_node := StringName(connection.get("to_node", &""))
+	var t_port := int(connection.get("to_port", 0))
+	for c in connections:
+		if StringName(c.get("from_node", &"")) == f_node and int(c.get("from_port", 0)) == f_port and StringName(c.get("to_node", &"")) == t_node and int(c.get("to_port", 0)) == t_port:
+			return true
+	return false
+
 ## Appends [param connection] (a [code]{from_node, from_port, to_node, to_port}[/code] [Dictionary]) to [member connections].
 func add_connection(connection:Dictionary):
-	connections.append(connection)
+	if not has_connection(connection):
+		connections.append(connection)
 
-## Removes [param connection] from [member connections].
+## Removes [param connection] from [member connections], matching by endpoints and ports regardless of extra keys (e.g. [code]keep_alive[/code]).
 func remove_connection(connection:Dictionary):
-	connections.erase(connection)
+	var f_node := StringName(connection.get("from_node", &""))
+	var f_port := int(connection.get("from_port", 0))
+	var t_node := StringName(connection.get("to_node", &""))
+	var t_port := int(connection.get("to_port", 0))
+	for i in range(connections.size() - 1, -1, -1):
+		var c : Dictionary = connections[i]
+		if StringName(c.get("from_node", &"")) == f_node and int(c.get("from_port", 0)) == f_port and StringName(c.get("to_node", &"")) == t_node and int(c.get("to_port", 0)) == t_port:
+			connections.remove_at(i)
 
 ## Returns the [BehaviorNode] in [member nodes] whose [member Resource.resource_name] matches [param name], or [code]null[/code] (logging an error) if none is found.
 func get_node(name:StringName)->BehaviorNode:
@@ -149,12 +168,21 @@ func setup_runtime(agent: Node, source_graph: BehaviorGraph = null) -> void:
 	set_agent(agent)
 	_resolved_nodes_cache.clear()
 	_rebuild_blackboard_map()
+
+	for node in nodes.values():
+		if node == null: continue
+		node._next_ref.clear()
+		for cond in node.conditions:
+			cond["next"] = null
 	
 	for c in connections:
-		var from_node : BehaviorNode = get_node(c["from_node"])
-		var to_node : BehaviorNode = get_node(c["to_node"])
+		var from_name := StringName(c["from_node"])
+		var to_name := StringName(c["to_node"])
+		if not nodes.has(from_name) or not nodes.has(to_name):
+			continue
+		var from_node : BehaviorNode = nodes[from_name]
+		var to_node : BehaviorNode = nodes[to_name]
 		if from_node == null or to_node == null:
-			push_error("BehaviorGraph: Can't build connection %s -> %s" % [c["from_node"], c["to_node"]])
 			continue
 		
 		from_node.add_next(to_node, c["from_port"])

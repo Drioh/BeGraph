@@ -74,7 +74,7 @@ _blackboard_bindings = Dictionary[StringName, StringName]({
 breakpointable = true
 mutable = true
 decorator = {
-"blackboard_key": &"",
+"blackboard_key": &"arrived",
 "condition_expected": 1.0,
 "type": "condition"
 }

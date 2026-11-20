@@ -152,19 +152,45 @@ func set_graph(graph: BehaviorGraph) -> void:
 		remove_child(child)
 		child.free()
 	current_graph = graph
+	if current_graph == null:
+		return
 
 	var frames : Array[BehaviorFrame] = []
 	for node_to_load in current_graph.nodes.values():
+		if node_to_load == null: continue
+		node_to_load._next_ref.clear()
+		for cond in node_to_load.conditions:
+			cond["next"] = null
 		if node_to_load is BehaviorFrame:
 			frames.append(node_to_load)
 		else:
 			load_node(node_to_load)
+
+	var valid_connections : Array[Dictionary] = []
 	for connection in current_graph.connections:
+		var from_name := StringName(connection.get("from_node", &""))
+		var to_name := StringName(connection.get("to_node", &""))
+		if not current_graph.nodes.has(from_name) or not current_graph.nodes.has(to_name):
+			continue
+		var normalized : Dictionary = {
+			"from_node": from_name,
+			"from_port": int(connection.get("from_port", 0)),
+			"to_node": to_name,
+			"to_port": int(connection.get("to_port", 0)),
+			"keep_alive": false,
+		}
+		valid_connections.append(normalized)
+		var f_bn : BehaviorNode = current_graph.nodes[from_name]
+		var t_bn : BehaviorNode = current_graph.nodes[to_name]
+		if f_bn != null and t_bn != null:
+			f_bn.add_next(t_bn, normalized["from_port"])
 		connect_node(
-			connection["from_node"], 
-			connection["from_port"], 
-			connection["to_node"], 
-			connection["to_port"])
+			normalized["from_node"], 
+			normalized["from_port"], 
+			normalized["to_node"], 
+			normalized["to_port"])
+	current_graph.connections = valid_connections
+
 	for frame_node in frames:
 		load_frame(frame_node)
 
@@ -447,8 +473,7 @@ func _do_connect(c: Dictionary) -> void:
 	if f_node == null or t_node == null: return
 	
 	f_node.node.add_next(t_node.node, c["from_port"])
-	if c not in current_graph.connections:
-		current_graph.add_connection(c)
+	current_graph.add_connection(c)
 		
 	connect_node(c["from_node"], c["from_port"], c["to_node"], c["to_port"])
 	_refresh_frame_buttons()
@@ -874,32 +899,71 @@ func _clone_behavior_node(source : BehaviorNode) -> BehaviorNode:
 		condition["next"] = null
 	return copy
 
-func _clone_nodes_and_connections(sources: Array, source_connections: Array, offset: Vector2, valid_bb_keys: Array[StringName] = []) -> Dictionary:
+func _clone_nodes_and_connections(sources: Array, source_connections: Array, offset: Vector2, valid_bb_keys: Array[StringName] = [], key_aliases: Dictionary = {}) -> Dictionary:
 	var name_map : Dictionary = {} # old name -> new name
+	var copy_by_name : Dictionary = {} # new name -> BehaviorNode
 	var copies : Array[BehaviorNode] = []
 	for src : BehaviorNode in sources:
 		var copy : BehaviorNode = _clone_behavior_node(src)
 		var new_name : StringName = _generate_unique_node_name()
 		while name_map.values().has(new_name):
 			new_name = _generate_unique_node_name()
-		name_map[StringName(src.resource_name)] = new_name
+		var orig_name := StringName(src.resource_name)
+		name_map[orig_name] = new_name
+		if key_aliases.has(src):
+			name_map[StringName(key_aliases[src])] = new_name
 		copy.resource_name = new_name
 		copy.position_in_graph = src.position_in_graph + offset
 		_unbind_blackboard_properties(copy, valid_bb_keys)
+		copy_by_name[new_name] = copy
 		copies.append(copy)
 
 	var new_connections : Array[Dictionary] = []
+	var added_conn_keys : Dictionary = {}
+	var append_remapped_connection := func(from_new: StringName, from_port: int, to_new: StringName, to_port: int) -> void:
+		var sig := "%s:%d->%s:%d" % [from_new, from_port, to_new, to_port]
+		if added_conn_keys.has(sig):
+			return
+		added_conn_keys[sig] = true
+		new_connections.append({
+			"from_node": from_new,
+			"from_port": from_port,
+			"to_node": to_new,
+			"to_port": to_port,
+			"keep_alive": false,
+		})
+		var from_copy : BehaviorNode = copy_by_name.get(from_new, null)
+		var to_copy : BehaviorNode = copy_by_name.get(to_new, null)
+		if from_copy != null and to_copy != null:
+			from_copy.add_next(to_copy, from_port)
+
 	for c in source_connections:
 		var from_orig := StringName(c["from_node"])
 		var to_orig := StringName(c["to_node"])
 		if not name_map.has(from_orig) or not name_map.has(to_orig):
 			continue
-		new_connections.append({
-			"from_node": name_map[from_orig],
-			"from_port": c["from_port"],
-			"to_node": name_map[to_orig],
-			"to_port": c["to_port"],
-		})
+		append_remapped_connection.call(name_map[from_orig], int(c["from_port"]), name_map[to_orig], int(c["to_port"]))
+
+	# Also remap any successor references stored directly in _next_ref or conditions on the source nodes.
+	for src : BehaviorNode in sources:
+		var from_orig := StringName(src.resource_name)
+		if not name_map.has(from_orig):
+			continue
+		var from_new : StringName = name_map[from_orig]
+		if src.output:
+			for next_orig in src._next_ref:
+				var target_orig := StringName(next_orig)
+				if name_map.has(target_orig):
+					append_remapped_connection.call(from_new, 0, name_map[target_orig], 0)
+		else:
+			for port_idx in src.conditions.size():
+				var cond_next = src.conditions[port_idx].get("next", null)
+				if cond_next == null or StringName(cond_next) == &"":
+					continue
+				var target_orig := StringName(cond_next)
+				if name_map.has(target_orig):
+					append_remapped_connection.call(from_new, port_idx, name_map[target_orig], 0)
+
 	return {"copies": copies, "connections": new_connections}
 
 ## Top-left corner (graph coordinates) of the bounding box of the snapshot's nodes.
@@ -941,11 +1005,13 @@ func embed_graph(source: BehaviorGraph, include_access_points: bool = false) -> 
 		return null
 
 	var sources : Array[BehaviorNode] = []
-	for n: BehaviorNode in source.nodes.values():
-		var src : BehaviorNode= n 
+	var key_aliases : Dictionary = {}
+	for n_key in source.nodes:
+		var src : BehaviorNode = source.nodes[n_key]
 		if src == null or src is BehaviorFrame: continue
 		if src.node_category == "access_point_node" and not include_access_points: continue
 		
+		key_aliases[src] = StringName(n_key)
 		sources.append(src)
 	
 	if sources.is_empty():
@@ -958,7 +1024,7 @@ func embed_graph(source: BehaviorGraph, include_access_points: bool = false) -> 
 		bounds = bounds.expand(src.position_in_graph)
 	var offset : Vector2 = (scroll_offset + size * 0.5) / zoom - bounds.get_center()
 
-	var cloned : Dictionary = _clone_nodes_and_connections(sources, source.connections, offset)
+	var cloned : Dictionary = _clone_nodes_and_connections(sources, source.connections, offset, [], key_aliases)
 	var copies : Array[BehaviorNode] = cloned["copies"]
 	var new_connections : Array[Dictionary] = cloned["connections"]
 

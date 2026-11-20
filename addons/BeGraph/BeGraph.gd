@@ -176,12 +176,16 @@ func _on_abandon_confirmed() -> void:
 func _on_abandon_canceled() -> void:
 	var graph : BehaviorGraph = _pending_graph
 	_pending_graph = null
-	# Reload the abandoned graph from disk so its in-memory modifications are
-	# evicted from the ResourceLoader cache. Without this, re-opening the same
-	# file later would return the same (dirty) in-memory instance.
+	# Unload the old graph's UI controls first so their signal connections (e.g.
+	# BehaviorGraphDecoratorTree listening to graph.changed) are torn down before
+	# the resource and its sub-resources are reloaded from disk.
 	var old_graph : BehaviorGraph = begraph_dock.loaded_graph
-	if old_graph != null and old_graph.resource_path != "" and ResourceLoader.exists(old_graph.resource_path):
-		ResourceLoader.load(old_graph.resource_path, "", ResourceLoader.CACHE_MODE_REPLACE)
+	var old_path : String = old_graph.resource_path if old_graph != null else ""
+	begraph_dock.load_graph(null)
+	if old_path != "" and ResourceLoader.exists(old_path):
+		var reloaded := ResourceLoader.load(old_path, "", ResourceLoader.CACHE_MODE_REPLACE_DEEP) as BehaviorGraph
+		if graph == old_graph and reloaded != null:
+			graph = reloaded
 	begraph_dock.load_graph(graph)
 	_confirm_dialog.hide()
 

@@ -258,17 +258,11 @@ func _refresh_decorator_tree() -> void:
 			var item: TreeItem = _decorator_rows["delay"]
 			item.set_range(2, dec.get("seconds", 1.0))
 			item.get_child(0).set_range(2, int(dec.get("delay_mode", 0)))
-		"condition":
-			var item: TreeItem = _decorator_rows["condition"]
-			var names : PackedStringArray = _get_boolean_blackboard_names()
-			var options : PackedStringArray = PackedStringArray(["(none)"])
-			options.append_array(names)
-			item.set_text(2, ",".join(options))
 
-			var key : String = str(dec.get("blackboard_key", &""))
-			var idx : int = names.find(key)
-			item.set_range(2, idx + 1 if idx != -1 else 0)
-			item.get_child(0).set_range(2, int(dec.get("condition_expected", 0)))
+	if _decorator_rows.has("condition"):
+		var cond_item: TreeItem = _decorator_rows["condition"]
+		_refresh_condition_options(cond_item)
+		cond_item.get_child(0).set_range(2, int(dec.get("condition_expected", 0)))
 
 	_decorator_syncing = false
 
@@ -283,7 +277,14 @@ func _on_decorator_item_edited() -> void:
 	if column == 0:
 		var type: String = str(item.get_metadata(0))
 		if item.is_checked(0):
+			var prev_bb_key: StringName = StringName(_node.decorator.get("blackboard_key", &""))
+			var prev_expected: int = int(_node.decorator.get("condition_expected", 0))
 			_node.set_decorator_type(type)
+			if type == "condition":
+				if prev_bb_key != &"" and _get_boolean_blackboard_names().has(String(prev_bb_key)):
+					_node.set_decorator_field(&"blackboard_key", prev_bb_key)
+				if prev_expected != 0:
+					_node.set_decorator_field(&"condition_expected", prev_expected)
 		elif str(_node.decorator.get("type", "none")) == type:
 			_node.set_decorator_type("none")
 		_refresh_decorator_tree()
@@ -335,6 +336,8 @@ func _on_item_mouse_selected(position: Vector2, _mouse_button_index: int) -> voi
 
 ## Rebuilds only the "condition" row's dropdown text/selection (cheaper than a full _refresh_decorator_tree()).
 func _refresh_condition_options(item: TreeItem) -> void:
+	var prev_syncing : bool = _decorator_syncing
+	_decorator_syncing = true
 	var names : PackedStringArray = _get_boolean_blackboard_names()
 	var options : PackedStringArray = PackedStringArray(["(none)"])
 	options.append_array(names)
@@ -343,6 +346,7 @@ func _refresh_condition_options(item: TreeItem) -> void:
 	var key : String = str(_node.decorator.get("blackboard_key", &""))
 	var idx : int = names.find(key)
 	item.set_range(2, idx + 1 if idx != -1 else 0)
+	_decorator_syncing = prev_syncing
 
 func _connect_bound_variable(v: BlackboardVariable) -> void:
 	if not v.name_changed.is_connected(_on_bound_variable_renamed):
@@ -376,7 +380,7 @@ func _sync_bound_variable() -> void:
 	if graph == null:
 		return
 	for v : BlackboardVariable in graph.blackboard:
-		if v != null and v.name == wanted_key:
+		if v != null and v.name == wanted_key and typeof(v.value) == TYPE_BOOL:
 			_bound_variable = v
 			_connect_bound_variable(v)
 			break
@@ -399,17 +403,21 @@ func _on_bound_variable_value_changed(new_value: Variant) -> void:
 
 ## Callback for the owning graph's [signal Resource.changed] (emitted when its whole blackboard
 ## array is reassigned, i.e. a variable was added or removed): if the currently bound variable is
-## no longer part of the blackboard, clears the binding.
+## no longer part of the blackboard, attempts to re-resolve by name before clearing the binding.
 func _on_blackboard_graph_changed() -> void:
 	if _node == null or _node._graph_ref == null: return
 	
-	if str(_node.decorator.get("type", "none")) == "condition" and _bound_variable != null:
+	var wanted_key : StringName = StringName(_node.decorator.get("blackboard_key", &""))
+	if str(_node.decorator.get("type", "none")) == "condition" and wanted_key != &"":
 		var graph : BehaviorGraph = _node._graph_ref.get_ref() as BehaviorGraph
-		if graph == null or _bound_variable not in graph.blackboard:
-			_disconnect_bound_variable(_bound_variable)
+		if graph == null or _bound_variable == null or _bound_variable not in graph.blackboard:
+			if _bound_variable != null and is_instance_valid(_bound_variable):
+				_disconnect_bound_variable(_bound_variable)
 			_bound_variable = null
-			_node.set_decorator_field(&"blackboard_key", &"")
-			return
+			_sync_bound_variable()
+			if _bound_variable == null:
+				_node.set_decorator_field(&"blackboard_key", &"")
+				return
 	_refresh_decorator_tree()
 
 func _disconnect_blackboard_tracking() -> void:

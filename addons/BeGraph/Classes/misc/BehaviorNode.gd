@@ -697,7 +697,11 @@ func _resolve_node(value: Variant) -> Node:
 			var tree := Engine.get_main_loop() as SceneTree
 			resolved = tree.root.get_node_or_null(value)
 		else:
-			push_error("BehaviorNode %s: node path is not absolute '%s'" % [resource_name, value])
+			resolved = agent.get_node_or_null(value)
+			if (resolved == null or resolved == agent) and agent.get_parent() != null:
+				var parent_resolved := agent.get_parent().get_node_or_null(value)
+				if parent_resolved != null:
+					resolved = parent_resolved
 		
 		if resolved == null:
 			push_error("BehaviorNode %s: node not found at path '%s'" % [resource_name, value])
