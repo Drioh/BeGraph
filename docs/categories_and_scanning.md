@@ -5,7 +5,7 @@ BeGraph features an automated discovery engine and a flexible category styling s
 2. Define custom categories with bespoke background and selection border colors.
 
 > [!IMPORTANT]
-> For any edit to the Project Settings to take actually place
+> For any edit to the Project Settings to take actually place you must restart the engine.
 ---
 
 ## Adding Custom Scan Folders (`custom_nodes_paths`)
